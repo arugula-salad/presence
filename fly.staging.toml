@@ -32,11 +32,13 @@ primary_region = "iad"
   auto_start_machines = true
   min_machines_running = 1
 
-  # As production: Fly's default soft limit (20 connections) would spread
-  # and start machines long before one is busy.
+  # Past 300 connections a machine is "busy" to Fly's proxy, which then
+  # sends new ones to the other machine (and starts it if it's stopped):
+  # one performance-1x holds about 400 people sending frames (#330).
+  # Fly's default (20) would spread them long before one is busy.
   [http_service.concurrency]
     type = "connections"
-    soft_limit = 5000
+    soft_limit = 300
     hard_limit = 10000
 
   [[http_service.checks]]
