@@ -92,7 +92,7 @@ function Estimate({ b }: { b: Billing }) {
           </tr>
         </tbody>
       </table>
-      <span class="hint">An estimate from the usage above, before tax. Your first month's base is prorated from the day you upgraded.</span>
+      <span class="hint">An estimate from your usage (under Usage), before tax. Your first month's base is prorated from the day you upgraded.</span>
     </div>
   );
 }

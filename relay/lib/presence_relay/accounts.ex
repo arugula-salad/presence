@@ -6,12 +6,16 @@ defmodule PresenceRelay.Accounts do
 
   An email identity is the address; a Google identity is Google's subject,
   joined to the account with the same (verified) address if there is one.
+
+  An account can also make API tokens, for agents and scripts: each acts
+  as the account (on `/api/v1` and the MCP endpoint, `/mcp`) until it's
+  revoked.
   """
 
   import Ecto.Query
   import Swoosh.Email, except: [from: 2]
   alias PresenceRelay.{Mailer, Repo}
-  alias PresenceRelay.Accounts.{Account, Identity, LoginToken}
+  alias PresenceRelay.Accounts.{Account, ApiToken, Identity, LoginToken}
 
   @link_life 15 * 60
   @email ~r/\A[^\s@]+@[^\s@]+\.[^\s@]+\z/
@@ -143,6 +147,89 @@ defmodule PresenceRelay.Accounts do
   end
 
   def from_google(_), do: {:error, :bad_profile}
+
+  ## API tokens
+
+  @doc """
+  A new API token for `account`, named `name` (what it's for): `{:ok,
+  token, raw}`. The raw token (`ak_…`) is shown this once; only its hash
+  is kept. It acts as the account on `/api/v1` and `/mcp`, until revoked.
+  """
+  def make_token(%Account{id: id}, name) do
+    name = if is_binary(name), do: String.trim(name), else: ""
+
+    if name != "" and String.length(name) <= 80 do
+      raw = "ak_" <> Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+      token =
+        Repo.insert!(%ApiToken{
+          account_id: id,
+          name: name,
+          token_hash: hash(raw),
+          prefix: String.slice(raw, 0, 10)
+        })
+
+      {:ok, token, raw}
+    else
+      {:error, "a token's name is 1–80 characters"}
+    end
+  end
+
+  @doc "`account`'s tokens that still work, newest first."
+  def list_tokens(%Account{id: id}) do
+    Repo.all(
+      from(t in ApiToken,
+        where: t.account_id == ^id and is_nil(t.revoked_at),
+        order_by: [desc: t.inserted_at, desc: t.id]
+      )
+    )
+  end
+
+  @doc "Revokes `account`'s token `id`: `:ok`, or `{:error, :not_found}`."
+  def revoke_token(%Account{id: account}, id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    with {id, ""} <- (is_binary(id) && Integer.parse(id)) || :error,
+         {1, _} <-
+           Repo.update_all(
+             from(t in ApiToken,
+               where: t.id == ^id and t.account_id == ^account and is_nil(t.revoked_at)
+             ),
+             set: [revoked_at: now]
+           ) do
+      :ok
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  The account a raw API token acts as, or nil (unknown or revoked). Notes
+  when it was last used, at most once a minute.
+  """
+  def by_token("ak_" <> _ = raw) when byte_size(raw) <= 100 do
+    q =
+      from(t in ApiToken,
+        join: a in assoc(t, :account),
+        where: t.token_hash == ^hash(raw) and is_nil(t.revoked_at),
+        select: {t, a}
+      )
+
+    case Repo.one(q) do
+      {t, account} ->
+        now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+        if is_nil(t.last_used_at) or DateTime.diff(now, t.last_used_at) >= 60,
+          do: Repo.update_all(from(x in ApiToken, where: x.id == ^t.id), set: [last_used_at: now])
+
+        account
+
+      nil ->
+        nil
+    end
+  end
+
+  def by_token(_), do: nil
 
   defp by_identity(provider, subject, attrs) do
     case Repo.get_by(Identity, provider: provider, subject: subject) do

@@ -1,8 +1,9 @@
 // The dashboard's side of the relay: who's signed in (/api/v1/me), the
 // ways in (P3's /api/v1/auth and /auth pages), and the owner's apps under
 // /api/v1/apps (keys, origins, guests, the server secret, the sign-in
-// provider with its room rule, and usage from #318's P9). Every write is
-// JSON, as the relay insists.
+// provider with its room rule, and usage from #318's P9), and the
+// account's API tokens for agents (/api/v1/tokens; they drive /mcp). Every
+// write is JSON, as the relay insists.
 
 /** Where the dashboard lives: always under /dashboard. */
 export const BASE = "/dashboard";
@@ -117,6 +118,16 @@ export interface Billing {
   can_manage: boolean;
 }
 
+/** An API token, as listed: never the token itself, which is shown once. */
+export interface Token {
+  id: string;
+  name: string;
+  /** Its first characters, to tell it apart. */
+  prefix: string;
+  made: string;
+  last_used: string | null;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -207,6 +218,13 @@ export const checkout = (id: string) => call<{ url: string }>("POST", app(id, "/
 
 /** Stripe's Customer Portal for the app's subscription. */
 export const portal = (id: string) => call<{ url: string }>("POST", app(id, "/billing/portal"), {}).then((r) => r.url);
+
+export const tokens = () => call<{ tokens: Token[] }>("GET", "/api/v1/tokens").then((r) => r.tokens);
+
+/** A new API token and the token itself (`ak_…`), shown this once. */
+export const makeToken = (name: string) => call<{ token: Token; secret: string }>("POST", "/api/v1/tokens", { name });
+
+export const revokeToken = (id: string) => call<{ revoked: string }>("DELETE", `/api/v1/tokens/${encodeURIComponent(id)}`);
 
 /** What to call a signed-in person: their name, or their address's first
  * part (without a +tag). */

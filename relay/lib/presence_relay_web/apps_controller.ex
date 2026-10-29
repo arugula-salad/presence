@@ -153,16 +153,6 @@ defmodule PresenceRelayWeb.AppsController do
     end
   end
 
-  # Never the secret: it's shown once, when made or rotated.
-  defp view(app) do
-    %{
-      id: app.id,
-      name: app.name,
-      guests: app.guests,
-      origins: Enum.map(app.origins, & &1.origin),
-      keys: app.keys |> Enum.reject(& &1.revoked_at) |> Enum.map(&key_view/1)
-    }
-  end
-
-  defp key_view(k), do: %{key: k.key, mode: k.mode, made: k.inserted_at}
+  defp view(app), do: Apps.view(app)
+  defp key_view(k), do: Apps.key_view(k)
 end

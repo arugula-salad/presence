@@ -162,6 +162,19 @@ defmodule PresenceRelay.Apps do
     end
   end
 
+  @doc "An app as the API shows it (the dashboard's, MCP's): never the secret, which is shown once, when made or rotated."
+  def view(%App{} = app) do
+    %{
+      id: app.id,
+      name: app.name,
+      guests: app.guests,
+      origins: Enum.map(app.origins, & &1.origin),
+      keys: app.keys |> Enum.reject(& &1.revoked_at) |> Enum.map(&key_view/1)
+    }
+  end
+
+  def key_view(%Key{} = k), do: %{key: k.key, mode: k.mode, made: k.inserted_at}
+
   @doc "A name and whether guests may join."
   def update(%App{} = app, attrs) do
     changes =

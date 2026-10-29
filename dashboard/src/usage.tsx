@@ -79,7 +79,7 @@ function Meter({ used, cap, own }: { used: number; cap: number | null; own: numb
         <span class="fill" style={{ width: `${Math.min(share, 1) * 100}%` }} />
       </span>
       {state !== "ok" && <span class="state">{state === "at" ? (planCap ? "⚠ At your plan's cap" : "⚠ At your cap") : planCap ? "Near your plan's cap" : "Near your cap"}</span>}
-      {planCap && <span class="hint">Your plan's cap. Upgrade under Plan and billing for more.</span>}
+      {planCap && <span class="hint">Your plan's cap. Upgrade under Billing for more.</span>}
     </div>
   );
 }

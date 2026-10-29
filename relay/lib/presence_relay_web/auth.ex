@@ -1,20 +1,62 @@
 defmodule PresenceRelayWeb.Auth do
-  @moduledoc "The signed-in account, from the session cookie; and the guard on JSON writes."
+  @moduledoc """
+  The signed-in account, from an API token (`Authorization: Bearer ak_…`)
+  or else the session cookie; and the guard on JSON writes.
+
+  A request with a token is the token's account and never the cookie's,
+  and `:by_token` says so: what only a person at the dashboard may do
+  (make and revoke tokens) checks it.
+  """
   import Plug.Conn
   import Phoenix.Controller, only: [json: 2]
 
   def fetch_account(conn, _) do
-    account =
-      if PresenceRelay.Apps.database?(),
-        do: PresenceRelay.Accounts.get(get_session(conn, :account_id))
+    case bearer(conn) do
+      nil ->
+        account =
+          if PresenceRelay.Apps.database?(),
+            do: PresenceRelay.Accounts.get(get_session(conn, :account_id))
 
-    assign(conn, :account, account)
+        conn |> assign(:account, account) |> assign(:by_token, false)
+
+      token ->
+        account = if PresenceRelay.Apps.database?(), do: PresenceRelay.Accounts.by_token(token)
+        conn |> assign(:account, account) |> assign(:by_token, true)
+    end
+  end
+
+  @doc "The bearer token in `Authorization`, or nil."
+  def bearer(conn) do
+    case get_req_header(conn, "authorization") do
+      [<<scheme::binary-size(7), token::binary>> | _] when scheme in ["Bearer ", "bearer "] ->
+        String.trim(token)
+
+      _ ->
+        nil
+    end
   end
 
   def require_account(%{assigns: %{account: %{}}} = conn, _), do: conn
 
+  def require_account(%{assigns: %{by_token: true}} = conn, _),
+    do:
+      conn
+      |> put_status(401)
+      |> json(%{error: "that API token isn't known, or was revoked"})
+      |> halt()
+
   def require_account(conn, _),
     do: conn |> put_status(401) |> json(%{error: "sign in first"}) |> halt()
+
+  @doc "Only a session (a person at the dashboard), not an API token."
+  def require_session(%{assigns: %{by_token: true}} = conn, _),
+    do:
+      conn
+      |> put_status(403)
+      |> json(%{error: "API tokens are made and revoked in the dashboard"})
+      |> halt()
+
+  def require_session(conn, _), do: conn
 
   @doc "POST, PATCH and PUT must be JSON: a cross-site form can only send form encodings."
   def json_writes(%{method: m} = conn, _) when m in ["POST", "PATCH", "PUT"] do

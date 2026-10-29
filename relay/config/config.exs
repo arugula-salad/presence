@@ -46,6 +46,7 @@ config :presence_relay, :rate_limits, %{
   email_address: {5, 3600},
   meet_room: {20, 3600},
   api_write: {120, 60},
+  mcp: {300, 60},
   demo_token: {120, 3600}
 }
 

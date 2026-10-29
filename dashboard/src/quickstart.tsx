@@ -80,9 +80,9 @@ export function Quickstart({ app, issuer }: { app: App; issuer: Issuer | null })
             Paste one into your page. <code>auth</code> hands over the person's {PRESETS[issuer.provider].label} token; everything else is ours.
           </>
         ) : app.guests ? (
-          "Paste one into your page. Guests are on, so this works as it is; connect your sign-in below so people come in as themselves."
+          "Paste one into your page. Guests are on, so this works as it is; connect your sign-in (under Sign-in) so people come in as themselves."
         ) : (
-          "Paste one into your page. To connect, set your sign-in provider below, or turn guests on."
+          "Paste one into your page. To connect, set your sign-in provider under Sign-in, or turn guests on there."
         )
       }
     >

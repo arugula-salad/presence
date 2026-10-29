@@ -21,7 +21,7 @@ yourself.
 | [`client/`](client) | `@arugula/presence`: a room as state, over a transport |
 | [`elements/`](elements) | web components and `connect()`, the script-tag SDK |
 | [`react/`](react) | `@arugula/presence-react` |
-| [`relay/`](relay) | the Phoenix relay: rooms, accounts, apps and keys, calls on LiveKit, metering, billing on Stripe |
+| [`relay/`](relay) | the Phoenix relay: rooms, accounts, apps and keys, calls on LiveKit, metering, billing on Stripe, and an MCP server for agents |
 | [`demo/`](demo) | the arugula.stream site |
 | [`meet/`](meet) | meet.arugula.stream |
 | [`dashboard/`](dashboard) | the customer dashboard at /dashboard |

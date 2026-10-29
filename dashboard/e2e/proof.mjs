@@ -2,13 +2,15 @@
 // end, on a local relay, without us.
 //
 // Maya signs in by an emailed link (read from the relay's log: a dev relay
-// logs its mail) and makes an app. She adds an origin (a wrong one first),
-// copies a test key, sets an OpenID Connect provider (its errors first,
-// then right), a room rule, guests on and a cap. Then a little page of
-// hers, on that origin, joins a room with the copied key as a guest, and
-// the same page on another origin is refused. Usage is the relay's 404
-// (before #318's P9 meters) and then a stub of P9's answer. Screenshots
-// of each screen, desktop and phone, go to e2e/out.
+// logs its mail) and makes an app; its overview says what's left. On its
+// tabs she adds an origin (a wrong one first), copies a test key, sets an
+// OpenID Connect provider (its errors first, then right), a room rule,
+// guests on and a cap, and renames it. Then a little page of hers, on that
+// origin, joins a room with the copied key as a guest, and the same page
+// on another origin is refused. Usage is a stub of P9's answer. Last, she
+// makes an API token on Agents, and an agent with it drives /mcp: it
+// lists her app and makes one of its own. Screenshots of each screen,
+// desktop and phone, go to e2e/out.
 //
 // Against a dev relay with the dashboard and the SDK built into it (pnpm
 // build here and in ../elements), its log going to a file:
@@ -129,8 +131,28 @@ async function shots(page, name, { full = true } = {}) {
   await page.waitForTimeout(250);
   const wide = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   check(wide <= 0, `${name}: ${wide}px of sideways scroll at phone width`);
+  const clipped = await page.evaluate(() => [...document.querySelectorAll(".top a, .top button")].filter((e) => e.getBoundingClientRect().right > innerWidth + 0.5 && getComputedStyle(e).display !== "none").map((e) => e.textContent));
+  check(!clipped.length, `${name}: the top bar runs off the screen at phone width: ${clipped}`);
   await page.screenshot({ path: join(OUT, `${name}-phone.png`), fullPage: full });
   await page.setViewportSize(DESKTOP);
+}
+
+/** Opens one of the app's tabs by its link, and waits for its path. */
+async function tab(page, name, segment) {
+  await page.getByRole("navigation", { name: /'s pages$/ }).getByRole("link", { name, exact: true }).click();
+  await page.waitForURL(segment ? new RegExp(`/apps/app_[0-9a-f]{16}/${segment}$`) : /\/apps\/app_[0-9a-f]{16}$/);
+}
+
+/** One JSON-RPC request to /mcp with `token`: the result, or throws. */
+async function mcp(token, method, params = {}) {
+  const r = await fetch(`${RELAY}/mcp`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream", authorization: `Bearer ${token}` },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  });
+  const body = await r.json();
+  if (!r.ok || body.error) throw new Error(`${method}: ${r.status} ${JSON.stringify(body.error ?? body)}`);
+  return body.result;
 }
 
 /** Opens Maya's page at `origin` with `key`; how it went. */
@@ -177,13 +199,16 @@ try {
   const appUrl = page.url();
   await page.getByText("Your app's server secret").waitFor();
   check((await page.getByLabel("The server secret").textContent()).length >= 40, "the secret is shown");
-  await page.getByRole("heading", { name: "Keys" }).waitFor();
+  await page.getByRole("heading", { name: "Setting up" }).waitFor();
   await page.screenshot({ path: join(OUT, "3-new-app-desktop.png") });
   await page.getByRole("button", { name: "I've kept it" }).click();
   check(!(await page.getByText("Your app's server secret").isVisible()), "the secret goes away");
 
-  step("usage, before the relay meters: a calm note, not an error");
-  await page.getByText("Usage will appear here once people start joining your rooms.").waitFor();
+  step("the overview: what's left, each a link to its tab");
+  await page.locator("#setup").getByText("2 things left to set up.").waitFor();
+  check((await page.locator(".step.done").count()) === 1, "a key is done (it came with a live one)");
+  await page.locator("#setup").getByRole("link", { name: "Where your pages live" }).click();
+  await page.waitForURL(/\/apps\/app_[0-9a-f]{16}\/keys$/);
 
   step("adds an origin: a wrong one first");
   await page.getByLabel("An origin").fill("app.localhost");
@@ -203,6 +228,7 @@ try {
   check((await page.locator(".key-row").count()) === 2, "a live key and a test key");
 
   step("sets an OpenID Connect provider: errors under their fields, then right");
+  await tab(page, "Sign-in", "sign-in");
   await page.getByRole("radio", { name: "OpenID Connect" }).click();
   await page.getByRole("button", { name: "Use OpenID Connect" }).click();
   const issuerField = page.locator("label.field", { hasText: "Issuer URL" });
@@ -231,7 +257,9 @@ try {
   await page.getByRole("switch").click();
   await page.locator('[role="switch"][aria-checked="true"]').waitFor();
 
-  step("the quickstart has her key and her provider");
+  step("the overview is done, and the quickstart has her key and her provider");
+  await tab(page, "Overview", "");
+  await page.locator("#setup").getByText("Everything's in place.").waitFor();
   const snippet = await page.locator("#quickstart pre").textContent();
   check(snippet.includes(testKey) || snippet.includes("pk_live_"), "the snippet has a key of hers");
   await page.getByRole("radio", { name: "Test key" }).click();
@@ -239,20 +267,40 @@ try {
   const js = await page.locator("#quickstart pre").textContent();
   check(js.includes(`key: "${testKey}"`) && js.includes("userManager.getUser()") && js.includes(`relay: "ws://`), "the JS snippet: her test key, OIDC, this relay");
 
-  step("everything she set is kept (a reload)");
-  await page.reload();
+  await shots(page, "5-overview");
+
+  step("everything she set is kept (a reload of each tab)");
+  await page.goto(`${appUrl}/keys`);
   await page.locator("#origins li", { hasText: SITE }).waitFor();
+  await shots(page, "5-keys");
+  await page.goto(`${appUrl}/sign-in`);
   await page.locator('[role="switch"][aria-checked="true"]').waitFor();
   check((await page.getByLabel("The claim").inputValue()) === "team", "the room rule is kept");
   check((await page.locator("label.field", { hasText: "Audience" }).locator("input").inputValue()) === "sketchpad-web", "the audience is kept");
   check(!(await page.getByText("Your app's server secret").isVisible()), "the secret isn't shown again");
-  await shots(page, "5-app");
-  await page.locator("#quickstart").screenshot({ path: join(OUT, "6-quickstart-desktop.png") });
+  await shots(page, "5-sign-in");
   await page.locator("#sign-in").screenshot({ path: join(OUT, "7-provider-desktop.png") });
+  await page.goto(appUrl);
+  await page.locator("#quickstart").screenshot({ path: join(OUT, "6-quickstart-desktop.png") });
+
+  step("a link from before the tabs (#origins) lands on its tab");
+  await page.goto(`${BASE}/`);
+  await page.goto(`${appUrl}#origins`);
+  await page.locator("#origins li", { hasText: SITE }).waitFor();
+  check(!(await page.locator("#quickstart").count()), "the keys tab, not the overview");
+
+  step("renames it under Settings");
+  await page.goto(appUrl);
+  await tab(page, "Settings", "settings");
+  await page.getByLabel("The app's name").fill("Sketchpad web");
+  await page.getByRole("button", { name: "Rename" }).click();
+  await page.locator("#name").getByRole("status").getByText("Saved.").waitFor();
+  await page.getByRole("heading", { level: 1, name: "Sketchpad web" }).waitFor();
+  await shots(page, "5-settings");
 
   step("usage, on a stub of P9's answer; she sets a cap");
   await stubUsage(ctx);
-  await page.reload();
+  await page.goto(`${appUrl}/usage`);
   await page.getByText("Active users a day").waitFor();
   await page.locator(".tile", { hasText: "Active users this month" }).getByText("No cap set.").waitFor();
   await page.getByLabel("Cap on active users").fill("0");
@@ -286,11 +334,11 @@ try {
 
   step("her apps list");
   await page.goto(`${BASE}/`);
-  await page.locator(".app-card", { hasText: "Sketchpad" }).getByText("2 keys · 1 origin · guests welcome").waitFor();
+  await page.locator(".app-card", { hasText: "Sketchpad web" }).getByText("2 keys · 1 origin · guests welcome").waitFor();
   await shots(page, "10-apps");
 
   step("revoking the test key asks first, then it stops working");
-  await page.goto(appUrl);
+  await page.goto(`${appUrl}/keys`);
   await page.getByRole("button", { name: `Revoke ${testKey}` }).click();
   await page.getByRole("group", { name: /Revoke it\?/ }).getByRole("button", { name: "Revoke" }).click();
   await page.locator('.key-row[data-mode="test"]').waitFor({ state: "detached" });
@@ -298,6 +346,41 @@ try {
   const gone = await visit(browser, SITE, testKey, room);
   check(gone.socket === "refused", "a revoked key is refused");
   await gone.ctx.close();
+
+  step("on Agents she makes an API token: shown once, in the setup");
+  await page.getByRole("navigation").getByRole("link", { name: "Agents", exact: true }).click();
+  await page.waitForURL(`${BASE}/agents`);
+  await page.getByText("No tokens yet.").waitFor();
+  await page.getByLabel("The token's name").fill("Claude Code on my laptop");
+  await page.getByRole("button", { name: "Make a token" }).click();
+  const token = await page.getByLabel("The API token").textContent();
+  check(/^ak_[A-Za-z0-9_-]{40,}$/.test(token), `an API token, not ${token}`);
+  const setup = await page.locator("#connect pre").textContent();
+  check(setup.includes(`Bearer ${token}`) && setup.includes(`${RELAY}/mcp`), `the Claude Code line has her token and this relay: ${setup}`);
+  await page.getByRole("tab", { name: "Cursor" }).click();
+  JSON.parse(await page.locator("#connect pre").textContent());
+  await shots(page, "11-agents");
+
+  step("an agent with the token drives /mcp: her app's there, and it makes one");
+  const init = await mcp(token, "initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "proof", version: "0" } });
+  check(init.serverInfo.name === "arugula.stream", "initialize");
+  const { tools } = await mcp(token, "tools/list");
+  check(tools.some((t) => t.name === "create_app"), "the tools");
+  const listed = (await mcp(token, "tools/call", { name: "list_apps", arguments: {} })).structuredContent;
+  check(listed.apps.some((a) => a.name === "Sketchpad web" && a.setup.ready), `list_apps: ${JSON.stringify(listed)}`);
+  const made = (await mcp(token, "tools/call", { name: "create_app", arguments: { name: "Made by an agent" } })).structuredContent;
+  await mcp(token, "tools/call", { name: "add_origin", arguments: { app_id: made.app.id, origin: SITE } });
+  await page.goto(`${BASE}/`);
+  await page.locator(".app-card", { hasText: "Made by an agent" }).getByText("1 key · 1 origin").waitFor();
+
+  step("she revokes the token; the agent's refused");
+  await page.goto(`${BASE}/agents`);
+  await page.locator(".token-row", { hasText: "Claude Code on my laptop" }).getByText(/last used/).waitFor();
+  await page.getByRole("button", { name: "Revoke Claude Code on my laptop" }).click();
+  await page.getByRole("group", { name: /Revoke it\?/ }).getByRole("button", { name: "Revoke" }).click();
+  await page.getByText("No tokens yet.").waitFor();
+  const refused = await fetch(`${RELAY}/mcp`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }) });
+  check(refused.status === 401, `a revoked token is a 401, not ${refused.status}`);
 
   console.log(`ok: Maya set up ${appUrl} and joined from ${SITE}; screenshots in ${OUT}`);
 } catch (e) {
