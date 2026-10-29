@@ -140,7 +140,7 @@ async function context(name) {
   // Krisp's and LiveKit's own words about the filter (queries cut off).
   page.on("console", (m) => {
     const t = m.text();
-    if (/krisp|noise|processor|livekit-noise/i.test(t)) logs.push(`[${name}] ${m.type()}: ${t.replace(/\?[^\s"')]*/g, "?…").slice(0, 300)}`);
+    if (/krisp|noise.?filter|enhancedNoise|processor/i.test(t.replace(/noise-proof-\w+/g, "")) || (m.type() === "error" && !/favicon/.test(t))) logs.push(`[${name}] ${m.type()}: ${t.replace(/\?[^\s"')]*/g, "?…").slice(0, 300)}`);
   });
   return page;
 }
@@ -159,8 +159,18 @@ const choice = (page, where = ".voicebar") => page.locator(`${where} .seg.noise`
 /** The noise choice as the page shows it, and the fallback note. */
 const shown = (page, where = ".voicebar") =>
   page.evaluate((where) => {
-    const seg = document.querySelector(`${where} .seg.noise`);
-    const note = document.querySelector(`${where} .noise-fallback`);
+    // Into open shadow roots too (the SDK's elements draw in them).
+    const deep = (sel, root = document) => {
+      const hit = root.querySelector(sel);
+      if (hit) return hit;
+      for (const el of root.querySelectorAll("*")) if (el.shadowRoot) {
+        const h = deep(sel, el.shadowRoot);
+        if (h) return h;
+      }
+      return null;
+    };
+    const seg = deep(`${where} .seg.noise`);
+    const note = deep(`${where} ~ .noise-fallback`) ?? deep(`${where} .noise-fallback`);
     return seg && { mode: seg.dataset.mode, active: seg.dataset.active, pressed: seg.querySelector('[aria-checked="true"]')?.textContent, fallback: note ? { text: note.textContent, why: note.title } : null };
   }, where);
 
@@ -238,7 +248,7 @@ const expected = {
 };
 
 /** Whether `s` (sending()) is what `mode` should look like, and why not. */
-function looksLike(s, mode) {
+function looksLike(s, mode, muted = false) {
   const e = expected[mode];
   const why = [];
   if (!s.raw) why.push("no live microphone");
@@ -248,7 +258,8 @@ function looksLike(s, mode) {
   }
   if (!s.sender || s.sender.state !== "live") why.push("no live track sent");
   else if (s.sender.processed !== e.processed) why.push(e.processed ? "the raw microphone is sent, not Krisp's" : "a processed track is sent");
-  if (s.packets < 20) why.push(`only ${s.packets} audio packets in 1.5 s`);
+  // Muted, Opus sends a trickle of comfort-noise packets, not a stream.
+  if (!muted && s.packets < 20) why.push(`only ${s.packets} audio packets in 1.5 s`);
   return why;
 }
 
@@ -284,15 +295,17 @@ async function run() {
   if (expectFallback) {
     check(settled?.mode === "krisp" && settled?.active === "standard", "Krisp picked by default, Standard on the microphone");
     check(!!settled?.fallback?.text, `the bar says so: "${settled?.fallback?.text}" (why: ${settled?.fallback?.why})`);
-    check(looksLike(s1, "standard").length === 0, `and the microphone is Standard, with audio going out (${looksLike(s1, "standard").join(", ") || "as expected"})`);
+    check(looksLike(s1, "standard", true).length === 0, `and the microphone is Standard (${looksLike(s1, "standard", true).join(", ") || "as expected"})`);
   } else {
     check(settled?.mode === "krisp", "Krisp is the default (nothing picked, and this browser runs it)");
     check(krispOn, krispOn ? "Krisp is ON: Krisp's processor is enabled, after LiveKit's check of the room's token" : `Krisp did NOT start: "${settled?.fallback?.why}"; the microphone fell back to ${settled?.active}`);
     if (krispOn) {
-      check(looksLike(s1, "krisp").length === 0, `the track Ada sends is Krisp's processor's, her microphone opened without the browser's suppression, audio going out (${looksLike(s1, "krisp").join(", ") || "as expected"})`);
+      check(looksLike(s1, "krisp", true).length === 0, `the track Ada's sender has is Krisp's processor's, her microphone opened without the browser's suppression (${looksLike(s1, "krisp", true).join(", ") || "as expected"})`);
+      const settings = lk.find((r) => r.flags && "enhancedNoiseCancellation" in r.flags);
+      check(settings?.flags.enhancedNoiseCancellation === true && settings.status === 200, `LiveKit Cloud's check said yes: ${settings ? `${settings.where} ${settings.status} ${JSON.stringify(settings.flags)}` : "no check seen"}`);
       check(lk.some((r) => r.where.startsWith("integrations.livekit.io") && r.status === 200), "Krisp's models came from integrations.livekit.io (200)");
     } else {
-      check(settled?.active === "standard" && looksLike(s1, "standard").length === 0, `the fallback works: Standard on the microphone, audio going out (${looksLike(s1, "standard").join(", ") || "as expected"})`);
+      check(settled?.active === "standard" && looksLike(s1, "standard", true).length === 0, `the fallback works: Standard on the microphone (${looksLike(s1, "standard", true).join(", ") || "as expected"})`);
       check(settled?.fallback?.text === "Krisp isn't available here, using Standard", `and the bar says so: "${settled?.fallback?.text}"`);
     }
   }
@@ -333,6 +346,7 @@ async function run() {
   await choice(a).getByRole("radio", { name: target === "standard" ? "Standard" : "Off", exact: true }).click();
   const m1 = await activeIs(a, [target], ".voicebar", 20_000);
   const sm = await sending(a, 500);
+  check(looksLike(sm, target, true).length === 0, `muted: the microphone as ${target} wants it (${looksLike(sm, target, true).join(", ") || "as expected"})`);
   check(m1?.active === target && sm.raw?.noiseSuppression === expected[target].noiseSuppression && sm.sender?.processed === false, `muted: ${target} on the microphone (noiseSuppression ${sm.raw?.noiseSuppression}) and nothing heard`);
   await bar(a).getByRole("button", { name: "Unmute" }).click();
   await bar(a).getByRole("button", { name: "Mute", exact: true }).waitFor();
@@ -370,7 +384,50 @@ async function run() {
   check(c2?.active === want && looksLike(sc, want).length === 0, `switched to ${want} in the call (${looksLike(sc, want).join(", ") || `${sc.sender.processed ? "Krisp's track" : "raw microphone"} sent, ${sc.packets} packets in 1.5 s`})`);
   await a.screenshot({ path: `${out}noise-4-call-${want}-ada.png` });
 
-  for (const p of [a, b]) await p.context().close();
+  step("6. Cy's browser can't reach Krisp's models (integrations.livekit.io blocked): Standard, saying so, and she's heard");
+  const cy = await context("Cy");
+  await cy.context().route(/integrations\.livekit\.io/, (r) => r.abort("blockedbyclient"));
+  await join(cy, "Cy", room);
+  await bar(cy).getByRole("button", { name: "Join voice" }).click();
+  await bar(cy).getByRole("button", { name: "Unmute" }).waitFor({ timeout: 20_000 });
+  const fb = await activeIs(cy, ["standard"], ".voicebar", 30_000);
+  await cy.waitForTimeout(1500);
+  const fb2 = await shown(cy);
+  console.log(`  Cy's noise choice: ${JSON.stringify(fb2)}`);
+  check(fb?.active === "standard" && fb2?.active === "standard" && fb2?.mode === "krisp", "Krisp is her mode (the default), Standard is on her microphone");
+  check(fb2?.fallback?.text === "Krisp isn't available here, using Standard", `the bar says "${fb2?.fallback?.text}" (why: ${fb2?.fallback?.why})`);
+  await bar(cy).getByRole("button", { name: "Unmute" }).click();
+  await bar(cy).getByRole("button", { name: "Mute", exact: true }).waitFor();
+  await cy.waitForTimeout(800);
+  const sf = await sending(cy);
+  check(looksLike(sf, "standard").length === 0, `her microphone works as Standard (${looksLike(sf, "standard").join(", ") || `noiseSuppression ${sf.raw.noiseSuppression}, raw microphone sent, ${sf.packets} packets in 1.5 s`})`);
+  await cy.screenshot({ path: `${out}noise-5-fallback-cy.png` });
+
+  step("7. The script-tag SDK on another site: <arugula-voice>'s noise choice, Krisp's chunk from beside presence.js");
+  const dee = await context("Dee");
+  const site = "https://sdk-host.example/";
+  const chunks = [];
+  dee.on("response", (r) => /\/sdk\/v0\/krisp-[\w-]+\.js$/.test(r.url()) && chunks.push({ url: new URL(r.url()).pathname, status: r.status(), cors: r.headers()["access-control-allow-origin"] ?? null }));
+  const socket = `${relay.replace(/^http/, "ws")}/socket`;
+  await dee.route(site, (r) =>
+    r.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta charset="utf-8"><title>host</title><script type="module" src="${relay}/sdk/v0/presence.js"></script>
+<body style="background:#06080d;color:#e6e9ef;font:15px system-ui;padding:24px"><arugula-room room="${room}" demo name="Dee" relay="${socket}"><arugula-voice></arugula-voice><arugula-people size="head"></arugula-people></arugula-room>`,
+    }),
+  );
+  await dee.goto(site);
+  await dee.locator(".arugula-voice").getByRole("button", { name: "Join voice" }).click({ timeout: 30_000 });
+  await dee.locator(".arugula-voice").getByRole("button", { name: "Unmute" }).waitFor({ timeout: 20_000 });
+  const el = await activeIs(dee, ["krisp", "standard"], ".arugula-voice", 30_000);
+  await dee.waitForTimeout(1500);
+  const el2 = await shown(dee, ".arugula-voice");
+  console.log(`  <arugula-voice>'s noise choice: ${JSON.stringify(el2)}; Krisp's chunk: ${JSON.stringify(chunks)}`);
+  check(el2?.active === "krisp" && el2?.mode === "krisp", "on another origin, the SDK's voice bar has the choice and Krisp runs");
+  check(chunks.length === 1 && chunks[0].status === 200 && chunks[0].cors === "*", "Krisp's chunk came once from the relay's /sdk/v0/, CORS open");
+  await dee.screenshot({ path: `${out}noise-6-sdk-element-dee.png` });
+
+  for (const p of [a, b, cy, dee]) await p.context().close();
 }
 
 try {

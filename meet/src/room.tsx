@@ -364,35 +364,37 @@ const NOISE: Record<NoiseFilter, [label: string, title: string]> = {
 };
 
 /** Your microphone's noise filter in a call or voice: Krisp, Standard or
- * Off (kept in this browser), and a note while Krisp is your choice and
- * can't run here. */
+ * Off (kept in this browser). */
 function NoiseChoice({ client }: { client: PresenceClient }) {
   const n = client.noise;
   return (
-    <>
-      <span class="seg noise" role="radiogroup" aria-label="Noise filter" data-mode={n.mode} data-active={n.active ?? ""}>
-        <span class="noise-label">Noise</span>
-        {NOISE_FILTERS.map((m) => (
-          <button
-            key={m}
-            role="radio"
-            aria-checked={n.mode === m}
-            class={n.mode === m ? "btn on" : "btn"}
-            disabled={m === "krisp" && n.krisp === false}
-            title={m === "krisp" && n.krisp === false ? "Krisp doesn't run in this browser" : NOISE[m][1]}
-            onClick={() => void client.setNoiseFilter(m)}
-          >
-            {NOISE[m][0]}
-          </button>
-        ))}
-      </span>
-      {n.fallback && (
-        <span class="notice noise-fallback" title={n.fallback}>
-          {KRISP_FALLBACK}
-        </span>
-      )}
-    </>
+    <span class="seg noise" role="radiogroup" aria-label="Noise filter" data-mode={n.mode} data-active={n.active ?? ""}>
+      <span class="noise-label">Noise</span>
+      {NOISE_FILTERS.map((m) => (
+        <button
+          key={m}
+          role="radio"
+          aria-checked={n.mode === m}
+          class={n.mode === m ? "btn on" : "btn"}
+          disabled={m === "krisp" && n.krisp === false}
+          title={m === "krisp" && n.krisp === false ? "Krisp doesn't run in this browser" : NOISE[m][1]}
+          onClick={() => void client.setNoiseFilter(m)}
+        >
+          {NOISE[m][0]}
+        </button>
+      ))}
+    </span>
   );
+}
+
+/** While Krisp is your choice and can't run here: saying so (why, on hover). */
+function NoiseNote({ client }: { client: PresenceClient }) {
+  const why = client.noise.fallback;
+  return why ? (
+    <span class="notice noise-fallback" title={why}>
+      {KRISP_FALLBACK}
+    </span>
+  ) : null;
 }
 
 /** Your call, in the room's bar: who's in it, mute, video and leave (or
@@ -435,6 +437,7 @@ function CallBar({ client, me, names, error }: { client: PresenceClient; me: str
         {c.state === "ringing" ? "Cancel" : "Leave"}
       </button>
       {(c.error || error) && <span class="error">{c.error || error}</span>}
+      {c.state !== "ringing" && <NoiseNote client={client} />}
     </div>
   );
 }
@@ -501,6 +504,7 @@ function VoiceStrip({ client, me }: { client: PresenceClient; me: string }) {
         </button>
       )}
       {(v?.error || err) && <span class="error">{v?.error || err}</span>}
+      {v && <NoiseNote client={client} />}
       {notice && (
         <span class="notice" role="status">
           {notice}
