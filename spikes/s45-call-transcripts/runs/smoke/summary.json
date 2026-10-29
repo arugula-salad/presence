@@ -1,0 +1,108 @@
+{
+ "run": "smoke",
+ "meta": {
+  "scenario": "smoke",
+  "room": "s45:smoke:voice",
+  "dispatch": "api",
+  "run": "smoke",
+  "model": "deepgram/nova-3",
+  "gate": "vad",
+  "keyterms": [],
+  "text": true,
+  "started": 1793316366791
+ },
+ "wer": 0.1,
+ "ref_words": 30,
+ "attribution": {
+  "ok": 6,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 3,
+   "p50": 686,
+   "p90": 1386,
+   "max": 1386,
+   "mean": 817
+  },
+  "final_after_speech_reached_agent": {
+   "n": 3,
+   "p50": 303,
+   "p90": 311,
+   "max": 311,
+   "mean": 303
+  },
+  "first_interim_after_speech_start": {
+   "n": 3,
+   "p50": 1710,
+   "p90": 1862,
+   "max": 1862,
+   "mean": 1661
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 0
+  },
+  "relay_http_after_speech_end": {
+   "n": 3,
+   "p50": 688,
+   "p90": 1388,
+   "max": 1388,
+   "mean": 819
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Ada",
+    "track_s": 30.6,
+    "muted_frames_s": 0,
+    "pushed_s": 20.4,
+    "usage_s": 20.2,
+    "sessions": 4
+   }
+  ],
+  "stt_s": 20.2,
+  "track_s": 30.6,
+  "speech_s": 17.4,
+  "gated_fraction": 0.662
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": false,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0000",
+   "muted": false,
+   "ref": "also a popular contrivance whereby love making may be suspended but not stopped during the picnic season",
+   "hyp": "Also, a popular contrivance whereby lovemaking may be suspended but not stopped. During the picnic season.",
+   "wer": 0.118,
+   "final_ms": 380,
+   "final_after_rx_ms": 311
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0001",
+   "muted": false,
+   "ref": "harangue the tiresome product of a tireless tongue",
+   "hyp": "Harang The tiresome product of a tireless tongue.",
+   "wer": 0.125,
+   "final_ms": 686,
+   "final_after_rx_ms": 303
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0002",
+   "muted": false,
+   "ref": "angor pain painful to hear",
+   "hyp": "Angor. Pain, painful to hear.",
+   "wer": 0,
+   "final_ms": 1386,
+   "final_after_rx_ms": 294
+  }
+ ]
+}

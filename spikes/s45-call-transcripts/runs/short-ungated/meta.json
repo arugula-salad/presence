@@ -1,0 +1,11 @@
+{
+ "scenario": "short",
+ "room": "s45:short-ungated:voice",
+ "dispatch": "api",
+ "run": "short-ungated",
+ "model": "deepgram/nova-3",
+ "gate": "none",
+ "keyterms": [],
+ "text": true,
+ "started": 1793316877365
+}

@@ -1,0 +1,11 @@
+{
+ "scenario": "smoke",
+ "room": "s45:smoke:voice",
+ "dispatch": "api",
+ "run": "smoke",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793316366791
+}

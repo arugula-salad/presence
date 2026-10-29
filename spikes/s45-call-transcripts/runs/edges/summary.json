@@ -1,0 +1,191 @@
+{
+ "run": "edges",
+ "meta": {
+  "scenario": "edges",
+  "room": "s45:edges:voice",
+  "dispatch": "api",
+  "run": "edges",
+  "model": "deepgram/nova-3",
+  "gate": "vad",
+  "keyterms": [],
+  "text": true,
+  "started": 1793317101140
+ },
+ "wer": 0.0275,
+ "ref_words": 109,
+ "attribution": {
+  "ok": 12,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 7,
+   "p50": 339,
+   "p90": 402,
+   "max": 402,
+   "mean": 258
+  },
+  "final_after_speech_reached_agent": {
+   "n": 6,
+   "p50": 298,
+   "p90": 360,
+   "max": 360,
+   "mean": 254
+  },
+  "first_interim_after_speech_start": {
+   "n": 7,
+   "p50": 1699,
+   "p90": 1739,
+   "max": 1739,
+   "mean": 1543
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 17,
+   "p50": 357,
+   "p90": 430,
+   "max": 430,
+   "mean": 255
+  },
+  "relay_http_after_speech_end": {
+   "n": 7,
+   "p50": 341,
+   "p90": 404,
+   "max": 404,
+   "mean": 260
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Bo",
+    "track_s": 44.9,
+    "muted_frames_s": 0,
+    "pushed_s": 4.47,
+    "usage_s": 11.4,
+    "sessions": 1
+   },
+   {
+    "who": "Ada",
+    "track_s": 77.2,
+    "muted_frames_s": 0,
+    "pushed_s": 17.18,
+    "usage_s": 17,
+    "sessions": 4
+   },
+   {
+    "who": "Bo",
+    "track_s": 19.1,
+    "muted_frames_s": 0,
+    "pushed_s": 7,
+    "usage_s": 11.4,
+    "sessions": 1
+   },
+   {
+    "who": "Cy",
+    "track_s": 77.3,
+    "muted_frames_s": 8.4,
+    "pushed_s": 10.64,
+    "usage_s": 10.6,
+    "sessions": 1
+   },
+   {
+    "who": "Di",
+    "track_s": 39.6,
+    "muted_frames_s": 0,
+    "pushed_s": 10.54,
+    "usage_s": 10.5,
+    "sessions": 2
+   }
+  ],
+  "stt_s": 49.6,
+  "track_s": 258.1,
+  "speech_s": 44.5,
+  "gated_fraction": 0.192
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": true,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0010",
+   "muted": false,
+   "ref": "housecleaning a domestic upheaval that makes it easy for the government to enlist all the soldiers it needs",
+   "hyp": "House cleaning. A domestic upheaval that makes it easy for the government to enlist all the soldiers it needs",
+   "wer": 0.111,
+   "final_ms": 339,
+   "final_after_rx_ms": 279
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0007",
+   "muted": false,
+   "ref": "a cold lucid indifference reigned in his soul",
+   "hyp": "A cold, lucid indifference reigned in his soul",
+   "wer": 0,
+   "final_ms": 402,
+   "final_after_rx_ms": 326
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0012",
+   "muted": true,
+   "ref": "many if not all the elements of the pre socratic philosophy are included in the timaeus",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0013",
+   "muted": false,
+   "ref": "it is probable that the relation of the ideas to god or of god to the world was differently conceived by him at different times of his life",
+   "hyp": "It is probable that the relation of the ideas to God or of God to the world was differently conceived by him at different times of his life.",
+   "wer": 0,
+   "final_ms": 337,
+   "final_after_rx_ms": 360
+  },
+  {
+   "who": "Di",
+   "utt": "61-70968-0003",
+   "muted": false,
+   "ref": "he was like unto my father in a way and yet was not my father",
+   "hyp": "He was like unto my father in a way, and yet was not my father.",
+   "wer": 0,
+   "final_ms": -10
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0009",
+   "muted": false,
+   "ref": "hotel a place where a guest often gives up good dollars for poor quarters",
+   "hyp": "Hotel. A place where a guest often gives up good dollars for poor quarters.",
+   "wer": 0,
+   "final_ms": 340,
+   "final_after_rx_ms": 280
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0008",
+   "muted": false,
+   "ref": "the chaos in which his ardour extinguished itself was a cold indifferent knowledge of himself",
+   "hyp": "The chaos in which his ardor extinguished itself was a cold indifferent knowledge of himself",
+   "wer": 0.067,
+   "final_ms": 374,
+   "final_after_rx_ms": 298
+  },
+  {
+   "who": "Di",
+   "utt": "61-70968-0004",
+   "muted": false,
+   "ref": "also there was a stripling page who turned into a maid",
+   "hyp": "Also, there was a stripling page who turned into a maid.",
+   "wer": 0,
+   "final_ms": 22,
+   "final_after_rx_ms": -17
+  }
+ ]
+}

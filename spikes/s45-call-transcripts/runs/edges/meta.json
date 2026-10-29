@@ -1,0 +1,11 @@
+{
+ "scenario": "edges",
+ "room": "s45:edges:voice",
+ "dispatch": "api",
+ "run": "edges",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793317101140
+}

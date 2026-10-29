@@ -1,0 +1,108 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>s45 speaker</title>
+<!--
+  S45 spike: one fake person in a LiveKit room, driven by speakers.mjs.
+  It publishes a "microphone" made with WebAudio (a LibriSpeech utterance
+  played into a MediaStreamDestination at a known instant, silence
+  otherwise), mutes it the way client/src/call.ts does (track.mute()), and,
+  like every page in a call would, takes the transcriber's lk.transcription
+  text streams as captions. It also reports the participant list the way
+  call.ts builds `people` (room.remoteParticipants), to see whether the
+  agent would show up as a person.
+-->
+<body>
+  <pre id="out"></pre>
+  <script type="module">
+    import { Room, RoomEvent, Track, LocalAudioTrack } from "/lk/livekit-client.esm.mjs";
+    const q = new URLSearchParams(location.search);
+    const me = q.get("name");
+    const emit = (o) => window.s45log?.({ t: Date.now(), page: me, ...o });
+
+    let room = null;
+    let ctx = null;
+    let dest = null;
+    let mic = null;
+    const buffers = new Map();
+
+    async function buffer(wav) {
+      if (!buffers.has(wav)) {
+        const bytes = await (await fetch(`/fixtures/${wav}`)).arrayBuffer();
+        buffers.set(wav, await ctx.decodeAudioData(bytes));
+      }
+      return buffers.get(wav);
+    }
+
+    // Where the utterance's speech ends inside its file: the last 10 ms
+    // window louder than -45 dBFS (what the agent's VAD calls speech).
+    function voicedEnd(buf) {
+      const d = buf.getChannelData(0);
+      const w = Math.round(buf.sampleRate / 100);
+      for (let i = d.length - w; i >= 0; i -= w) {
+        let s = 0;
+        for (let j = 0; j < w; j++) s += d[i + j] * d[i + j];
+        if (20 * Math.log10(Math.sqrt(s / w) + 1e-12) > -45) return (i + w) / buf.sampleRate;
+      }
+      return buf.duration;
+    }
+
+    window.s45 = {
+      async join(url, token) {
+        ctx ??= new AudioContext({ sampleRate: 48000 });
+        await ctx.resume();
+        // A fresh destination each join: disconnecting stops the old track.
+        dest = ctx.createMediaStreamDestination();
+        room = new Room({ adaptiveStream: true, dynacast: true });
+        room.registerTextStreamHandler("lk.transcription", async (reader, from) => {
+          const got = Date.now();
+          const text = await reader.readAll();
+          const a = reader.info.attributes ?? {};
+          emit({ ev: "caption", got, done: Date.now(), from: from.identity, who: a["s45.identity"], track: a["lk.transcribed_track_id"], final: a["lk.transcription_final"] === "true", seg: a["lk.segment_id"], text });
+        });
+        const people = () => [...room.remoteParticipants.values()].map((p) => ({ id: p.identity, kind: p.kind, isAgent: p.isAgent }));
+        room.on(RoomEvent.ParticipantConnected, (p) => emit({ ev: "participant_connected", id: p.identity, kind: p.kind, people: people() }));
+        room.on(RoomEvent.ParticipantDisconnected, (p) => emit({ ev: "participant_disconnected", id: p.identity, people: people() }));
+        room.on(RoomEvent.Disconnected, (why) => emit({ ev: "disconnected", why }));
+        await room.connect(url, token);
+        emit({ ev: "joined", people: people() });
+        if (q.get("listen") === "1") return;
+        mic = new LocalAudioTrack(dest.stream.getAudioTracks()[0], undefined, false);
+        await room.localParticipant.publishTrack(mic, { source: Track.Source.Microphone, dtx: true, red: true });
+        emit({ ev: "published" });
+      },
+      people: () => [...(room?.remoteParticipants.values() ?? [])].map((p) => ({ id: p.identity, kind: p.kind, isAgent: p.isAgent })),
+      // Play `wav` now; resolves when it's done playing. Logs when its
+      // speech starts and ends, in this page's clock (Date.now()).
+      async say(wav, utt) {
+        const buf = await buffer(wav);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(dest);
+        const lead = 0.05;
+        const at = ctx.currentTime + lead;
+        // AudioContext time → wall clock (good to a render quantum or so).
+        const wallAt = Date.now() + (at - ctx.currentTime) * 1000;
+        src.start(at);
+        const endS = voicedEnd(buf);
+        emit({ ev: "say_start", utt, wav, at: Math.round(wallAt), muted: mic?.isMuted ?? null });
+        emit({ ev: "say_end_planned", utt, at: Math.round(wallAt + endS * 1000), dur_s: buf.duration, voiced_s: endS });
+        await new Promise((r) => (src.onended = r));
+        emit({ ev: "say_done", utt });
+      },
+      async mute() {
+        await mic.mute();
+        emit({ ev: "mute" });
+      },
+      async unmute() {
+        await mic.unmute();
+        emit({ ev: "unmute" });
+      },
+      async leave() {
+        await room.disconnect();
+        mic = null;
+        emit({ ev: "left" });
+      },
+    };
+    window.s45ready = true;
+  </script>
+</body>

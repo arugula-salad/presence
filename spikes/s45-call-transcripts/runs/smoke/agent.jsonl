@@ -1,0 +1,110 @@
+{"t":1793316368244,"ev":"config","run":"smoke","model":"deepgram/nova-3","gate":"vad","keyterms":[],"text":true,"post":"set","idle_s":15}
+{"t":1793316368244,"ev":"job","room":"s45:smoke:voice","metadata":"{\"run\":\"smoke\",\"model\":\"deepgram/nova-3\",\"gate\":\"vad\",\"keyterms\":[],\"text\":true,\"post\":\"http://127.0.0.1:38277/relay/transcript\"}","dispatch":"AD_5atKvx66zh36"}
+{"t":1793316368631,"ev":"connected","room":"s45:smoke:voice","me":"agent-AJ_ygkxWfQMTQ9F","hidden":true}
+{"t":1793316368854,"ev":"track","who":"sub_ada","name":"Ada","track":"TR_AMNRQMBwcDAz3b","model":"deepgram/nova-3","gate":"vad","keyterms":[]}
+{"t":1793316372277,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316372279,"ev":"stt_open","who":"sub_ada","session":1}
+{"t":1793316373390,"ev":"interim","who":"sub_ada","name":"Ada","text":"Also,","conf":0.7807617,"start":0,"end":1,"session":1}
+{"t":1793316373391,"ev":"text_sent","seg":"72f7ac3c","final":false,"ms":1}
+{"t":1793316373847,"ev":"frames","who":"sub_ada","framesIn":500,"framesMuted":0,"pushed_s":1.98}
+{"t":1793316374189,"ev":"interim","who":"sub_ada","name":"Ada","text":"Also, a popular","conf":1,"start":0,"end":2,"session":1}
+{"t":1793316374190,"ev":"text_sent","seg":"72f7ac3c","final":false,"ms":1}
+{"t":1793316374637,"ev":"rx_end","who":"sub_ada","at":1793316374337}
+{"t":1793316374710,"ev":"usage","who":"sub_ada","audio_s":2.799999999999998,"session":1}
+{"t":1793316374710,"ev":"final","who":"sub_ada","name":"Ada","text":"Also, a popular contrivance","conf":1,"start":0,"end":2.63,"session":1}
+{"t":1793316374711,"ev":"text_sent","seg":"72f7ac3c","final":true,"ms":1}
+{"t":1793316374720,"ev":"post_done","seg":"72f7ac3c","status":401,"ms":9}
+{"t":1793316374827,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316375617,"ev":"interim","who":"sub_ada","name":"Ada","text":"whereby love","conf":0.96435547,"start":2.63,"end":3.65,"session":1}
+{"t":1793316375618,"ev":"text_sent","seg":"5439da2f","final":false,"ms":0}
+{"t":1793316376619,"ev":"interim","who":"sub_ada","name":"Ada","text":"whereby lovemaking may be","conf":0.96435547,"start":2.63,"end":4.65,"session":1}
+{"t":1793316376619,"ev":"text_sent","seg":"5439da2f","final":false,"ms":0}
+{"t":1793316377269,"ev":"usage","who":"sub_ada","audio_s":2.5999999999999988,"session":1}
+{"t":1793316377269,"ev":"final","who":"sub_ada","name":"Ada","text":"whereby lovemaking may be suspended","conf":0.9951172,"start":2.63,"end":5.2899998,"session":1}
+{"t":1793316377269,"ev":"text_sent","seg":"5439da2f","final":true,"ms":0}
+{"t":1793316377271,"ev":"post_done","seg":"5439da2f","status":401,"ms":2}
+{"t":1793316377287,"ev":"rx_end","who":"sub_ada","at":1793316376987}
+{"t":1793316377397,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316378269,"ev":"interim","who":"sub_ada","name":"Ada","text":"but not","conf":0.99902344,"start":5.29,"end":6.3000001999999995,"session":1}
+{"t":1793316378269,"ev":"text_sent","seg":"ee9d825b","final":false,"ms":0}
+{"t":1793316378847,"ev":"frames","who":"sub_ada","framesIn":1000,"framesMuted":0,"pushed_s":6.98}
+{"t":1793316378916,"ev":"usage","who":"sub_ada","audio_s":1.6000000000000008,"session":1}
+{"t":1793316378916,"ev":"final","who":"sub_ada","name":"Ada","text":"but not stopped.","conf":0.84765625,"start":5.29,"end":6.9000001,"session":1}
+{"t":1793316378917,"ev":"text_sent","seg":"ee9d825b","final":true,"ms":1}
+{"t":1793316378919,"ev":"post_done","seg":"ee9d825b","status":401,"ms":2}
+{"t":1793316379867,"ev":"interim","who":"sub_ada","name":"Ada","text":"During the picnic","conf":0.9995117,"start":6.9,"end":7.9,"session":1}
+{"t":1793316379868,"ev":"text_sent","seg":"6ce71e79","final":false,"ms":1}
+{"t":1793316380257,"ev":"rx_end","who":"sub_ada","at":1793316379957}
+{"t":1793316380268,"ev":"usage","who":"sub_ada","audio_s":1.4000000000000006,"session":1}
+{"t":1793316380268,"ev":"final","who":"sub_ada","name":"Ada","text":"During the picnic season.","conf":1,"start":6.9,"end":8.2799996,"session":1}
+{"t":1793316380269,"ev":"text_sent","seg":"6ce71e79","final":true,"ms":1}
+{"t":1793316380270,"ev":"post_done","seg":"6ce71e79","status":401,"ms":1}
+{"t":1793316380757,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316380856,"ev":"usage","who":"sub_ada","audio_s":0.44999999999999996,"session":1}
+{"t":1793316382637,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316382637,"ev":"stt_open","who":"sub_ada","session":2}
+{"t":1793316383709,"ev":"interim","who":"sub_ada","name":"Ada","text":"Hooray.","conf":0.9066162,"start":0,"end":1,"session":2}
+{"t":1793316383710,"ev":"text_sent","seg":"347dac6b","final":false,"ms":0}
+{"t":1793316383847,"ev":"frames","who":"sub_ada","framesIn":1500,"framesMuted":0,"pushed_s":10.5}
+{"t":1793316383873,"ev":"stt_closed","who":"sub_ada","session":1}
+{"t":1793316383877,"ev":"rx_end","who":"sub_ada","at":1793316383577}
+{"t":1793316384156,"ev":"usage","who":"sub_ada","audio_s":1.900000000000001,"session":2}
+{"t":1793316384156,"ev":"final","who":"sub_ada","name":"Ada","text":"Harang","conf":0.7426758,"start":0,"end":1.53,"session":2}
+{"t":1793316384156,"ev":"text_sent","seg":"347dac6b","final":true,"ms":0}
+{"t":1793316384158,"ev":"post_done","seg":"347dac6b","status":401,"ms":2}
+{"t":1793316384377,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316384464,"ev":"usage","who":"sub_ada","audio_s":0.2,"session":2}
+{"t":1793316384957,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316384957,"ev":"stt_open","who":"sub_ada","session":3}
+{"t":1793316386006,"ev":"interim","who":"sub_ada","name":"Ada","text":"The time","conf":0.99121094,"start":0,"end":1,"session":3}
+{"t":1793316386007,"ev":"text_sent","seg":"c7caaf75","final":false,"ms":1}
+{"t":1793316386807,"ev":"interim","who":"sub_ada","name":"Ada","text":"The tiresome product","conf":0.9980469,"start":0,"end":2,"session":3}
+{"t":1793316386808,"ev":"text_sent","seg":"c7caaf75","final":false,"ms":0}
+{"t":1793316387478,"ev":"stt_closed","who":"sub_ada","session":2}
+{"t":1793316387648,"ev":"interim","who":"sub_ada","name":"Ada","text":"The tiresome product of a tireless","conf":0.99902344,"start":0,"end":3,"session":3}
+{"t":1793316387648,"ev":"text_sent","seg":"c7caaf75","final":false,"ms":0}
+{"t":1793316388297,"ev":"rx_end","who":"sub_ada","at":1793316387997}
+{"t":1793316388300,"ev":"usage","who":"sub_ada","audio_s":3.7499999999999947,"session":3}
+{"t":1793316388300,"ev":"final","who":"sub_ada","name":"Ada","text":"The tiresome product of a tireless tongue.","conf":0.9995117,"start":0,"end":3.64,"session":3}
+{"t":1793316388301,"ev":"text_sent","seg":"c7caaf75","final":true,"ms":1}
+{"t":1793316388303,"ev":"post_done","seg":"c7caaf75","status":401,"ms":2}
+{"t":1793316388797,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316388847,"ev":"frames","who":"sub_ada","framesIn":2000,"framesMuted":0,"pushed_s":15.26}
+{"t":1793316388897,"ev":"usage","who":"sub_ada","audio_s":0.44999999999999996,"session":3}
+{"t":1793316390487,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316390487,"ev":"stt_open","who":"sub_ada","session":4}
+{"t":1793316391347,"ev":"interim","who":"sub_ada","name":"Ada","text":"Angle.","conf":0.8885091,"start":0,"end":1,"session":4}
+{"t":1793316391348,"ev":"text_sent","seg":"d49e1e90","final":false,"ms":1}
+{"t":1793316391507,"ev":"rx_end","who":"sub_ada","at":1793316391207}
+{"t":1793316391636,"ev":"usage","who":"sub_ada","audio_s":1.5500000000000007,"session":4}
+{"t":1793316391636,"ev":"final","who":"sub_ada","name":"Ada","text":"Angor.","conf":0.7098796,"start":0,"end":1.31,"session":4}
+{"t":1793316391636,"ev":"text_sent","seg":"d49e1e90","final":true,"ms":0}
+{"t":1793316391638,"ev":"post_done","seg":"d49e1e90","status":401,"ms":1}
+{"t":1793316391667,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316391911,"ev":"stt_closed","who":"sub_ada","session":3}
+{"t":1793316392466,"ev":"interim","who":"sub_ada","name":"Ada","text":"Pain,","conf":0.9567871,"start":1.31,"end":2.35,"session":4}
+{"t":1793316392466,"ev":"text_sent","seg":"3dfb0f8e","final":false,"ms":0}
+{"t":1793316392584,"ev":"usage","who":"sub_ada","audio_s":0.9500000000000003,"session":4}
+{"t":1793316392584,"ev":"final","who":"sub_ada","name":"Ada","text":"Pain,","conf":0.9604492,"start":1.31,"end":2.4400001,"session":4}
+{"t":1793316392584,"ev":"text_sent","seg":"3dfb0f8e","final":true,"ms":0}
+{"t":1793316392586,"ev":"post_done","seg":"3dfb0f8e","status":401,"ms":2}
+{"t":1793316392647,"ev":"rx_end","who":"sub_ada","at":1793316392347}
+{"t":1793316393147,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316393584,"ev":"interim","who":"sub_ada","name":"Ada","text":"painful,","conf":0.6954346,"start":2.44,"end":3.45,"session":4}
+{"t":1793316393584,"ev":"text_sent","seg":"92cfda6f","final":false,"ms":0}
+{"t":1793316393847,"ev":"frames","who":"sub_ada","framesIn":2500,"framesMuted":0,"pushed_s":19.03}
+{"t":1793316394613,"ev":"interim","who":"sub_ada","name":"Ada","text":"painful to hear.","conf":0.99902344,"start":2.44,"end":4.4499998000000005,"session":4}
+{"t":1793316394614,"ev":"text_sent","seg":"92cfda6f","final":false,"ms":1}
+{"t":1793316394721,"ev":"usage","who":"sub_ada","audio_s":2.1000000000000005,"session":4}
+{"t":1793316394721,"ev":"final","who":"sub_ada","name":"Ada","text":"painful to hear.","conf":0.99902344,"start":2.44,"end":4.52,"session":4}
+{"t":1793316394722,"ev":"text_sent","seg":"92cfda6f","final":true,"ms":1}
+{"t":1793316394724,"ev":"post_done","seg":"92cfda6f","status":401,"ms":2}
+{"t":1793316394727,"ev":"rx_end","who":"sub_ada","at":1793316394427}
+{"t":1793316395227,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316395337,"ev":"usage","who":"sub_ada","audio_s":0.49999999999999994,"session":4}
+{"t":1793316398351,"ev":"stt_closed","who":"sub_ada","session":4}
+{"t":1793316398847,"ev":"frames","who":"sub_ada","framesIn":3000,"framesMuted":0,"pushed_s":20.4}
+{"t":1793316399425,"ev":"track_done","who":"sub_ada","framesIn":3057,"framesMuted":0,"pushed_s":20.4,"sessions":4}
+{"t":1793316414635,"ev":"leaving_empty","after_s":15}
+{"t":1793316414641,"ev":"disconnected","why":1}
+{"t":1793316414642,"ev":"shutdown"}

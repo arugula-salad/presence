@@ -1,0 +1,57 @@
+{"t":1793317269178,"page":"Ada","ev":"join_call"}
+{"t":1793317269432,"page":"Ada","ev":"joined","people":[]}
+{"t":1793317269488,"page":"Ada","ev":"published"}
+{"t":1793317270003,"ev":"dispatch","via":"api","result":{"status":200,"body":{"agent_name":"s45-transcriber","attributes":{},"deployment":"","id":"AD_sFC8jwfVqzA5","metadata":"{\"run\":\"muted-mute\",\"model\":\"deepgram/nova-3\",\"gate\":\"mute\",\"keyterms\":[],\"text\":true}","restart_policy":"JRP_ON_FAILURE","room":"s45:muted-mute:voice","state":{"created_at":"1793317269978605928","deleted_at":"0","jobs":[]}},"ms":190}}
+{"t":1793317274012,"page":"Ada","ev":"say_start","utt":"121-121726-0000","wav":"121-121726-0000.wav","at":1793317274061,"muted":false}
+{"t":1793317274012,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0000","at":1793317281971,"dur_s":8.46,"voiced_s":7.91}
+{"t":1793317275150,"page":"Ada","ev":"caption","got":1793317275149,"done":1793317275150,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"4380a902","text":"Also,"}
+{"t":1793317276180,"page":"Ada","ev":"caption","got":1793317276179,"done":1793317276180,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"4380a902","text":"Also, a popular"}
+{"t":1793317276751,"page":"Ada","ev":"caption","got":1793317276751,"done":1793317276751,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":true,"seg":"4380a902","text":"Also, a popular contrivance"}
+{"t":1793317277701,"page":"Ada","ev":"caption","got":1793317277701,"done":1793317277701,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"436f75c7","text":"whereby love"}
+{"t":1793317278707,"page":"Ada","ev":"caption","got":1793317278707,"done":1793317278707,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"436f75c7","text":"whereby lovemaking may be"}
+{"t":1793317279413,"page":"Ada","ev":"caption","got":1793317279413,"done":1793317279413,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":true,"seg":"436f75c7","text":"whereby lovemaking may be suspended"}
+{"t":1793317280412,"page":"Ada","ev":"caption","got":1793317280412,"done":1793317280412,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"c98762f3","text":"but not"}
+{"t":1793317281010,"page":"Ada","ev":"caption","got":1793317281009,"done":1793317281010,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":true,"seg":"c98762f3","text":"but not stopped."}
+{"t":1793317282006,"page":"Ada","ev":"caption","got":1793317282006,"done":1793317282006,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"aeb33f8a","text":"During the picnic"}
+{"t":1793317282417,"page":"Ada","ev":"caption","got":1793317282417,"done":1793317282417,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":true,"seg":"aeb33f8a","text":"During the picnic season."}
+{"t":1793317282521,"page":"Ada","ev":"say_done","utt":"121-121726-0000"}
+{"t":1793317284024,"page":"Ada","ev":"mute"}
+{"t":1793317284025,"page":"Ada","ev":"note","note":"muted for 40 s, talking"}
+{"t":1793317284031,"page":"Ada","ev":"say_start","utt":"121-121726-0001","wav":"121-121726-0001.wav","at":1793317284081,"muted":true}
+{"t":1793317284031,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0001","at":1793317289696,"dur_s":5.925,"voiced_s":5.615}
+{"t":1793317290009,"page":"Ada","ev":"say_done","utt":"121-121726-0001"}
+{"t":1793317290016,"page":"Ada","ev":"say_start","utt":"121-121726-0002","wav":"121-121726-0002.wav","at":1793317290066,"muted":true}
+{"t":1793317290016,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0002","at":1793317293916,"dur_s":4.41,"voiced_s":3.85}
+{"t":1793317294479,"page":"Ada","ev":"say_done","utt":"121-121726-0002"}
+{"t":1793317294485,"page":"Ada","ev":"say_start","utt":"121-121726-0003","wav":"121-121726-0003.wav","at":1793317294535,"muted":true}
+{"t":1793317294485,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0003","at":1793317300920,"dur_s":6.755,"voiced_s":6.385}
+{"t":1793317301284,"page":"Ada","ev":"say_done","utt":"121-121726-0003"}
+{"t":1793317301291,"page":"Ada","ev":"say_start","utt":"121-121726-0004","wav":"121-121726-0004.wav","at":1793317301340,"muted":true}
+{"t":1793317301291,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0004","at":1793317304790,"dur_s":4.02,"voiced_s":3.45}
+{"t":1793317305358,"page":"Ada","ev":"say_done","utt":"121-121726-0004"}
+{"t":1793317305365,"page":"Ada","ev":"say_start","utt":"121-121726-0006","wav":"121-121726-0006.wav","at":1793317305415,"muted":true}
+{"t":1793317305365,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0006","at":1793317309050,"dur_s":3.895,"voiced_s":3.635}
+{"t":1793317309305,"page":"Ada","ev":"say_done","utt":"121-121726-0006"}
+{"t":1793317309312,"page":"Ada","ev":"say_start","utt":"121-121726-0007","wav":"121-121726-0007.wav","at":1793317309362,"muted":true}
+{"t":1793317309312,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0007","at":1793317315522,"dur_s":6.73,"voiced_s":6.16}
+{"t":1793317316089,"page":"Ada","ev":"say_done","utt":"121-121726-0007"}
+{"t":1793317316097,"page":"Ada","ev":"say_start","utt":"121-121726-0008","wav":"121-121726-0008.wav","at":1793317316146,"muted":true}
+{"t":1793317316097,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0008","at":1793317320556,"dur_s":4.99,"voiced_s":4.41}
+{"t":1793317321135,"page":"Ada","ev":"say_done","utt":"121-121726-0008"}
+{"t":1793317321143,"page":"Ada","ev":"say_start","utt":"121-121726-0009","wav":"121-121726-0009.wav","at":1793317321193,"muted":true}
+{"t":1793317321143,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0009","at":1793317327893,"dur_s":7.26,"voiced_s":6.7}
+{"t":1793317328452,"page":"Ada","ev":"say_done","utt":"121-121726-0009"}
+{"t":1793317328454,"page":"Ada","ev":"unmute"}
+{"t":1793317328957,"page":"Ada","ev":"say_start","utt":"121-121726-0003","wav":"121-121726-0003.wav","at":1793317329007,"muted":false}
+{"t":1793317328957,"page":"Ada","ev":"say_end_planned","utt":"121-121726-0003","at":1793317335392,"dur_s":6.755,"voiced_s":6.385}
+{"t":1793317330789,"page":"Ada","ev":"caption","got":1793317330789,"done":1793317330789,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"0edbc3f5","text":"Hay fever."}
+{"t":1793317331037,"page":"Ada","ev":"caption","got":1793317331037,"done":1793317331037,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":true,"seg":"0edbc3f5","text":"Hay fever."}
+{"t":1793317333034,"page":"Ada","ev":"caption","got":1793317333034,"done":1793317333034,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"1409397d","text":"A heart trouble"}
+{"t":1793317334030,"page":"Ada","ev":"caption","got":1793317334030,"done":1793317334030,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"1409397d","text":"A heart trouble caused by falling in"}
+{"t":1793317335046,"page":"Ada","ev":"caption","got":1793317335046,"done":1793317335046,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":false,"seg":"1409397d","text":"A heart trouble caused by falling in love with a grass"}
+{"t":1793317335758,"page":"Ada","ev":"say_done","utt":"121-121726-0003"}
+{"t":1793317335792,"page":"Ada","ev":"caption","got":1793317335791,"done":1793317335792,"from":"","who":"sub_ada","track":"TR_AMw9u43WouFgCt","final":true,"seg":"1409397d","text":"A heart trouble caused by falling in love with a grass widow."}
+{"t":1793317341262,"page":"Ada","ev":"people_end","people":[]}
+{"t":1793317341285,"page":"Ada","ev":"disconnected","why":1}
+{"t":1793317341285,"page":"Ada","ev":"left"}
+{"t":1793317341301,"ev":"end"}

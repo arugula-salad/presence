@@ -1,0 +1,14 @@
+{
+  "name": "s45-call-transcripts-spike",
+  "private": true,
+  "type": "module",
+  "description": "S45 throwaway spike: a LiveKit transcriber agent and the scripts that measured it. Not product code.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@livekit/agents": "1.9.5",
+    "@livekit/rtc-node": "^1.2.1",
+    "livekit-client": "2.23.0",
+    "livekit-server-sdk": "^2.19.2",
+    "playwright": "1.63.0"
+  }
+}

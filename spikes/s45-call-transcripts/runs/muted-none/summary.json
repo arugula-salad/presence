@@ -1,0 +1,158 @@
+{
+ "run": "muted-none",
+ "meta": {
+  "scenario": "muted",
+  "room": "s45:muted-none:voice",
+  "dispatch": "api",
+  "run": "muted-none",
+  "model": "deepgram/nova-3",
+  "gate": "none",
+  "keyterms": [],
+  "text": true,
+  "started": 1793317196367
+ },
+ "wer": 0.0968,
+ "ref_words": 31,
+ "attribution": {
+  "ok": 6,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 2,
+   "p50": 426,
+   "p90": 426,
+   "max": 426,
+   "mean": 401
+  },
+  "final_after_speech_reached_agent": {
+   "n": 2,
+   "p50": 354,
+   "p90": 354,
+   "max": 354,
+   "mean": 338
+  },
+  "first_interim_after_speech_start": {
+   "n": 2,
+   "p50": 1592,
+   "p90": 1592,
+   "max": 1592,
+   "mean": 1312
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 0
+  },
+  "relay_http_after_speech_end": {
+   "n": 0
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Ada",
+    "track_s": 70.3,
+    "muted_frames_s": 44.4,
+    "pushed_s": 70.27,
+    "usage_s": 70.2,
+    "sessions": 1
+   }
+  ],
+  "stt_s": 70.2,
+  "track_s": 70.3,
+  "speech_s": 14.3,
+  "gated_fraction": 0.999
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": null,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0000",
+   "muted": false,
+   "ref": "also a popular contrivance whereby love making may be suspended but not stopped during the picnic season",
+   "hyp": "Also, a popular condrivance whereby lovemaking may be suspended but not stopped. During the picnic season.",
+   "wer": 0.176,
+   "final_ms": 376,
+   "final_after_rx_ms": 322
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0001",
+   "muted": true,
+   "ref": "harangue the tiresome product of a tireless tongue",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0002",
+   "muted": true,
+   "ref": "angor pain painful to hear",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0003",
+   "muted": true,
+   "ref": "hay fever a heart trouble caused by falling in love with a grass widow",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0004",
+   "muted": true,
+   "ref": "heaven a good place to be raised to",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0006",
+   "muted": true,
+   "ref": "heredity the cause of all our faults",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0007",
+   "muted": true,
+   "ref": "horse sense a degree of wisdom that keeps one from betting on the races",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0008",
+   "muted": true,
+   "ref": "hose man's excuse for wetting the walk",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0009",
+   "muted": true,
+   "ref": "hotel a place where a guest often gives up good dollars for poor quarters",
+   "hyp": "",
+   "wer": 1
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0003",
+   "muted": false,
+   "ref": "hay fever a heart trouble caused by falling in love with a grass widow",
+   "hyp": "Hay fever. A heart trouble caused by falling in love with a grass widow.",
+   "wer": 0,
+   "final_ms": 426,
+   "final_after_rx_ms": 354
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "scenario": "short",
+ "room": "s45:short-cartesia:voice",
+ "dispatch": "api",
+ "run": "short-cartesia",
+ "model": "cartesia/ink-whisper",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793317875587
+}

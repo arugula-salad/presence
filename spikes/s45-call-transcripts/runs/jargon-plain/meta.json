@@ -1,0 +1,11 @@
+{
+ "scenario": "jargon",
+ "room": "s45:jargon-plain:voice",
+ "dispatch": "api",
+ "run": "jargon-plain",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793316958114
+}
