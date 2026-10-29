@@ -48,5 +48,7 @@ primary_region = "iad"
   path = "/metrics"
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  # shared-cpu-1x (512 MB) throttled under the load probe; two of these
+  # until the probe says otherwise (ops/README.md).
+  size = "shared-cpu-2x"
+  memory = "1gb"
