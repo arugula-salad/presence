@@ -74,7 +74,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: */pnpm-lock.yaml
+          cache-dependency-path: "*/pnpm-lock.yaml"
       # Each package has its own lockfile (no workspace); they link each
       # other (link:../core), so core and client install first.
       - name: Install
