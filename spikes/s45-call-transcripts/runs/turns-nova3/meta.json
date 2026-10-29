@@ -1,0 +1,11 @@
+{
+ "scenario": "turns",
+ "room": "s45:turns-nova3:voice",
+ "dispatch": "api",
+ "run": "turns-nova3",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793316495046
+}

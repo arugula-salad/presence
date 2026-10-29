@@ -1,0 +1,12 @@
+{
+ "scenario": "presence",
+ "room": "s45:empty-room:voice",
+ "dispatch": "api",
+ "run": "empty-room",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "idle_s": 600,
+ "started": 1793317402823
+}

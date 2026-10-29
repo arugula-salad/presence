@@ -1,0 +1,11 @@
+{
+ "scenario": "muted",
+ "room": "s45:muted-none:voice",
+ "dispatch": "api",
+ "run": "muted-none",
+ "model": "deepgram/nova-3",
+ "gate": "none",
+ "keyterms": [],
+ "text": true,
+ "started": 1793317196367
+}

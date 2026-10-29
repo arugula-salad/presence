@@ -1,0 +1,176 @@
+{
+ "run": "jargon-keyterms",
+ "meta": {
+  "scenario": "jargon",
+  "room": "s45:jargon-keyterms:voice",
+  "dispatch": "api",
+  "run": "jargon-keyterms",
+  "model": "deepgram/nova-3",
+  "gate": "vad",
+  "keyterms": [
+   "Timaeus",
+   "Neoplatonists",
+   "pre-Socratic",
+   "Fitzooth",
+   "harangue",
+   "angor",
+   "mummeries",
+   "Ada",
+   "Bo",
+   "Cy",
+   "Di"
+  ],
+  "text": true,
+  "started": 1793317024114
+ },
+ "wer": 0.0417,
+ "ref_words": 96,
+ "attribution": {
+  "ok": 11,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 7,
+   "p50": 283,
+   "p90": 402,
+   "max": 402,
+   "mean": 266
+  },
+  "final_after_speech_reached_agent": {
+   "n": 7,
+   "p50": 240,
+   "p90": 333,
+   "max": 333,
+   "mean": 222
+  },
+  "first_interim_after_speech_start": {
+   "n": 7,
+   "p50": 1522,
+   "p90": 1728,
+   "max": 1728,
+   "mean": 1343
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 14,
+   "p50": 300,
+   "p90": 420,
+   "max": 422,
+   "mean": 284
+  },
+  "relay_http_after_speech_end": {
+   "n": 0
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Ada",
+    "track_s": 63.3,
+    "muted_frames_s": 0,
+    "pushed_s": 10.93,
+    "usage_s": 10.8,
+    "sessions": 3
+   },
+   {
+    "who": "Cy",
+    "track_s": 63.3,
+    "muted_frames_s": 0,
+    "pushed_s": 23.87,
+    "usage_s": 23.8,
+    "sessions": 3
+   },
+   {
+    "who": "Di",
+    "track_s": 63.3,
+    "muted_frames_s": 0,
+    "pushed_s": 12.26,
+    "usage_s": 12.2,
+    "sessions": 2
+   }
+  ],
+  "stt_s": 46.8,
+  "track_s": 189.9,
+  "speech_s": 41.5,
+  "gated_fraction": 0.247
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": null,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0001",
+   "muted": false,
+   "ref": "harangue the tiresome product of a tireless tongue",
+   "hyp": "Harangue The tiresome product of a tireless tongue.",
+   "wer": 0,
+   "final_ms": 402,
+   "final_after_rx_ms": 326
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0001",
+   "muted": false,
+   "ref": "the influence with the timaeus has exercised upon posterity is due partly to a misunderstanding",
+   "hyp": "The influence which the Timaeus has exercised upon posterity is due partly to a misunderstanding.",
+   "wer": 0.067,
+   "final_ms": 309,
+   "final_after_rx_ms": 241
+  },
+  {
+   "who": "Di",
+   "utt": "61-70968-0001",
+   "muted": false,
+   "ref": "give not so earnest a mind to these mummeries child",
+   "hyp": "Give not so earnest a mind to these mummeries, child.",
+   "wer": 0,
+   "final_ms": 234,
+   "final_after_rx_ms": 167
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0002",
+   "muted": false,
+   "ref": "angor pain painful to hear",
+   "hyp": "Angor pain, painful to hear.",
+   "wer": 0,
+   "final_ms": 283,
+   "final_after_rx_ms": 240
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0004",
+   "muted": false,
+   "ref": "there is no danger of the modern commentators on the timaeus falling into the absurdities of the neo platonists",
+   "hyp": "There is no danger of the modern commentators on the Timaeus falling into the absurdities of the Neoplatonists.",
+   "wer": 0.105,
+   "final_ms": 274,
+   "final_after_rx_ms": 234
+  },
+  {
+   "who": "Di",
+   "utt": "61-70968-0011",
+   "muted": false,
+   "ref": "he gave way to the others very readily and retreated unperceived by the squire and mistress fitzooth to the rear of the tent",
+   "hyp": "He gave way to the others very readily and retreated unperceived by the squire in mistress Fitzooth to the rear of the tent.",
+   "wer": 0.043,
+   "final_ms": -6,
+   "final_after_rx_ms": 10
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0012",
+   "muted": false,
+   "ref": "many if not all the elements of the pre socratic philosophy are included in the timaeus",
+   "hyp": "Many, if not all the elements of the pre Socratic philosophy are included in the Timaeus.",
+   "wer": 0,
+   "final_ms": 364,
+   "final_after_rx_ms": 333
+  }
+ ]
+}

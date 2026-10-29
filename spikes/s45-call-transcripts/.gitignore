@@ -1,0 +1,8 @@
+node_modules/
+fixtures/
+runs/*/audio/
+*.wav
+*.flac
+runs/*.log
+runs/*.pid
+runs/mem-check/

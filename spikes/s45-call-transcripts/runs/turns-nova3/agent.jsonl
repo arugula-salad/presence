@@ -1,0 +1,602 @@
+{"t":1793316496380,"ev":"config","run":"turns-nova3","model":"deepgram/nova-3","gate":"vad","keyterms":[],"text":true,"post":"set","idle_s":15}
+{"t":1793316496380,"ev":"job","room":"s45:turns-nova3:voice","metadata":"{\"run\":\"turns-nova3\",\"model\":\"deepgram/nova-3\",\"gate\":\"vad\",\"keyterms\":[],\"text\":true,\"post\":\"http://127.0.0.1:40967/relay/transcript\"}","dispatch":"AD_TfKh8WP5kuTW"}
+{"t":1793316496785,"ev":"connected","room":"s45:turns-nova3:voice","me":"agent-AJ_wk78fb3Xt47t","hidden":true}
+{"t":1793316497010,"ev":"track","who":"sub_cy","name":"Cy","track":"TR_AMFFXDuXXsF7tS","model":"deepgram/nova-3","gate":"vad","keyterms":[]}
+{"t":1793316497012,"ev":"track","who":"sub_bo","name":"Bo","track":"TR_AM4V8xrMCYBxp4","model":"deepgram/nova-3","gate":"vad","keyterms":[]}
+{"t":1793316497012,"ev":"track","who":"sub_ada","name":"Ada","track":"TR_AMtX5UDt9gEYzP","model":"deepgram/nova-3","gate":"vad","keyterms":[]}
+{"t":1793316502003,"ev":"frames","who":"sub_ada","framesIn":500,"framesMuted":0,"pushed_s":0}
+{"t":1793316502003,"ev":"frames","who":"sub_bo","framesIn":500,"framesMuted":0,"pushed_s":0}
+{"t":1793316502003,"ev":"frames","who":"sub_cy","framesIn":500,"framesMuted":0,"pushed_s":0}
+{"t":1793316502083,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316502085,"ev":"stt_open","who":"sub_ada","session":1}
+{"t":1793316503138,"ev":"interim","who":"sub_ada","name":"Ada","text":"Also,","conf":0.85424805,"start":0,"end":1,"session":1}
+{"t":1793316503140,"ev":"text_sent","seg":"e20084d2","final":false,"ms":2}
+{"t":1793316503937,"ev":"interim","who":"sub_ada","name":"Ada","text":"Also, a popular","conf":1,"start":0,"end":2,"session":1}
+{"t":1793316503938,"ev":"text_sent","seg":"e20084d2","final":false,"ms":1}
+{"t":1793316504443,"ev":"rx_end","who":"sub_ada","at":1793316504143}
+{"t":1793316504461,"ev":"usage","who":"sub_ada","audio_s":2.7499999999999982,"session":1}
+{"t":1793316504461,"ev":"final","who":"sub_ada","name":"Ada","text":"Also, a popular condrivance","conf":1,"start":0,"end":2.62,"session":1}
+{"t":1793316504461,"ev":"text_sent","seg":"e20084d2","final":true,"ms":0}
+{"t":1793316504471,"ev":"post_done","seg":"e20084d2","status":204,"ms":9}
+{"t":1793316504633,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316505417,"ev":"interim","who":"sub_ada","name":"Ada","text":"whereby love","conf":0.9707031,"start":2.62,"end":3.6500002,"session":1}
+{"t":1793316505418,"ev":"text_sent","seg":"ea1a50b0","final":false,"ms":0}
+{"t":1793316506423,"ev":"interim","who":"sub_ada","name":"Ada","text":"whereby lovemaking may be a","conf":0.95166016,"start":2.62,"end":4.6500002,"session":1}
+{"t":1793316506424,"ev":"text_sent","seg":"ea1a50b0","final":false,"ms":1}
+{"t":1793316507003,"ev":"frames","who":"sub_ada","framesIn":1000,"framesMuted":0,"pushed_s":5.33}
+{"t":1793316507003,"ev":"frames","who":"sub_bo","framesIn":1000,"framesMuted":0,"pushed_s":0}
+{"t":1793316507003,"ev":"frames","who":"sub_cy","framesIn":1000,"framesMuted":0,"pushed_s":0}
+{"t":1793316507063,"ev":"rx_end","who":"sub_ada","at":1793316506763}
+{"t":1793316507075,"ev":"usage","who":"sub_ada","audio_s":2.6499999999999986,"session":1}
+{"t":1793316507075,"ev":"final","who":"sub_ada","name":"Ada","text":"whereby lovemaking may be suspended","conf":0.9941406,"start":2.62,"end":5.27,"session":1}
+{"t":1793316507075,"ev":"text_sent","seg":"ea1a50b0","final":true,"ms":0}
+{"t":1793316507078,"ev":"post_done","seg":"ea1a50b0","status":204,"ms":2}
+{"t":1793316507183,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316508073,"ev":"interim","who":"sub_ada","name":"Ada","text":"but not","conf":1,"start":5.27,"end":6.3000001999999995,"session":1}
+{"t":1793316508074,"ev":"text_sent","seg":"19ffe91a","final":false,"ms":1}
+{"t":1793316508673,"ev":"usage","who":"sub_ada","audio_s":1.5500000000000007,"session":1}
+{"t":1793316508673,"ev":"final","who":"sub_ada","name":"Ada","text":"but not stopped.","conf":0.84716797,"start":5.27,"end":6.849999899999999,"session":1}
+{"t":1793316508673,"ev":"text_sent","seg":"19ffe91a","final":true,"ms":0}
+{"t":1793316508675,"ev":"post_done","seg":"19ffe91a","status":204,"ms":1}
+{"t":1793316509624,"ev":"interim","who":"sub_ada","name":"Ada","text":"During the picnic","conf":0.99902344,"start":6.85,"end":7.85,"session":1}
+{"t":1793316509625,"ev":"text_sent","seg":"5d43afbe","final":false,"ms":1}
+{"t":1793316510093,"ev":"rx_end","who":"sub_ada","at":1793316509793}
+{"t":1793316510123,"ev":"usage","who":"sub_ada","audio_s":1.4500000000000006,"session":1}
+{"t":1793316510123,"ev":"final","who":"sub_ada","name":"Ada","text":"During the picnic season.","conf":1,"start":6.85,"end":8.3100005,"session":1}
+{"t":1793316510124,"ev":"text_sent","seg":"5d43afbe","final":true,"ms":1}
+{"t":1793316510125,"ev":"post_done","seg":"5d43afbe","status":204,"ms":1}
+{"t":1793316510593,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316510695,"ev":"usage","who":"sub_ada","audio_s":0.49999999999999994,"session":1}
+{"t":1793316512003,"ev":"frames","who":"sub_ada","framesIn":1500,"framesMuted":0,"pushed_s":8.91}
+{"t":1793316512003,"ev":"frames","who":"sub_cy","framesIn":1500,"framesMuted":0,"pushed_s":0}
+{"t":1793316512003,"ev":"frames","who":"sub_bo","framesIn":1500,"framesMuted":0,"pushed_s":0}
+{"t":1793316512433,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316512434,"ev":"stt_open","who":"sub_bo","session":1}
+{"t":1793316513492,"ev":"interim","who":"sub_bo","name":"Bo","text":"He hoped there","conf":0.99902344,"start":0,"end":1,"session":1}
+{"t":1793316513493,"ev":"text_sent","seg":"ab6b3910","final":false,"ms":1}
+{"t":1793316513711,"ev":"stt_closed","who":"sub_ada","session":1}
+{"t":1793316514297,"ev":"interim","who":"sub_bo","name":"Bo","text":"He hoped there would be stew for dinner","conf":1,"start":0,"end":2,"session":1}
+{"t":1793316514297,"ev":"text_sent","seg":"ab6b3910","final":false,"ms":0}
+{"t":1793316515126,"ev":"interim","who":"sub_bo","name":"Bo","text":"He hoped there would be stew for dinner, turnips, and","conf":1,"start":0,"end":3,"session":1}
+{"t":1793316515126,"ev":"text_sent","seg":"ab6b3910","final":false,"ms":0}
+{"t":1793316516127,"ev":"interim","who":"sub_bo","name":"Bo","text":"He hoped there would be stew for dinner, turnips and carrots and brew","conf":0.9995117,"start":0,"end":4,"session":1}
+{"t":1793316516128,"ev":"text_sent","seg":"ab6b3910","final":false,"ms":1}
+{"t":1793316517003,"ev":"frames","who":"sub_ada","framesIn":2000,"framesMuted":0,"pushed_s":8.91}
+{"t":1793316517003,"ev":"frames","who":"sub_bo","framesIn":2000,"framesMuted":0,"pushed_s":4.98}
+{"t":1793316517003,"ev":"frames","who":"sub_cy","framesIn":2000,"framesMuted":0,"pushed_s":0}
+{"t":1793316517148,"ev":"usage","who":"sub_bo","audio_s":5.09999999999999,"session":1}
+{"t":1793316517148,"ev":"final","who":"sub_bo","name":"Bo","text":"He hoped there would be stew for dinner, turnips and carrots and brewed","conf":0.99902344,"start":0,"end":4.04,"session":1}
+{"t":1793316517148,"ev":"text_sent","seg":"ab6b3910","final":true,"ms":0}
+{"t":1793316517151,"ev":"post_done","seg":"ab6b3910","status":204,"ms":2}
+{"t":1793316517179,"ev":"interim","who":"sub_bo","name":"Bo","text":"potatoes and","conf":1,"start":4.04,"end":5.0500001999999995,"session":1}
+{"t":1793316517179,"ev":"text_sent","seg":"50984913","final":false,"ms":0}
+{"t":1793316518179,"ev":"interim","who":"sub_bo","name":"Bo","text":"potatoes and fat mutton","conf":0.99902344,"start":4.04,"end":6.0500001999999995,"session":1}
+{"t":1793316518180,"ev":"text_sent","seg":"50984913","final":false,"ms":1}
+{"t":1793316519183,"ev":"interim","who":"sub_bo","name":"Bo","text":"potatoes and fat mutton pieces to be ladled","conf":0.99902344,"start":4.04,"end":7.0500001999999995,"session":1}
+{"t":1793316519184,"ev":"text_sent","seg":"50984913","final":false,"ms":1}
+{"t":1793316520187,"ev":"interim","who":"sub_bo","name":"Bo","text":"potatoes and fat mutton pieces to be ladled out in thick","conf":0.99902344,"start":4.04,"end":8.05,"session":1}
+{"t":1793316520188,"ev":"text_sent","seg":"50984913","final":false,"ms":1}
+{"t":1793316521190,"ev":"usage","who":"sub_bo","audio_s":4.049999999999994,"session":1}
+{"t":1793316521190,"ev":"final","who":"sub_bo","name":"Bo","text":"potatoes and fat mutton pieces to be ladled out in","conf":0.99902344,"start":4.04,"end":7.5700002,"session":1}
+{"t":1793316521191,"ev":"text_sent","seg":"50984913","final":true,"ms":0}
+{"t":1793316521193,"ev":"post_done","seg":"50984913","status":204,"ms":2}
+{"t":1793316521204,"ev":"interim","who":"sub_bo","name":"Bo","text":"thick peppered flour","conf":0.8307292,"start":7.57,"end":9.05,"session":1}
+{"t":1793316521205,"ev":"text_sent","seg":"22a3e2c7","final":false,"ms":1}
+{"t":1793316522003,"ev":"frames","who":"sub_ada","framesIn":2500,"framesMuted":0,"pushed_s":8.91}
+{"t":1793316522003,"ev":"frames","who":"sub_bo","framesIn":2500,"framesMuted":0,"pushed_s":9.98}
+{"t":1793316522003,"ev":"frames","who":"sub_cy","framesIn":2500,"framesMuted":0,"pushed_s":0}
+{"t":1793316522186,"ev":"interim","who":"sub_bo","name":"Bo","text":"thick peppered flour fattened sauce,","conf":0.8383789,"start":7.57,"end":10.05,"session":1}
+{"t":1793316522186,"ev":"text_sent","seg":"22a3e2c7","final":false,"ms":0}
+{"t":1793316522203,"ev":"rx_end","who":"sub_bo","at":1793316521903}
+{"t":1793316522532,"ev":"usage","who":"sub_bo","audio_s":1.3500000000000005,"session":1}
+{"t":1793316522532,"ev":"final","who":"sub_bo","name":"Bo","text":"thick peppered flour fattened sauce.","conf":0.8414714,"start":7.57,"end":10.38,"session":1}
+{"t":1793316522533,"ev":"text_sent","seg":"22a3e2c7","final":true,"ms":1}
+{"t":1793316522535,"ev":"post_done","seg":"22a3e2c7","status":204,"ms":2}
+{"t":1793316522703,"ev":"stt_end_input","who":"sub_bo"}
+{"t":1793316522805,"ev":"usage","who":"sub_bo","audio_s":0.15000000000000002,"session":1}
+{"t":1793316524433,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316524433,"ev":"stt_open","who":"sub_cy","session":1}
+{"t":1793316525497,"ev":"interim","who":"sub_cy","name":"Cy","text":"The influence","conf":0.9716797,"start":0,"end":1,"session":1}
+{"t":1793316525498,"ev":"text_sent","seg":"cd2b608e","final":false,"ms":1}
+{"t":1793316525820,"ev":"stt_closed","who":"sub_bo","session":1}
+{"t":1793316526297,"ev":"interim","who":"sub_cy","name":"Cy","text":"The influence which the team","conf":0.98095703,"start":0,"end":2,"session":1}
+{"t":1793316526297,"ev":"text_sent","seg":"cd2b608e","final":false,"ms":0}
+{"t":1793316527003,"ev":"frames","who":"sub_ada","framesIn":3000,"framesMuted":0,"pushed_s":8.91}
+{"t":1793316527003,"ev":"frames","who":"sub_bo","framesIn":3000,"framesMuted":0,"pushed_s":10.67}
+{"t":1793316527003,"ev":"frames","who":"sub_cy","framesIn":3000,"framesMuted":0,"pushed_s":2.98}
+{"t":1793316527127,"ev":"interim","who":"sub_cy","name":"Cy","text":"The influence which the Timaeus has","conf":0.9951172,"start":0,"end":3,"session":1}
+{"t":1793316527127,"ev":"text_sent","seg":"cd2b608e","final":false,"ms":0}
+{"t":1793316528127,"ev":"interim","who":"sub_cy","name":"Cy","text":"The influence which the Timaeus has exercised upon","conf":0.99609375,"start":0,"end":4,"session":1}
+{"t":1793316528127,"ev":"text_sent","seg":"cd2b608e","final":false,"ms":0}
+{"t":1793316529043,"ev":"rx_end","who":"sub_cy","at":1793316528743}
+{"t":1793316529081,"ev":"usage","who":"sub_cy","audio_s":5.04999999999999,"session":1}
+{"t":1793316529081,"ev":"final","who":"sub_cy","name":"Cy","text":"The influence which the Timaeus has exercised upon posterity","conf":0.9951172,"start":0,"end":4.92,"session":1}
+{"t":1793316529081,"ev":"text_sent","seg":"cd2b608e","final":true,"ms":0}
+{"t":1793316529083,"ev":"post_done","seg":"cd2b608e","status":204,"ms":2}
+{"t":1793316529303,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316530077,"ev":"interim","who":"sub_cy","name":"Cy","text":"is due","conf":0.9902344,"start":4.92,"end":5.9499997,"session":1}
+{"t":1793316530078,"ev":"text_sent","seg":"13d08a41","final":false,"ms":1}
+{"t":1793316531081,"ev":"interim","who":"sub_cy","name":"Cy","text":"is due partly to a","conf":0.9980469,"start":4.92,"end":6.949999699999999,"session":1}
+{"t":1793316531081,"ev":"text_sent","seg":"13d08a41","final":false,"ms":0}
+{"t":1793316531882,"ev":"usage","who":"sub_cy","audio_s":2.799999999999998,"session":1}
+{"t":1793316531882,"ev":"final","who":"sub_cy","name":"Cy","text":"is due partly to a misunderstanding.","conf":0.98535156,"start":4.92,"end":7.7199997,"session":1}
+{"t":1793316531883,"ev":"text_sent","seg":"13d08a41","final":true,"ms":1}
+{"t":1793316531883,"ev":"rx_end","who":"sub_cy","at":1793316531583}
+{"t":1793316531884,"ev":"post_done","seg":"13d08a41","status":204,"ms":1}
+{"t":1793316532003,"ev":"frames","who":"sub_ada","framesIn":3500,"framesMuted":0,"pushed_s":8.91}
+{"t":1793316532003,"ev":"frames","who":"sub_bo","framesIn":3500,"framesMuted":0,"pushed_s":10.67}
+{"t":1793316532003,"ev":"frames","who":"sub_cy","framesIn":3500,"framesMuted":0,"pushed_s":7.98}
+{"t":1793316532383,"ev":"stt_end_input","who":"sub_cy"}
+{"t":1793316532486,"ev":"usage","who":"sub_cy","audio_s":0.49999999999999994,"session":1}
+{"t":1793316534233,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316534233,"ev":"stt_open","who":"sub_ada","session":2}
+{"t":1793316535278,"ev":"interim","who":"sub_ada","name":"Ada","text":"Hooray.","conf":0.90441895,"start":0,"end":1,"session":2}
+{"t":1793316535279,"ev":"text_sent","seg":"02ed7387","final":false,"ms":1}
+{"t":1793316535463,"ev":"rx_end","who":"sub_ada","at":1793316535163}
+{"t":1793316535500,"ev":"stt_closed","who":"sub_cy","session":1}
+{"t":1793316535717,"ev":"usage","who":"sub_ada","audio_s":1.850000000000001,"session":2}
+{"t":1793316535717,"ev":"final","who":"sub_ada","name":"Ada","text":"Harang.","conf":0.65983075,"start":0,"end":1.52,"session":2}
+{"t":1793316535718,"ev":"text_sent","seg":"02ed7387","final":true,"ms":1}
+{"t":1793316535720,"ev":"post_done","seg":"02ed7387","status":204,"ms":2}
+{"t":1793316535963,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316536078,"ev":"usage","who":"sub_ada","audio_s":0.25,"session":2}
+{"t":1793316536533,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316536533,"ev":"stt_open","who":"sub_ada","session":3}
+{"t":1793316537003,"ev":"frames","who":"sub_ada","framesIn":4000,"framesMuted":0,"pushed_s":11.92}
+{"t":1793316537003,"ev":"frames","who":"sub_cy","framesIn":4000,"framesMuted":0,"pushed_s":8.35}
+{"t":1793316537003,"ev":"frames","who":"sub_bo","framesIn":4000,"framesMuted":0,"pushed_s":10.67}
+{"t":1793316537577,"ev":"interim","who":"sub_ada","name":"Ada","text":"The tire","conf":0.9951172,"start":0,"end":1,"session":3}
+{"t":1793316537578,"ev":"text_sent","seg":"152c2edf","final":false,"ms":1}
+{"t":1793316538383,"ev":"interim","who":"sub_ada","name":"Ada","text":"The tiresome product of","conf":0.99902344,"start":0,"end":2,"session":3}
+{"t":1793316538383,"ev":"text_sent","seg":"152c2edf","final":false,"ms":0}
+{"t":1793316539091,"ev":"stt_closed","who":"sub_ada","session":2}
+{"t":1793316539221,"ev":"interim","who":"sub_ada","name":"Ada","text":"The tiresome product of a tireless tongue","conf":0.9995117,"start":0,"end":3,"session":3}
+{"t":1793316539221,"ev":"text_sent","seg":"152c2edf","final":false,"ms":0}
+{"t":1793316539620,"ev":"usage","who":"sub_ada","audio_s":3.4499999999999957,"session":3}
+{"t":1793316539620,"ev":"final","who":"sub_ada","name":"Ada","text":"The tiresome product of a tireless tongue.","conf":0.9995117,"start":0,"end":3.38,"session":3}
+{"t":1793316539621,"ev":"text_sent","seg":"152c2edf","final":true,"ms":1}
+{"t":1793316539622,"ev":"post_done","seg":"152c2edf","status":204,"ms":1}
+{"t":1793316539623,"ev":"rx_end","who":"sub_ada","at":1793316539323}
+{"t":1793316540123,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316540217,"ev":"usage","who":"sub_ada","audio_s":0.49999999999999994,"session":3}
+{"t":1793316541493,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316541493,"ev":"stt_open","who":"sub_bo","session":2}
+{"t":1793316542003,"ev":"frames","who":"sub_ada","framesIn":4500,"framesMuted":0,"pushed_s":15.03}
+{"t":1793316542003,"ev":"frames","who":"sub_bo","framesIn":4500,"framesMuted":0,"pushed_s":11.59}
+{"t":1793316542003,"ev":"frames","who":"sub_cy","framesIn":4500,"framesMuted":0,"pushed_s":8.35}
+{"t":1793316542536,"ev":"interim","who":"sub_bo","name":"Bo","text":"After early","conf":0.9980469,"start":0,"end":1,"session":2}
+{"t":1793316542536,"ev":"text_sent","seg":"715b50a4","final":false,"ms":0}
+{"t":1793316543231,"ev":"stt_closed","who":"sub_ada","session":3}
+{"t":1793316543340,"ev":"interim","who":"sub_bo","name":"Bo","text":"After early nightfall, the","conf":1,"start":0,"end":2,"session":2}
+{"t":1793316543340,"ev":"text_sent","seg":"715b50a4","final":false,"ms":0}
+{"t":1793316544197,"ev":"interim","who":"sub_bo","name":"Bo","text":"After early nightfall, the yellow lamps would light","conf":1,"start":0,"end":3,"session":2}
+{"t":1793316544198,"ev":"text_sent","seg":"715b50a4","final":false,"ms":0}
+{"t":1793316545193,"ev":"interim","who":"sub_bo","name":"Bo","text":"After early nightfall, the yellow lamps would light up here and there","conf":1,"start":0,"end":4,"session":2}
+{"t":1793316545194,"ev":"text_sent","seg":"715b50a4","final":false,"ms":1}
+{"t":1793316546207,"ev":"usage","who":"sub_bo","audio_s":5.09999999999999,"session":2}
+{"t":1793316546207,"ev":"final","who":"sub_bo","name":"Bo","text":"After early nightfall, the yellow lamps would light up here and there. The","conf":0.9995117,"start":0,"end":4.43,"session":2}
+{"t":1793316546208,"ev":"text_sent","seg":"715b50a4","final":true,"ms":1}
+{"t":1793316546209,"ev":"post_done","seg":"715b50a4","status":204,"ms":1}
+{"t":1793316546648,"ev":"interim","who":"sub_bo","name":"Bo","text":"squalid quarter of","conf":0.9685872,"start":4.43,"end":5.449999999999999,"session":2}
+{"t":1793316546649,"ev":"text_sent","seg":"01f131d1","final":false,"ms":1}
+{"t":1793316547003,"ev":"frames","who":"sub_ada","framesIn":5000,"framesMuted":0,"pushed_s":15.03}
+{"t":1793316547003,"ev":"frames","who":"sub_bo","framesIn":5000,"framesMuted":0,"pushed_s":16.59}
+{"t":1793316547003,"ev":"frames","who":"sub_cy","framesIn":5000,"framesMuted":0,"pushed_s":8.35}
+{"t":1793316547513,"ev":"rx_end","who":"sub_bo","at":1793316547213}
+{"t":1793316547557,"ev":"usage","who":"sub_bo","audio_s":1.3500000000000005,"session":2}
+{"t":1793316547557,"ev":"final","who":"sub_bo","name":"Bo","text":"squalid quarter of the brothels.","conf":0.9980469,"start":4.43,"end":6.3200003,"session":2}
+{"t":1793316547558,"ev":"text_sent","seg":"01f131d1","final":true,"ms":1}
+{"t":1793316547559,"ev":"post_done","seg":"01f131d1","status":204,"ms":1}
+{"t":1793316548013,"ev":"stt_end_input","who":"sub_bo"}
+{"t":1793316548121,"ev":"usage","who":"sub_bo","audio_s":0.44999999999999996,"session":2}
+{"t":1793316549863,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316549863,"ev":"stt_open","who":"sub_cy","session":2}
+{"t":1793316550726,"ev":"interim","who":"sub_cy","name":"Cy","text":"There is no day","conf":0.98535156,"start":0,"end":1,"session":2}
+{"t":1793316550726,"ev":"text_sent","seg":"e211390a","final":false,"ms":0}
+{"t":1793316551135,"ev":"stt_closed","who":"sub_bo","session":2}
+{"t":1793316551529,"ev":"interim","who":"sub_cy","name":"Cy","text":"There is no danger of the MOG","conf":0.98828125,"start":0,"end":2,"session":2}
+{"t":1793316551530,"ev":"text_sent","seg":"e211390a","final":false,"ms":1}
+{"t":1793316552003,"ev":"frames","who":"sub_ada","framesIn":5500,"framesMuted":0,"pushed_s":15.03}
+{"t":1793316552003,"ev":"frames","who":"sub_bo","framesIn":5500,"framesMuted":0,"pushed_s":17.59}
+{"t":1793316552003,"ev":"frames","who":"sub_cy","framesIn":5500,"framesMuted":0,"pushed_s":10.9}
+{"t":1793316552497,"ev":"interim","who":"sub_cy","name":"Cy","text":"There is no danger of the modern commentator","conf":0.9980469,"start":0,"end":3,"session":2}
+{"t":1793316552497,"ev":"text_sent","seg":"e211390a","final":false,"ms":0}
+{"t":1793316553507,"ev":"interim","who":"sub_cy","name":"Cy","text":"There is no danger of the modern commentators on the Timaeus","conf":0.9970703,"start":0,"end":4,"session":2}
+{"t":1793316553507,"ev":"text_sent","seg":"e211390a","final":false,"ms":0}
+{"t":1793316553761,"ev":"usage","who":"sub_cy","audio_s":4.299999999999993,"session":2}
+{"t":1793316553761,"ev":"final","who":"sub_cy","name":"Cy","text":"There is no danger of the modern commentators on the Timaeus","conf":0.9970703,"start":0,"end":4.22,"session":2}
+{"t":1793316553762,"ev":"text_sent","seg":"e211390a","final":true,"ms":1}
+{"t":1793316553763,"ev":"post_done","seg":"e211390a","status":204,"ms":1}
+{"t":1793316553813,"ev":"rx_end","who":"sub_cy","at":1793316553513}
+{"t":1793316553973,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316554761,"ev":"interim","who":"sub_cy","name":"Cy","text":"falling into","conf":0.76953125,"start":4.22,"end":5.2500002,"session":2}
+{"t":1793316554762,"ev":"text_sent","seg":"fa940228","final":false,"ms":1}
+{"t":1793316555759,"ev":"interim","who":"sub_cy","name":"Cy","text":"falling into the absurdities of","conf":0.99609375,"start":4.22,"end":6.2500002,"session":2}
+{"t":1793316555759,"ev":"text_sent","seg":"fa940228","final":false,"ms":0}
+{"t":1793316556781,"ev":"interim","who":"sub_cy","name":"Cy","text":"falling into the absurdities of the neoplateness.","conf":0.9970703,"start":4.22,"end":7.2500002,"session":2}
+{"t":1793316556782,"ev":"text_sent","seg":"fa940228","final":false,"ms":1}
+{"t":1793316557003,"ev":"frames","who":"sub_ada","framesIn":6000,"framesMuted":0,"pushed_s":15.03}
+{"t":1793316557003,"ev":"frames","who":"sub_bo","framesIn":6000,"framesMuted":0,"pushed_s":17.59}
+{"t":1793316557003,"ev":"frames","who":"sub_cy","framesIn":6000,"framesMuted":0,"pushed_s":15.9}
+{"t":1793316557277,"ev":"usage","who":"sub_cy","audio_s":3.4999999999999956,"session":2}
+{"t":1793316557277,"ev":"final","who":"sub_cy","name":"Cy","text":"falling into the absurdities of the Neoplatonists.","conf":0.99609375,"start":4.22,"end":7.74,"session":2}
+{"t":1793316557278,"ev":"text_sent","seg":"fa940228","final":true,"ms":1}
+{"t":1793316557279,"ev":"post_done","seg":"fa940228","status":204,"ms":1}
+{"t":1793316557333,"ev":"rx_end","who":"sub_cy","at":1793316557033}
+{"t":1793316557833,"ev":"stt_end_input","who":"sub_cy"}
+{"t":1793316557886,"ev":"usage","who":"sub_cy","audio_s":0.5499999999999999,"session":2}
+{"t":1793316559303,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316559303,"ev":"stt_open","who":"sub_ada","session":4}
+{"t":1793316560323,"ev":"rx_end","who":"sub_ada","at":1793316560023}
+{"t":1793316560344,"ev":"interim","who":"sub_ada","name":"Ada","text":"Angle.","conf":0.8828125,"start":0,"end":1,"session":4}
+{"t":1793316560344,"ev":"text_sent","seg":"5e58d731","final":false,"ms":0}
+{"t":1793316560463,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316560627,"ev":"usage","who":"sub_ada","audio_s":1.7000000000000008,"session":4}
+{"t":1793316560627,"ev":"final","who":"sub_ada","name":"Ada","text":"Angor","conf":0.81811523,"start":0,"end":1.32,"session":4}
+{"t":1793316560627,"ev":"text_sent","seg":"5e58d731","final":true,"ms":0}
+{"t":1793316560629,"ev":"post_done","seg":"5e58d731","status":204,"ms":2}
+{"t":1793316560899,"ev":"stt_closed","who":"sub_cy","session":2}
+{"t":1793316561393,"ev":"rx_end","who":"sub_ada","at":1793316561093}
+{"t":1793316561425,"ev":"interim","who":"sub_ada","name":"Ada","text":"pain,","conf":0.9675293,"start":1.32,"end":2.3499999000000003,"session":4}
+{"t":1793316561426,"ev":"text_sent","seg":"c0b673d1","final":false,"ms":1}
+{"t":1793316561469,"ev":"usage","who":"sub_ada","audio_s":0.8500000000000002,"session":4}
+{"t":1793316561470,"ev":"final","who":"sub_ada","name":"Ada","text":"pain,","conf":0.967041,"start":1.32,"end":2.3800001,"session":4}
+{"t":1793316561470,"ev":"text_sent","seg":"c0b673d1","final":true,"ms":0}
+{"t":1793316561471,"ev":"post_done","seg":"c0b673d1","status":204,"ms":1}
+{"t":1793316561844,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316562003,"ev":"frames","who":"sub_ada","framesIn":6500,"framesMuted":0,"pushed_s":18.14}
+{"t":1793316562003,"ev":"frames","who":"sub_bo","framesIn":6500,"framesMuted":0,"pushed_s":17.59}
+{"t":1793316562003,"ev":"frames","who":"sub_cy","framesIn":6500,"framesMuted":0,"pushed_s":16.72}
+{"t":1793316562386,"ev":"interim","who":"sub_ada","name":"Ada","text":"painful","conf":0.9980469,"start":2.38,"end":3.4,"session":4}
+{"t":1793316562386,"ev":"text_sent","seg":"08142c95","final":false,"ms":0}
+{"t":1793316563236,"ev":"usage","who":"sub_ada","audio_s":1.7500000000000009,"session":4}
+{"t":1793316563236,"ev":"final","who":"sub_ada","name":"Ada","text":"painful to hear.","conf":0.99902344,"start":2.38,"end":4.2299999,"session":4}
+{"t":1793316563237,"ev":"text_sent","seg":"08142c95","final":true,"ms":1}
+{"t":1793316563238,"ev":"post_done","seg":"08142c95","status":204,"ms":1}
+{"t":1793316563243,"ev":"rx_end","who":"sub_ada","at":1793316562943}
+{"t":1793316563743,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316563843,"ev":"usage","who":"sub_ada","audio_s":0.49999999999999994,"session":4}
+{"t":1793316565263,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316565263,"ev":"stt_open","who":"sub_bo","session":3}
+{"t":1793316566113,"ev":"interim","who":"sub_bo","name":"Bo","text":"Number","conf":0.63671875,"start":0,"end":1,"session":3}
+{"t":1793316566114,"ev":"text_sent","seg":"fe910535","final":false,"ms":0}
+{"t":1793316566857,"ev":"stt_closed","who":"sub_ada","session":4}
+{"t":1793316566911,"ev":"interim","who":"sub_bo","name":"Bo","text":"Number ten. Fresh","conf":0.98291016,"start":0,"end":2,"session":3}
+{"t":1793316566911,"ev":"text_sent","seg":"fe910535","final":false,"ms":0}
+{"t":1793316567003,"ev":"frames","who":"sub_ada","framesIn":7000,"framesMuted":0,"pushed_s":19.87}
+{"t":1793316567003,"ev":"frames","who":"sub_bo","framesIn":7000,"framesMuted":0,"pushed_s":19.74}
+{"t":1793316567003,"ev":"frames","who":"sub_cy","framesIn":7000,"framesMuted":0,"pushed_s":16.72}
+{"t":1793316567888,"ev":"interim","who":"sub_bo","name":"Bo","text":"Number ten. Fresh Nelly is waiting","conf":0.98828125,"start":0,"end":3,"session":3}
+{"t":1793316567888,"ev":"text_sent","seg":"fe910535","final":false,"ms":0}
+{"t":1793316568642,"ev":"usage","who":"sub_bo","audio_s":3.7499999999999947,"session":3}
+{"t":1793316568642,"ev":"final","who":"sub_bo","name":"Bo","text":"Number ten. Fresh Nelly is waiting on you.","conf":0.99316406,"start":0,"end":3.74,"session":3}
+{"t":1793316568643,"ev":"text_sent","seg":"fe910535","final":true,"ms":1}
+{"t":1793316568644,"ev":"post_done","seg":"fe910535","status":204,"ms":1}
+{"t":1793316568723,"ev":"rx_end","who":"sub_bo","at":1793316568423}
+{"t":1793316569213,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316569645,"ev":"interim","who":"sub_bo","name":"Bo","text":"Good night,","conf":0.9970703,"start":3.74,"end":4.75,"session":3}
+{"t":1793316569646,"ev":"text_sent","seg":"c156df51","final":false,"ms":1}
+{"t":1793316570433,"ev":"rx_end","who":"sub_bo","at":1793316570133}
+{"t":1793316570512,"ev":"usage","who":"sub_bo","audio_s":1.900000000000001,"session":3}
+{"t":1793316570513,"ev":"final","who":"sub_bo","name":"Bo","text":"Good night, husband.","conf":0.97875977,"start":3.74,"end":5.5599999,"session":3}
+{"t":1793316570513,"ev":"text_sent","seg":"c156df51","final":true,"ms":0}
+{"t":1793316570515,"ev":"post_done","seg":"c156df51","status":204,"ms":2}
+{"t":1793316570933,"ev":"stt_end_input","who":"sub_bo"}
+{"t":1793316570981,"ev":"usage","who":"sub_bo","audio_s":0.39999999999999997,"session":3}
+{"t":1793316572003,"ev":"frames","who":"sub_ada","framesIn":7500,"framesMuted":0,"pushed_s":19.87}
+{"t":1793316572003,"ev":"frames","who":"sub_bo","framesIn":7500,"framesMuted":0,"pushed_s":23.66}
+{"t":1793316572003,"ev":"frames","who":"sub_cy","framesIn":7500,"framesMuted":0,"pushed_s":16.72}
+{"t":1793316572223,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316572223,"ev":"stt_open","who":"sub_cy","session":3}
+{"t":1793316573265,"ev":"interim","who":"sub_cy","name":"Cy","text":"In the present","conf":0.9921875,"start":0,"end":1,"session":3}
+{"t":1793316573265,"ev":"text_sent","seg":"0016f05f","final":false,"ms":0}
+{"t":1793316573423,"ev":"rx_end","who":"sub_cy","at":1793316573123}
+{"t":1793316573593,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316573670,"ev":"usage","who":"sub_cy","audio_s":1.850000000000001,"session":3}
+{"t":1793316573670,"ev":"final","who":"sub_cy","name":"Cy","text":"In the present day,","conf":0.9980469,"start":0,"end":1.47,"session":3}
+{"t":1793316573670,"ev":"text_sent","seg":"0016f05f","final":true,"ms":0}
+{"t":1793316573672,"ev":"post_done","seg":"0016f05f","status":204,"ms":1}
+{"t":1793316573996,"ev":"stt_closed","who":"sub_bo","session":3}
+{"t":1793316574467,"ev":"interim","who":"sub_cy","name":"Cy","text":"we are well","conf":0.9980469,"start":1.47,"end":2.5,"session":3}
+{"t":1793316574468,"ev":"text_sent","seg":"f9302586","final":false,"ms":1}
+{"t":1793316575058,"ev":"usage","who":"sub_cy","audio_s":1.3500000000000005,"session":3}
+{"t":1793316575058,"ev":"final","who":"sub_cy","name":"Cy","text":"we are well aware","conf":0.99902344,"start":1.47,"end":3.1099999,"session":3}
+{"t":1793316575059,"ev":"text_sent","seg":"f9302586","final":true,"ms":1}
+{"t":1793316575060,"ev":"post_done","seg":"f9302586","status":204,"ms":1}
+{"t":1793316575103,"ev":"rx_end","who":"sub_cy","at":1793316574803}
+{"t":1793316575243,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316576059,"ev":"interim","who":"sub_cy","name":"Cy","text":"that an","conf":0.9951172,"start":3.11,"end":4.1500002,"session":3}
+{"t":1793316576060,"ev":"text_sent","seg":"33d14da7","final":false,"ms":1}
+{"t":1793316577003,"ev":"frames","who":"sub_ada","framesIn":8000,"framesMuted":0,"pushed_s":19.87}
+{"t":1793316577003,"ev":"frames","who":"sub_bo","framesIn":8000,"framesMuted":0,"pushed_s":23.66}
+{"t":1793316577003,"ev":"frames","who":"sub_cy","framesIn":8000,"framesMuted":0,"pushed_s":21.91}
+{"t":1793316577103,"ev":"rx_end","who":"sub_cy","at":1793316576803}
+{"t":1793316577111,"ev":"usage","who":"sub_cy","audio_s":2.0500000000000007,"session":3}
+{"t":1793316577111,"ev":"final","who":"sub_cy","name":"Cy","text":"that an ancient philosopher","conf":0.99853516,"start":3.11,"end":5.1500002,"session":3}
+{"t":1793316577112,"ev":"text_sent","seg":"33d14da7","final":true,"ms":1}
+{"t":1793316577113,"ev":"post_done","seg":"33d14da7","status":204,"ms":1}
+{"t":1793316577203,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316578067,"ev":"interim","who":"sub_cy","name":"Cy","text":"is to be","conf":0.99902344,"start":5.15,"end":6.15,"session":3}
+{"t":1793316578067,"ev":"text_sent","seg":"73d41532","final":false,"ms":0}
+{"t":1793316579062,"ev":"interim","who":"sub_cy","name":"Cy","text":"is to be interpreted from","conf":0.9970703,"start":5.15,"end":7.15,"session":3}
+{"t":1793316579063,"ev":"text_sent","seg":"73d41532","final":false,"ms":0}
+{"t":1793316579462,"ev":"usage","who":"sub_cy","audio_s":2.3499999999999996,"session":3}
+{"t":1793316579462,"ev":"final","who":"sub_cy","name":"Cy","text":"is to be interpreted from himself","conf":0.99902344,"start":5.15,"end":7.5200000000000005,"session":3}
+{"t":1793316579463,"ev":"text_sent","seg":"73d41532","final":true,"ms":1}
+{"t":1793316579464,"ev":"rx_end","who":"sub_cy","at":1793316579163}
+{"t":1793316579465,"ev":"post_done","seg":"73d41532","status":204,"ms":2}
+{"t":1793316579573,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316580464,"ev":"interim","who":"sub_cy","name":"Cy","text":"and by the contemporary","conf":0.9980469,"start":7.52,"end":8.5500002,"session":3}
+{"t":1793316580465,"ev":"text_sent","seg":"9c92e5bc","final":false,"ms":1}
+{"t":1793316581471,"ev":"interim","who":"sub_cy","name":"Cy","text":"and by the contemporary history of","conf":0.99902344,"start":7.52,"end":9.5500002,"session":3}
+{"t":1793316581472,"ev":"text_sent","seg":"9c92e5bc","final":false,"ms":1}
+{"t":1793316582003,"ev":"frames","who":"sub_ada","framesIn":8500,"framesMuted":0,"pushed_s":19.87}
+{"t":1793316582003,"ev":"frames","who":"sub_bo","framesIn":8500,"framesMuted":0,"pushed_s":23.66}
+{"t":1793316582003,"ev":"frames","who":"sub_cy","framesIn":8500,"framesMuted":0,"pushed_s":26.91}
+{"t":1793316582016,"ev":"usage","who":"sub_cy","audio_s":2.5999999999999988,"session":3}
+{"t":1793316582016,"ev":"final","who":"sub_cy","name":"Cy","text":"and by the contemporary history of thought.","conf":0.99902344,"start":7.52,"end":10.0600004,"session":3}
+{"t":1793316582017,"ev":"text_sent","seg":"9c92e5bc","final":true,"ms":1}
+{"t":1793316582018,"ev":"post_done","seg":"9c92e5bc","status":204,"ms":1}
+{"t":1793316582093,"ev":"rx_end","who":"sub_cy","at":1793316581793}
+{"t":1793316582593,"ev":"stt_end_input","who":"sub_cy"}
+{"t":1793316582689,"ev":"usage","who":"sub_cy","audio_s":0.5499999999999999,"session":3}
+{"t":1793316584323,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316584323,"ev":"stt_open","who":"sub_ada","session":5}
+{"t":1793316585372,"ev":"interim","who":"sub_ada","name":"Ada","text":"Hey. Feel","conf":0.8642578,"start":0,"end":1,"session":5}
+{"t":1793316585372,"ev":"text_sent","seg":"0774a0f0","final":false,"ms":0}
+{"t":1793316585623,"ev":"rx_end","who":"sub_ada","at":1793316585323}
+{"t":1793316585703,"ev":"stt_closed","who":"sub_cy","session":3}
+{"t":1793316585892,"ev":"usage","who":"sub_ada","audio_s":1.950000000000001,"session":5}
+{"t":1793316585892,"ev":"final","who":"sub_ada","name":"Ada","text":"Hay fever.","conf":0.9873047,"start":0,"end":1.6,"session":5}
+{"t":1793316585893,"ev":"text_sent","seg":"0774a0f0","final":true,"ms":1}
+{"t":1793316585894,"ev":"post_done","seg":"0774a0f0","status":204,"ms":1}
+{"t":1793316586123,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316586229,"ev":"usage","who":"sub_ada","audio_s":0.25,"session":5}
+{"t":1793316586423,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316586423,"ev":"stt_open","who":"sub_ada","session":6}
+{"t":1793316587003,"ev":"frames","who":"sub_ada","framesIn":9000,"framesMuted":0,"pushed_s":22.96}
+{"t":1793316587003,"ev":"frames","who":"sub_bo","framesIn":9000,"framesMuted":0,"pushed_s":23.66}
+{"t":1793316587003,"ev":"frames","who":"sub_cy","framesIn":9000,"framesMuted":0,"pushed_s":27.49}
+{"t":1793316587468,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart","conf":0.9980469,"start":0,"end":1,"session":6}
+{"t":1793316587469,"ev":"text_sent","seg":"6484d6b4","final":false,"ms":1}
+{"t":1793316588270,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart trouble caused by","conf":0.99902344,"start":0,"end":2,"session":6}
+{"t":1793316588270,"ev":"text_sent","seg":"6484d6b4","final":false,"ms":0}
+{"t":1793316589212,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart trouble caused by falling in love with a","conf":1,"start":0,"end":3,"session":6}
+{"t":1793316589213,"ev":"text_sent","seg":"6484d6b4","final":false,"ms":0}
+{"t":1793316589243,"ev":"stt_closed","who":"sub_ada","session":5}
+{"t":1793316590219,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart trouble caused by falling in love with a grass widow.","conf":0.99902344,"start":0,"end":4,"session":6}
+{"t":1793316590219,"ev":"text_sent","seg":"6484d6b4","final":false,"ms":0}
+{"t":1793316590393,"ev":"rx_end","who":"sub_ada","at":1793316590093}
+{"t":1793316590420,"ev":"usage","who":"sub_ada","audio_s":4.299999999999993,"session":6}
+{"t":1793316590420,"ev":"final","who":"sub_ada","name":"Ada","text":"A heart trouble caused by falling in love with a grass widow.","conf":0.99902344,"start":0,"end":4.17,"session":6}
+{"t":1793316590421,"ev":"text_sent","seg":"6484d6b4","final":true,"ms":1}
+{"t":1793316590422,"ev":"post_done","seg":"6484d6b4","status":204,"ms":1}
+{"t":1793316590893,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316590994,"ev":"usage","who":"sub_ada","audio_s":0.44999999999999996,"session":6}
+{"t":1793316592003,"ev":"frames","who":"sub_ada","framesIn":9500,"framesMuted":0,"pushed_s":26.84}
+{"t":1793316592003,"ev":"frames","who":"sub_bo","framesIn":9500,"framesMuted":0,"pushed_s":23.66}
+{"t":1793316592003,"ev":"frames","who":"sub_cy","framesIn":9500,"framesMuted":0,"pushed_s":27.49}
+{"t":1793316592463,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316592463,"ev":"stt_open","who":"sub_bo","session":4}
+{"t":1793316593507,"ev":"interim","who":"sub_bo","name":"Bo","text":"The music","conf":0.9873047,"start":0,"end":1,"session":4}
+{"t":1793316593508,"ev":"text_sent","seg":"589cf8a7","final":false,"ms":1}
+{"t":1793316594008,"ev":"stt_closed","who":"sub_ada","session":6}
+{"t":1793316594310,"ev":"interim","who":"sub_bo","name":"Bo","text":"The music came nearer and he","conf":0.99902344,"start":0,"end":2,"session":4}
+{"t":1793316594310,"ev":"text_sent","seg":"589cf8a7","final":false,"ms":0}
+{"t":1793316595152,"ev":"interim","who":"sub_bo","name":"Bo","text":"The music came nearer and he recalled the words","conf":0.99902344,"start":0,"end":3,"session":4}
+{"t":1793316595152,"ev":"text_sent","seg":"589cf8a7","final":false,"ms":0}
+{"t":1793316595503,"ev":"rx_end","who":"sub_bo","at":1793316595203}
+{"t":1793316595683,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316595758,"ev":"usage","who":"sub_bo","audio_s":3.699999999999995,"session":4}
+{"t":1793316595758,"ev":"final","who":"sub_bo","name":"Bo","text":"The music came nearer, and he recalled the words.","conf":0.99902344,"start":0,"end":3.57,"session":4}
+{"t":1793316595758,"ev":"text_sent","seg":"589cf8a7","final":true,"ms":0}
+{"t":1793316595760,"ev":"post_done","seg":"589cf8a7","status":204,"ms":2}
+{"t":1793316596755,"ev":"interim","who":"sub_bo","name":"Bo","text":"The words of Shelley","conf":1,"start":3.57,"end":4.6,"session":4}
+{"t":1793316596755,"ev":"text_sent","seg":"4d05c8ec","final":false,"ms":0}
+{"t":1793316597003,"ev":"frames","who":"sub_ada","framesIn":10000,"framesMuted":0,"pushed_s":26.84}
+{"t":1793316597003,"ev":"frames","who":"sub_bo","framesIn":10000,"framesMuted":0,"pushed_s":28.61}
+{"t":1793316597003,"ev":"frames","who":"sub_cy","framesIn":10000,"framesMuted":0,"pushed_s":27.49}
+{"t":1793316597757,"ev":"interim","who":"sub_bo","name":"Bo","text":"The words of Shelley's fragment upon","conf":1,"start":3.57,"end":5.6,"session":4}
+{"t":1793316597757,"ev":"text_sent","seg":"4d05c8ec","final":false,"ms":0}
+{"t":1793316598765,"ev":"interim","who":"sub_bo","name":"Bo","text":"The words of Shelley's fragment upon the moon wandering","conf":1,"start":3.57,"end":6.6,"session":4}
+{"t":1793316598766,"ev":"text_sent","seg":"4d05c8ec","final":false,"ms":1}
+{"t":1793316599760,"ev":"interim","who":"sub_bo","name":"Bo","text":"The words of Shelley's fragment upon the moon wandering companionless.","conf":1,"start":3.57,"end":7.5999997,"session":4}
+{"t":1793316599760,"ev":"text_sent","seg":"4d05c8ec","final":false,"ms":0}
+{"t":1793316599853,"ev":"rx_end","who":"sub_bo","at":1793316599553}
+{"t":1793316599867,"ev":"usage","who":"sub_bo","audio_s":4.099999999999993,"session":4}
+{"t":1793316599867,"ev":"final","who":"sub_bo","name":"Bo","text":"Words of Shelley's fragment upon the moon wandering companionless.","conf":1,"start":3.57,"end":7.6799997,"session":4}
+{"t":1793316599867,"ev":"text_sent","seg":"4d05c8ec","final":true,"ms":0}
+{"t":1793316599868,"ev":"post_done","seg":"4d05c8ec","status":204,"ms":1}
+{"t":1793316600013,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316600856,"ev":"interim","who":"sub_bo","name":"Bo","text":"Pale for we","conf":0.98291016,"start":7.68,"end":8.7,"session":4}
+{"t":1793316600856,"ev":"text_sent","seg":"3da0d08c","final":false,"ms":0}
+{"t":1793316601493,"ev":"rx_end","who":"sub_bo","at":1793316601193}
+{"t":1793316601605,"ev":"usage","who":"sub_bo","audio_s":1.7500000000000009,"session":4}
+{"t":1793316601605,"ev":"final","who":"sub_bo","name":"Bo","text":"Pale for weariness,","conf":0.9970703,"start":7.68,"end":9.3999998,"session":4}
+{"t":1793316601606,"ev":"text_sent","seg":"3da0d08c","final":true,"ms":1}
+{"t":1793316601607,"ev":"post_done","seg":"3da0d08c","status":204,"ms":1}
+{"t":1793316601993,"ev":"stt_end_input","who":"sub_bo"}
+{"t":1793316602003,"ev":"frames","who":"sub_ada","framesIn":10500,"framesMuted":0,"pushed_s":26.84}
+{"t":1793316602003,"ev":"frames","who":"sub_bo","framesIn":10500,"framesMuted":0,"pushed_s":33.59}
+{"t":1793316602003,"ev":"frames","who":"sub_cy","framesIn":10500,"framesMuted":0,"pushed_s":27.49}
+{"t":1793316602091,"ev":"usage","who":"sub_bo","audio_s":0.35,"session":4}
+{"t":1793316603813,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316603813,"ev":"stt_open","who":"sub_cy","session":4}
+{"t":1793316604866,"ev":"interim","who":"sub_cy","name":"Cy","text":"But they have","conf":0.9980469,"start":0,"end":1,"session":4}
+{"t":1793316604866,"ev":"text_sent","seg":"d48b03d8","final":false,"ms":0}
+{"t":1793316605106,"ev":"stt_closed","who":"sub_bo","session":4}
+{"t":1793316605669,"ev":"interim","who":"sub_cy","name":"Cy","text":"But they have nothing to do with the","conf":0.9970703,"start":0,"end":2,"session":4}
+{"t":1793316605669,"ev":"text_sent","seg":"d48b03d8","final":false,"ms":0}
+{"t":1793316606505,"ev":"interim","who":"sub_cy","name":"Cy","text":"But they have nothing to do with the interpretation of","conf":0.9951172,"start":0,"end":3,"session":4}
+{"t":1793316606506,"ev":"text_sent","seg":"d48b03d8","final":false,"ms":1}
+{"t":1793316606653,"ev":"usage","who":"sub_cy","audio_s":3.1999999999999966,"session":4}
+{"t":1793316606653,"ev":"final","who":"sub_cy","name":"Cy","text":"But they have nothing to do with the interpretation of","conf":0.9951172,"start":0,"end":3.1,"session":4}
+{"t":1793316606654,"ev":"text_sent","seg":"d48b03d8","final":true,"ms":1}
+{"t":1793316606656,"ev":"post_done","seg":"d48b03d8","status":204,"ms":2}
+{"t":1793316607003,"ev":"frames","who":"sub_ada","framesIn":11000,"framesMuted":0,"pushed_s":26.84}
+{"t":1793316607003,"ev":"frames","who":"sub_bo","framesIn":11000,"framesMuted":0,"pushed_s":33.59}
+{"t":1793316607003,"ev":"frames","who":"sub_cy","framesIn":11000,"framesMuted":0,"pushed_s":31.09}
+{"t":1793316607243,"ev":"rx_end","who":"sub_cy","at":1793316606943}
+{"t":1793316607251,"ev":"usage","who":"sub_cy","audio_s":0.6,"session":4}
+{"t":1793316607252,"ev":"final","who":"sub_cy","name":"Cy","text":"Plato","conf":0.91967773,"start":3.1,"end":3.7300001,"session":4}
+{"t":1793316607252,"ev":"text_sent","seg":"7c5d5ab9","final":true,"ms":0}
+{"t":1793316607253,"ev":"post_done","seg":"7c5d5ab9","status":204,"ms":1}
+{"t":1793316607513,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316608254,"ev":"interim","who":"sub_cy","name":"Cy","text":"and in","conf":0.85546875,"start":3.73,"end":4.75,"session":4}
+{"t":1793316608255,"ev":"text_sent","seg":"5995d4dc","final":false,"ms":1}
+{"t":1793316608893,"ev":"rx_end","who":"sub_cy","at":1793316608593}
+{"t":1793316608911,"ev":"usage","who":"sub_cy","audio_s":1.7000000000000008,"session":4}
+{"t":1793316608911,"ev":"final","who":"sub_cy","name":"Cy","text":"and in spirit","conf":0.93115234,"start":3.73,"end":5.3699999,"session":4}
+{"t":1793316608911,"ev":"text_sent","seg":"5995d4dc","final":true,"ms":0}
+{"t":1793316608912,"ev":"post_done","seg":"5995d4dc","status":204,"ms":1}
+{"t":1793316608983,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316609902,"ev":"interim","who":"sub_cy","name":"Cy","text":"they are opposed","conf":0.93115234,"start":5.37,"end":6.4000002,"session":4}
+{"t":1793316609903,"ev":"text_sent","seg":"8a29d360","final":false,"ms":1}
+{"t":1793316610655,"ev":"usage","who":"sub_cy","audio_s":1.7500000000000009,"session":4}
+{"t":1793316610655,"ev":"final","who":"sub_cy","name":"Cy","text":"they are opposed to him.","conf":0.9941406,"start":5.37,"end":7.12,"session":4}
+{"t":1793316610656,"ev":"text_sent","seg":"8a29d360","final":true,"ms":1}
+{"t":1793316610657,"ev":"post_done","seg":"8a29d360","status":204,"ms":1}
+{"t":1793316610663,"ev":"rx_end","who":"sub_cy","at":1793316610363}
+{"t":1793316611163,"ev":"stt_end_input","who":"sub_cy"}
+{"t":1793316611260,"ev":"usage","who":"sub_cy","audio_s":0.49999999999999994,"session":4}
+{"t":1793316612003,"ev":"frames","who":"sub_ada","framesIn":11500,"framesMuted":0,"pushed_s":26.84}
+{"t":1793316612003,"ev":"frames","who":"sub_bo","framesIn":11500,"framesMuted":0,"pushed_s":33.59}
+{"t":1793316612003,"ev":"frames","who":"sub_cy","framesIn":11500,"framesMuted":0,"pushed_s":35.24}
+{"t":1793316612993,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316612993,"ev":"stt_open","who":"sub_ada","session":7}
+{"t":1793316613773,"ev":"rx_end","who":"sub_ada","at":1793316613473}
+{"t":1793316614038,"ev":"interim","who":"sub_ada","name":"Ada","text":"Heaven,","conf":0.7952881,"start":0,"end":1,"session":7}
+{"t":1793316614038,"ev":"text_sent","seg":"f98f246b","final":false,"ms":0}
+{"t":1793316614093,"ev":"rx_start","who":"sub_ada"}
+{"t":1793316614115,"ev":"usage","who":"sub_ada","audio_s":1.5000000000000007,"session":7}
+{"t":1793316614115,"ev":"final","who":"sub_ada","name":"Ada","text":"Heaven,","conf":0.78393555,"start":0,"end":1.07,"session":7}
+{"t":1793316614115,"ev":"text_sent","seg":"f98f246b","final":true,"ms":0}
+{"t":1793316614117,"ev":"post_done","seg":"f98f246b","status":204,"ms":2}
+{"t":1793316614274,"ev":"stt_closed","who":"sub_cy","session":4}
+{"t":1793316614919,"ev":"interim","who":"sub_ada","name":"Ada","text":"a good","conf":1,"start":1.07,"end":2.0999999000000003,"session":7}
+{"t":1793316614919,"ev":"text_sent","seg":"1c04639e","final":false,"ms":0}
+{"t":1793316615785,"ev":"interim","who":"sub_ada","name":"Ada","text":"a good place to be raised","conf":1,"start":1.07,"end":3.0999996999999997,"session":7}
+{"t":1793316615785,"ev":"text_sent","seg":"1c04639e","final":false,"ms":0}
+{"t":1793316616153,"ev":"rx_end","who":"sub_ada","at":1793316615853}
+{"t":1793316616185,"ev":"usage","who":"sub_ada","audio_s":2.1000000000000005,"session":7}
+{"t":1793316616185,"ev":"final","who":"sub_ada","name":"Ada","text":"a good place to be raised to.","conf":1,"start":1.07,"end":3.4599998999999997,"session":7}
+{"t":1793316616186,"ev":"text_sent","seg":"1c04639e","final":true,"ms":1}
+{"t":1793316616187,"ev":"post_done","seg":"1c04639e","status":204,"ms":1}
+{"t":1793316616653,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793316616755,"ev":"usage","who":"sub_ada","audio_s":0.44999999999999996,"session":7}
+{"t":1793316617003,"ev":"frames","who":"sub_ada","framesIn":12000,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316617003,"ev":"frames","who":"sub_bo","framesIn":12000,"framesMuted":0,"pushed_s":33.59}
+{"t":1793316617003,"ev":"frames","who":"sub_cy","framesIn":12000,"framesMuted":0,"pushed_s":35.24}
+{"t":1793316618563,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316618563,"ev":"stt_open","who":"sub_bo","session":5}
+{"t":1793316619429,"ev":"interim","who":"sub_bo","name":"Bo","text":"The dull,","conf":0.9980469,"start":0,"end":1,"session":5}
+{"t":1793316619430,"ev":"text_sent","seg":"46fb5e02","final":false,"ms":1}
+{"t":1793316619769,"ev":"stt_closed","who":"sub_ada","session":7}
+{"t":1793316620233,"ev":"interim","who":"sub_bo","name":"Bo","text":"The dull light fell more","conf":0.99902344,"start":0,"end":2,"session":5}
+{"t":1793316620234,"ev":"text_sent","seg":"46fb5e02","final":false,"ms":1}
+{"t":1793316621209,"ev":"interim","who":"sub_bo","name":"Bo","text":"The dull light fell more faintly upon the pay","conf":0.99902344,"start":0,"end":3,"session":5}
+{"t":1793316621209,"ev":"text_sent","seg":"46fb5e02","final":false,"ms":0}
+{"t":1793316622003,"ev":"frames","who":"sub_ada","framesIn":12500,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316622003,"ev":"frames","who":"sub_bo","framesIn":12500,"framesMuted":0,"pushed_s":37.44}
+{"t":1793316622004,"ev":"frames","who":"sub_cy","framesIn":12500,"framesMuted":0,"pushed_s":35.24}
+{"t":1793316622212,"ev":"interim","who":"sub_bo","name":"Bo","text":"The dull light fell more faintly upon the page whereon another","conf":0.99902344,"start":0,"end":4,"session":5}
+{"t":1793316622212,"ev":"text_sent","seg":"46fb5e02","final":false,"ms":0}
+{"t":1793316623221,"ev":"usage","who":"sub_bo","audio_s":5.04999999999999,"session":5}
+{"t":1793316623221,"ev":"final","who":"sub_bo","name":"Bo","text":"The dull light fell more faintly upon the page where on another equation","conf":0.99902344,"start":0,"end":4.67,"session":5}
+{"t":1793316623221,"ev":"text_sent","seg":"46fb5e02","final":true,"ms":0}
+{"t":1793316623222,"ev":"post_done","seg":"46fb5e02","status":204,"ms":1}
+{"t":1793316623918,"ev":"interim","who":"sub_bo","name":"Bo","text":"began to unfold","conf":0.99609375,"start":4.67,"end":5.6999997,"session":5}
+{"t":1793316623919,"ev":"text_sent","seg":"a837b71d","final":false,"ms":1}
+{"t":1793316624912,"ev":"interim","who":"sub_bo","name":"Bo","text":"began to unfold itself","conf":0.99902344,"start":4.67,"end":6.699999699999999,"session":5}
+{"t":1793316624913,"ev":"text_sent","seg":"a837b71d","final":false,"ms":1}
+{"t":1793316625393,"ev":"rx_end","who":"sub_bo","at":1793316625093}
+{"t":1793316625633,"ev":"rx_start","who":"sub_bo"}
+{"t":1793316625940,"ev":"interim","who":"sub_bo","name":"Bo","text":"began to unfold itself slowly and to","conf":1,"start":4.67,"end":7.699999699999999,"session":5}
+{"t":1793316625940,"ev":"text_sent","seg":"a837b71d","final":false,"ms":0}
+{"t":1793316626934,"ev":"interim","who":"sub_bo","name":"Bo","text":"began to unfold itself slowly and to spread abroad","conf":1,"start":4.67,"end":8.6999997,"session":5}
+{"t":1793316626934,"ev":"text_sent","seg":"a837b71d","final":false,"ms":0}
+{"t":1793316627003,"ev":"frames","who":"sub_ada","framesIn":13000,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316627003,"ev":"frames","who":"sub_bo","framesIn":13000,"framesMuted":0,"pushed_s":42.44}
+{"t":1793316627003,"ev":"frames","who":"sub_cy","framesIn":13000,"framesMuted":0,"pushed_s":35.24}
+{"t":1793316627950,"ev":"usage","who":"sub_bo","audio_s":4.699999999999991,"session":5}
+{"t":1793316627950,"ev":"final","who":"sub_bo","name":"Bo","text":"began to unfold itself slowly and to","conf":0.99902344,"start":4.67,"end":7.7199997,"session":5}
+{"t":1793316627951,"ev":"text_sent","seg":"a837b71d","final":true,"ms":1}
+{"t":1793316627952,"ev":"post_done","seg":"a837b71d","status":204,"ms":1}
+{"t":1793316627968,"ev":"interim","who":"sub_bo","name":"Bo","text":"spread abroad its widening tail.","conf":0.9980469,"start":7.72,"end":9.7,"session":5}
+{"t":1793316627968,"ev":"text_sent","seg":"712b77d7","final":false,"ms":0}
+{"t":1793316628322,"ev":"usage","who":"sub_bo","audio_s":0.39999999999999997,"session":5}
+{"t":1793316628322,"ev":"final","who":"sub_bo","name":"Bo","text":"spread abroad its widening tail.","conf":0.9980469,"start":7.72,"end":10.07,"session":5}
+{"t":1793316628322,"ev":"text_sent","seg":"712b77d7","final":true,"ms":0}
+{"t":1793316628323,"ev":"post_done","seg":"712b77d7","status":204,"ms":1}
+{"t":1793316628353,"ev":"rx_end","who":"sub_bo","at":1793316628053}
+{"t":1793316628853,"ev":"stt_end_input","who":"sub_bo"}
+{"t":1793316628915,"ev":"usage","who":"sub_bo","audio_s":0.49999999999999994,"session":5}
+{"t":1793316630703,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316630703,"ev":"stt_open","who":"sub_cy","session":5}
+{"t":1793316631618,"ev":"interim","who":"sub_cy","name":"Cy","text":"The dialogue","conf":0.9199219,"start":0,"end":1,"session":5}
+{"t":1793316631619,"ev":"text_sent","seg":"a6bdc0ad","final":false,"ms":1}
+{"t":1793316631929,"ev":"stt_closed","who":"sub_bo","session":5}
+{"t":1793316632003,"ev":"frames","who":"sub_ada","framesIn":13500,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316632003,"ev":"frames","who":"sub_bo","framesIn":13500,"framesMuted":0,"pushed_s":44.28}
+{"t":1793316632003,"ev":"frames","who":"sub_cy","framesIn":13500,"framesMuted":0,"pushed_s":36.95}
+{"t":1793316632415,"ev":"interim","who":"sub_cy","name":"Cy","text":"The dialogue is primarily","conf":0.99121094,"start":0,"end":2,"session":5}
+{"t":1793316632416,"ev":"text_sent","seg":"a6bdc0ad","final":false,"ms":1}
+{"t":1793316633338,"ev":"interim","who":"sub_cy","name":"Cy","text":"The dialogue is primarily concerned with","conf":0.99902344,"start":0,"end":3,"session":5}
+{"t":1793316633339,"ev":"text_sent","seg":"a6bdc0ad","final":false,"ms":1}
+{"t":1793316634339,"ev":"interim","who":"sub_cy","name":"Cy","text":"The dialogue is primarily concerned with the animal creation","conf":0.9970703,"start":0,"end":4,"session":5}
+{"t":1793316634340,"ev":"text_sent","seg":"a6bdc0ad","final":false,"ms":1}
+{"t":1793316634690,"ev":"usage","who":"sub_cy","audio_s":4.3499999999999925,"session":5}
+{"t":1793316634690,"ev":"final","who":"sub_cy","name":"Cy","text":"The dialogue is primarily concerned with the animal creation","conf":0.9951172,"start":0,"end":4.3,"session":5}
+{"t":1793316634690,"ev":"text_sent","seg":"a6bdc0ad","final":true,"ms":0}
+{"t":1793316634692,"ev":"post_done","seg":"a6bdc0ad","status":204,"ms":2}
+{"t":1793316634703,"ev":"rx_end","who":"sub_cy","at":1793316634403}
+{"t":1793316634983,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316635642,"ev":"interim","who":"sub_cy","name":"Cy","text":"including","conf":1,"start":4.3,"end":5.3,"session":5}
+{"t":1793316635642,"ev":"text_sent","seg":"4a952163","final":false,"ms":0}
+{"t":1793316636591,"ev":"usage","who":"sub_cy","audio_s":1.900000000000001,"session":5}
+{"t":1793316636591,"ev":"final","who":"sub_cy","name":"Cy","text":"including under this term","conf":0.9970703,"start":4.3,"end":6.2399996,"session":5}
+{"t":1793316636591,"ev":"text_sent","seg":"4a952163","final":true,"ms":0}
+{"t":1793316636593,"ev":"post_done","seg":"4a952163","status":204,"ms":1}
+{"t":1793316636693,"ev":"rx_end","who":"sub_cy","at":1793316636393}
+{"t":1793316636733,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316637003,"ev":"frames","who":"sub_ada","framesIn":14000,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316637003,"ev":"frames","who":"sub_bo","framesIn":14000,"framesMuted":0,"pushed_s":44.28}
+{"t":1793316637003,"ev":"frames","who":"sub_cy","framesIn":14000,"framesMuted":0,"pushed_s":41.95}
+{"t":1793316637592,"ev":"interim","who":"sub_cy","name":"Cy","text":"the heavenly body,","conf":0.9277344,"start":6.24,"end":7.250000200000001,"session":5}
+{"t":1793316637593,"ev":"text_sent","seg":"09957166","final":false,"ms":1}
+{"t":1793316637995,"ev":"usage","who":"sub_cy","audio_s":1.4500000000000006,"session":5}
+{"t":1793316637995,"ev":"final","who":"sub_cy","name":"Cy","text":"the heavenly bodies,","conf":0.9765625,"start":6.24,"end":7.6100004000000006,"session":5}
+{"t":1793316637995,"ev":"text_sent","seg":"09957166","final":true,"ms":0}
+{"t":1793316637997,"ev":"post_done","seg":"09957166","status":204,"ms":2}
+{"t":1793316638033,"ev":"rx_end","who":"sub_cy","at":1793316637733}
+{"t":1793316638173,"ev":"rx_start","who":"sub_cy"}
+{"t":1793316638991,"ev":"interim","who":"sub_cy","name":"Cy","text":"and with man,","conf":0.71435547,"start":7.61,"end":8.6499995,"session":5}
+{"t":1793316638992,"ev":"text_sent","seg":"055c9c82","final":false,"ms":1}
+{"t":1793316639194,"ev":"usage","who":"sub_cy","audio_s":1.2000000000000004,"session":5}
+{"t":1793316639194,"ev":"final","who":"sub_cy","name":"Cy","text":"and with man,","conf":0.71533203,"start":7.61,"end":8.819999600000001,"session":5}
+{"t":1793316639195,"ev":"text_sent","seg":"055c9c82","final":true,"ms":1}
+{"t":1793316639196,"ev":"post_done","seg":"055c9c82","status":204,"ms":1}
+{"t":1793316640193,"ev":"interim","who":"sub_cy","name":"Cy","text":"only as one","conf":0.9970703,"start":8.82,"end":9.8500007,"session":5}
+{"t":1793316640194,"ev":"text_sent","seg":"edb32b80","final":false,"ms":1}
+{"t":1793316641197,"ev":"interim","who":"sub_cy","name":"Cy","text":"only as one among the animal.","conf":0.99609375,"start":8.82,"end":10.8500007,"session":5}
+{"t":1793316641198,"ev":"text_sent","seg":"edb32b80","final":false,"ms":1}
+{"t":1793316641648,"ev":"usage","who":"sub_cy","audio_s":2.4499999999999993,"session":5}
+{"t":1793316641648,"ev":"final","who":"sub_cy","name":"Cy","text":"only as one among the animals.","conf":0.9951172,"start":8.82,"end":11.2600005,"session":5}
+{"t":1793316641649,"ev":"text_sent","seg":"edb32b80","final":true,"ms":1}
+{"t":1793316641650,"ev":"post_done","seg":"edb32b80","status":204,"ms":1}
+{"t":1793316641683,"ev":"rx_end","who":"sub_cy","at":1793316641383}
+{"t":1793316642003,"ev":"frames","who":"sub_ada","framesIn":14500,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316642003,"ev":"frames","who":"sub_bo","framesIn":14500,"framesMuted":0,"pushed_s":44.28}
+{"t":1793316642003,"ev":"frames","who":"sub_cy","framesIn":14500,"framesMuted":0,"pushed_s":46.95}
+{"t":1793316642183,"ev":"stt_end_input","who":"sub_cy"}
+{"t":1793316642228,"ev":"usage","who":"sub_cy","audio_s":0.49999999999999994,"session":5}
+{"t":1793316645242,"ev":"stt_closed","who":"sub_cy","session":5}
+{"t":1793316647003,"ev":"frames","who":"sub_ada","framesIn":15000,"framesMuted":0,"pushed_s":30.9}
+{"t":1793316647003,"ev":"frames","who":"sub_bo","framesIn":15000,"framesMuted":0,"pushed_s":44.28}
+{"t":1793316647003,"ev":"frames","who":"sub_cy","framesIn":15000,"framesMuted":0,"pushed_s":47.12}
+{"t":1793316647442,"ev":"track_done","who":"sub_ada","framesIn":15043,"framesMuted":0,"pushed_s":30.9,"sessions":7}
+{"t":1793316647463,"ev":"track_done","who":"sub_bo","framesIn":15045,"framesMuted":0,"pushed_s":44.28,"sessions":5}
+{"t":1793316647484,"ev":"track_done","who":"sub_cy","framesIn":15048,"framesMuted":0,"pushed_s":47.12,"sessions":5}
+{"t":1793316662806,"ev":"leaving_empty","after_s":15}
+{"t":1793316662812,"ev":"disconnected","why":1}
+{"t":1793316662813,"ev":"shutdown"}

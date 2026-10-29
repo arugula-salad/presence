@@ -1,0 +1,151 @@
+{
+ "relay": "https://arugula-stream-staging.fly.dev",
+ "room": "s45-mvu6yut5",
+ "lkRoom": "demo:s45-mvu6yut5:voice",
+ "chips": {
+  "Ada": [
+   "AYou",
+   "BBo"
+  ],
+  "Bo": [
+   "AAda",
+   "BYou"
+  ]
+ },
+ "tracks": [
+  "Ada (u_09fb86fc08f1)",
+  "Bo (u_e743157f4726)"
+ ],
+ "finals": [
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "Did"
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "but not stopped."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "During the picnic season."
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "Bruised potatoes and fat mutton pieces to be ladled out in thick"
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "peppered, flour fattened sauce."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "Hoorayang!"
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "The tiresome product of a tireless tongue."
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "After early nightfall, the yellow lamps would light up here and there. The"
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "Angor"
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "squalid quarter of the brothels."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "pain,"
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "painful to hear."
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "Number ten. Fresh Nelly is waiting on you."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "Hay fever."
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "Good night, husband."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "A heart trouble caused by falling in love with a grass widow."
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "The music came nearer, and he recalled the words."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "Also, a popular contrivance"
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "Words of Shelley's fragment upon the moon wandering companionless."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "whereby lovemaking may be suspended"
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "Pale for weariness,"
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "but not stopped."
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "During the picnic season."
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "He hoped there would be stew for dinner,"
+  },
+  {
+   "name": "Bo",
+   "who": "u_e743157f4726",
+   "text": "turnips"
+  },
+  {
+   "name": "Ada",
+   "who": "u_09fb86fc08f1",
+   "text": "Her"
+  }
+ ]
+}

@@ -1,0 +1,93 @@
+{"t":1793317197673,"ev":"config","run":"muted-none","model":"deepgram/nova-3","gate":"none","keyterms":[],"text":true,"idle_s":15}
+{"t":1793317197673,"ev":"job","room":"s45:muted-none:voice","metadata":"{\"run\":\"muted-none\",\"model\":\"deepgram/nova-3\",\"gate\":\"none\",\"keyterms\":[],\"text\":true}","dispatch":"AD_3uPjSxUa2HpK"}
+{"t":1793317198085,"ev":"connected","room":"s45:muted-none:voice","me":"agent-AJ_KcYZvmPPqKjw","hidden":true}
+{"t":1793317198309,"ev":"track","who":"sub_ada","name":"Ada","track":"TR_AMooc67FycBbCL","model":"deepgram/nova-3","gate":"none","keyterms":[]}
+{"t":1793317198318,"ev":"stt_open","who":"sub_ada","session":1}
+{"t":1793317201696,"ev":"rx_start","who":"sub_ada"}
+{"t":1793317202403,"ev":"interim","who":"sub_ada","name":"Ada","text":"Also,","conf":0.8598633,"start":0,"end":4,"session":1}
+{"t":1793317202404,"ev":"text_sent","seg":"7285dcab","final":false,"ms":1}
+{"t":1793317203306,"ev":"frames","who":"sub_ada","framesIn":500,"framesMuted":0,"pushed_s":5}
+{"t":1793317203410,"ev":"usage","who":"sub_ada","audio_s":5.04999999999999,"session":1}
+{"t":1793317203438,"ev":"interim","who":"sub_ada","name":"Ada","text":"Also, a popular","conf":1,"start":3.02,"end":5,"session":1}
+{"t":1793317203439,"ev":"text_sent","seg":"7285dcab","final":false,"ms":1}
+{"t":1793317204000,"ev":"usage","who":"sub_ada","audio_s":0.6,"session":1}
+{"t":1793317204001,"ev":"final","who":"sub_ada","name":"Ada","text":"Also, a popular condrivance","conf":1,"start":3.02,"end":5.58,"session":1}
+{"t":1793317204001,"ev":"text_sent","seg":"7285dcab","final":true,"ms":0}
+{"t":1793317204026,"ev":"rx_end","who":"sub_ada","at":1793317203726}
+{"t":1793317204216,"ev":"rx_start","who":"sub_ada"}
+{"t":1793317205005,"ev":"interim","who":"sub_ada","name":"Ada","text":"whereby love","conf":0.9633789,"start":5.58,"end":6.6,"session":1}
+{"t":1793317205006,"ev":"text_sent","seg":"e0a6e50a","final":false,"ms":1}
+{"t":1793317206009,"ev":"interim","who":"sub_ada","name":"Ada","text":"whereby lovemaking may be a","conf":0.93847656,"start":5.58,"end":7.6,"session":1}
+{"t":1793317206009,"ev":"text_sent","seg":"e0a6e50a","final":false,"ms":0}
+{"t":1793317206654,"ev":"usage","who":"sub_ada","audio_s":2.6499999999999986,"session":1}
+{"t":1793317206654,"ev":"final","who":"sub_ada","name":"Ada","text":"whereby lovemaking may be suspended","conf":0.9951172,"start":5.58,"end":8.2399998,"session":1}
+{"t":1793317206655,"ev":"text_sent","seg":"e0a6e50a","final":true,"ms":1}
+{"t":1793317206676,"ev":"rx_end","who":"sub_ada","at":1793317206376}
+{"t":1793317206786,"ev":"rx_start","who":"sub_ada"}
+{"t":1793317207654,"ev":"interim","who":"sub_ada","name":"Ada","text":"but not","conf":0.99902344,"start":8.24,"end":9.2500002,"session":1}
+{"t":1793317207654,"ev":"text_sent","seg":"450bb1d5","final":false,"ms":0}
+{"t":1793317208257,"ev":"usage","who":"sub_ada","audio_s":1.6500000000000008,"session":1}
+{"t":1793317208257,"ev":"final","who":"sub_ada","name":"Ada","text":"but not stopped.","conf":0.83935547,"start":8.24,"end":9.840000400000001,"session":1}
+{"t":1793317208257,"ev":"text_sent","seg":"450bb1d5","final":true,"ms":0}
+{"t":1793317208306,"ev":"frames","who":"sub_ada","framesIn":1000,"framesMuted":0,"pushed_s":10}
+{"t":1793317209260,"ev":"interim","who":"sub_ada","name":"Ada","text":"During the picnic","conf":0.9995117,"start":9.84,"end":10.8500002,"session":1}
+{"t":1793317209261,"ev":"text_sent","seg":"87589ecf","final":false,"ms":1}
+{"t":1793317209636,"ev":"rx_end","who":"sub_ada","at":1793317209336}
+{"t":1793317209658,"ev":"usage","who":"sub_ada","audio_s":1.4000000000000006,"session":1}
+{"t":1793317209658,"ev":"final","who":"sub_ada","name":"Ada","text":"During the picnic season.","conf":1,"start":9.84,"end":11.2200001,"session":1}
+{"t":1793317209659,"ev":"text_sent","seg":"87589ecf","final":true,"ms":1}
+{"t":1793317211344,"ev":"muted","who":"sub_ada"}
+{"t":1793317213306,"ev":"frames","who":"sub_ada","framesIn":1500,"framesMuted":197,"pushed_s":15}
+{"t":1793317214661,"ev":"usage","who":"sub_ada","audio_s":4.99999999999999,"session":1}
+{"t":1793317217650,"ev":"usage","who":"sub_ada","audio_s":2.9499999999999975,"session":1}
+{"t":1793317218306,"ev":"frames","who":"sub_ada","framesIn":2000,"framesMuted":697,"pushed_s":20}
+{"t":1793317220699,"ev":"usage","who":"sub_ada","audio_s":3.049999999999997,"session":1}
+{"t":1793317223306,"ev":"frames","who":"sub_ada","framesIn":2500,"framesMuted":1197,"pushed_s":25}
+{"t":1793317223698,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317226698,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317228306,"ev":"frames","who":"sub_ada","framesIn":3000,"framesMuted":1697,"pushed_s":30}
+{"t":1793317229750,"ev":"usage","who":"sub_ada","audio_s":3.049999999999997,"session":1}
+{"t":1793317232750,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317233306,"ev":"frames","who":"sub_ada","framesIn":3500,"framesMuted":2197,"pushed_s":35}
+{"t":1793317235800,"ev":"usage","who":"sub_ada","audio_s":3.049999999999997,"session":1}
+{"t":1793317238306,"ev":"frames","who":"sub_ada","framesIn":4000,"framesMuted":2697,"pushed_s":40}
+{"t":1793317238798,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317241799,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317243306,"ev":"frames","who":"sub_ada","framesIn":4500,"framesMuted":3197,"pushed_s":45}
+{"t":1793317244856,"ev":"usage","who":"sub_ada","audio_s":3.049999999999997,"session":1}
+{"t":1793317247847,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317248306,"ev":"frames","who":"sub_ada","framesIn":5000,"framesMuted":3697,"pushed_s":50}
+{"t":1793317250897,"ev":"usage","who":"sub_ada","audio_s":3.049999999999997,"session":1}
+{"t":1793317253306,"ev":"frames","who":"sub_ada","framesIn":5500,"framesMuted":4197,"pushed_s":55}
+{"t":1793317253898,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317255774,"ev":"unmuted","who":"sub_ada"}
+{"t":1793317256897,"ev":"usage","who":"sub_ada","audio_s":2.9999999999999973,"session":1}
+{"t":1793317256996,"ev":"rx_start","who":"sub_ada"}
+{"t":1793317257901,"ev":"interim","who":"sub_ada","name":"Ada","text":"Hay fever.","conf":0.9135742,"start":56.52,"end":59.4999995,"session":1}
+{"t":1793317257901,"ev":"text_sent","seg":"4e4705bc","final":false,"ms":0}
+{"t":1793317258296,"ev":"rx_end","who":"sub_ada","at":1793317257996}
+{"t":1793317258298,"ev":"usage","who":"sub_ada","audio_s":1.4000000000000006,"session":1}
+{"t":1793317258298,"ev":"final","who":"sub_ada","name":"Ada","text":"Hay fever.","conf":0.9873047,"start":56.52,"end":59.8800006,"session":1}
+{"t":1793317258299,"ev":"text_sent","seg":"4e4705bc","final":true,"ms":1}
+{"t":1793317258306,"ev":"frames","who":"sub_ada","framesIn":6000,"framesMuted":4443,"pushed_s":60}
+{"t":1793317259096,"ev":"rx_start","who":"sub_ada"}
+{"t":1793317260305,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart trouble","conf":1,"start":59.88,"end":61.900000500000004,"session":1}
+{"t":1793317260305,"ev":"text_sent","seg":"3ae0ec74","final":false,"ms":0}
+{"t":1793317261302,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart trouble caused by falling","conf":1,"start":59.88,"end":62.900000500000004,"session":1}
+{"t":1793317261303,"ev":"text_sent","seg":"3ae0ec74","final":false,"ms":0}
+{"t":1793317262312,"ev":"interim","who":"sub_ada","name":"Ada","text":"A heart trouble caused by falling in love with a grass","conf":1,"start":59.88,"end":63.900000500000004,"session":1}
+{"t":1793317262313,"ev":"text_sent","seg":"3ae0ec74","final":false,"ms":1}
+{"t":1793317263066,"ev":"rx_end","who":"sub_ada","at":1793317262766}
+{"t":1793317263120,"ev":"usage","who":"sub_ada","audio_s":4.849999999999991,"session":1}
+{"t":1793317263120,"ev":"final","who":"sub_ada","name":"Ada","text":"A heart trouble caused by falling in love with a grass widow.","conf":1,"start":59.88,"end":64.6500005,"session":1}
+{"t":1793317263121,"ev":"text_sent","seg":"3ae0ec74","final":true,"ms":1}
+{"t":1793317263306,"ev":"frames","who":"sub_ada","framesIn":6500,"framesMuted":4443,"pushed_s":65}
+{"t":1793317268061,"ev":"usage","who":"sub_ada","audio_s":4.94999999999999,"session":1}
+{"t":1793317268306,"ev":"frames","who":"sub_ada","framesIn":7000,"framesMuted":4443,"pushed_s":70}
+{"t":1793317268585,"ev":"stt_end_input","who":"sub_ada"}
+{"t":1793317268585,"ev":"track_done","who":"sub_ada","framesIn":7027,"framesMuted":4443,"pushed_s":70.27,"sessions":1}
+{"t":1793317268679,"ev":"usage","who":"sub_ada","audio_s":0.49999999999999994,"session":1}
+{"t":1793317271696,"ev":"stt_closed","who":"sub_ada","session":1}
+{"t":1793317285086,"ev":"leaving_empty","after_s":15}
+{"t":1793317285092,"ev":"disconnected","why":1}
+{"t":1793317285093,"ev":"shutdown"}

@@ -1,0 +1,15 @@
+{"t":1793316452621,"ev":"config","run":"presence-tokenall","model":"deepgram/nova-3","gate":"vad","keyterms":[],"text":true,"idle_s":15}
+{"t":1793316452621,"ev":"job","room":"s45:presence-tokenall:voice","metadata":"{\"run\":\"presence-tokenall\",\"model\":\"deepgram/nova-3\",\"gate\":\"vad\",\"keyterms\":[],\"text\":true}","dispatch":"AD_JMPauQ9tW7BS"}
+{"t":1793316452978,"ev":"connected","room":"s45:presence-tokenall:voice","me":"agent-AJ_mh2kjwtEStWL","hidden":true}
+{"t":1793316452981,"ev":"joined","who":"sub_bo","kind":0}
+{"t":1793316453202,"ev":"track","who":"sub_bo","name":"Bo","track":"TR_AMZARmUMyatNQv","model":"deepgram/nova-3","gate":"vad","keyterms":[]}
+{"t":1793316453204,"ev":"track","who":"sub_ada","name":"Ada","track":"TR_AMU2zmv4c459R8","model":"deepgram/nova-3","gate":"vad","keyterms":[]}
+{"t":1793316458194,"ev":"frames","who":"sub_ada","framesIn":500,"framesMuted":0,"pushed_s":0}
+{"t":1793316458194,"ev":"frames","who":"sub_bo","framesIn":500,"framesMuted":0,"pushed_s":0}
+{"t":1793316463194,"ev":"frames","who":"sub_ada","framesIn":1000,"framesMuted":0,"pushed_s":0}
+{"t":1793316463194,"ev":"frames","who":"sub_bo","framesIn":1000,"framesMuted":0,"pushed_s":0}
+{"t":1793316466986,"ev":"track_done","who":"sub_ada","framesIn":1379,"framesMuted":0,"pushed_s":0,"sessions":0}
+{"t":1793316467007,"ev":"track_done","who":"sub_bo","framesIn":1381,"framesMuted":0,"pushed_s":0,"sessions":0}
+{"t":1793316482980,"ev":"leaving_empty","after_s":15}
+{"t":1793316482987,"ev":"disconnected","why":1}
+{"t":1793316482988,"ev":"shutdown"}

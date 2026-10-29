@@ -1,0 +1,11 @@
+{
+ "scenario": "presence",
+ "room": "s45:presence-visible:voice",
+ "dispatch": "api",
+ "run": "presence-visible",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793317364641
+}

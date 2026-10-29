@@ -1,0 +1,158 @@
+{
+ "run": "short-ungated",
+ "meta": {
+  "scenario": "short",
+  "room": "s45:short-ungated:voice",
+  "dispatch": "api",
+  "run": "short-ungated",
+  "model": "deepgram/nova-3",
+  "gate": "none",
+  "keyterms": [],
+  "text": true,
+  "started": 1793316877365
+ },
+ "wer": 0.0667,
+ "ref_words": 105,
+ "attribution": {
+  "ok": 15,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 6,
+   "p50": 338,
+   "p90": 621,
+   "max": 621,
+   "mean": 372
+  },
+  "final_after_speech_reached_agent": {
+   "n": 6,
+   "p50": 281,
+   "p90": 556,
+   "max": 556,
+   "mean": 315
+  },
+  "first_interim_after_speech_start": {
+   "n": 6,
+   "p50": 1501,
+   "p90": 1685,
+   "max": 1685,
+   "mean": 1481
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 12,
+   "p50": 355,
+   "p90": 638,
+   "max": 640,
+   "mean": 390
+  },
+  "relay_http_after_speech_end": {
+   "n": 6,
+   "p50": 340,
+   "p90": 623,
+   "max": 623,
+   "mean": 374
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Ada",
+    "track_s": 66,
+    "muted_frames_s": 0,
+    "pushed_s": 65.95,
+    "usage_s": 65.9,
+    "sessions": 1
+   },
+   {
+    "who": "Bo",
+    "track_s": 66,
+    "muted_frames_s": 0,
+    "pushed_s": 65.97,
+    "usage_s": 65.9,
+    "sessions": 1
+   },
+   {
+    "who": "Cy",
+    "track_s": 66,
+    "muted_frames_s": 0,
+    "pushed_s": 65.99,
+    "usage_s": 65.9,
+    "sessions": 1
+   }
+  ],
+  "stt_s": 197.8,
+  "track_s": 198,
+  "speech_s": 45.3,
+  "gated_fraction": 0.999
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": true,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0000",
+   "muted": false,
+   "ref": "also a popular contrivance whereby love making may be suspended but not stopped during the picnic season",
+   "hyp": "Also, a popular contrivance whereby lovemaking may be suspended but not stopped. During the picnic season.",
+   "wer": 0.118,
+   "final_ms": 313,
+   "final_after_rx_ms": 248
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0000",
+   "muted": false,
+   "ref": "he hoped there would be stew for dinner turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick peppered flour fattened sauce",
+   "hyp": "He hoped there would be stew for dinner, turnips and carrots and brewed potatoes and fat mutton pieces to be ladled out in thick peppered flour fattened sauce.",
+   "wer": 0.036,
+   "final_ms": 621,
+   "final_after_rx_ms": 556
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0001",
+   "muted": false,
+   "ref": "the influence with the timaeus has exercised upon posterity is due partly to a misunderstanding",
+   "hyp": "The influence which the Timaeus has exercised upon posterity is due partly to a misunderstanding.",
+   "wer": 0.067,
+   "final_ms": 312,
+   "final_after_rx_ms": 239
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0001",
+   "muted": false,
+   "ref": "harangue the tiresome product of a tireless tongue",
+   "hyp": "Harang. The tiresome product of a tireless tongue.",
+   "wer": 0.125,
+   "final_ms": 342,
+   "final_after_rx_ms": 289
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0002",
+   "muted": false,
+   "ref": "after early nightfall the yellow lamps would light up here and there the squalid quarter of the brothels",
+   "hyp": "After early nightfall, the yellow lamps would light up here and there. The squalid quarter of the brothels.",
+   "wer": 0,
+   "final_ms": 305,
+   "final_after_rx_ms": 279
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0004",
+   "muted": false,
+   "ref": "there is no danger of the modern commentators on the timaeus falling into the absurdities of the neo platonists",
+   "hyp": "There is no danger of the modern commentators on the Timaeus falling into the absurdities of the Neoplatonists.",
+   "wer": 0.105,
+   "final_ms": 338,
+   "final_after_rx_ms": 281
+  }
+ ]
+}

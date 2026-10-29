@@ -1,0 +1,23 @@
+{
+ "scenario": "jargon",
+ "room": "s45:jargon-keyterms:voice",
+ "dispatch": "api",
+ "run": "jargon-keyterms",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [
+  "Timaeus",
+  "Neoplatonists",
+  "pre-Socratic",
+  "Fitzooth",
+  "harangue",
+  "angor",
+  "mummeries",
+  "Ada",
+  "Bo",
+  "Cy",
+  "Di"
+ ],
+ "text": true,
+ "started": 1793317024114
+}

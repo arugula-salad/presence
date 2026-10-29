@@ -1,0 +1,248 @@
+{
+ "run": "turns-nova3",
+ "meta": {
+  "scenario": "turns",
+  "room": "s45:turns-nova3:voice",
+  "dispatch": "api",
+  "run": "turns-nova3",
+  "model": "deepgram/nova-3",
+  "gate": "vad",
+  "keyterms": [],
+  "text": true,
+  "started": 1793316495046
+ },
+ "wer": 0.0426,
+ "ref_words": 258,
+ "attribution": {
+  "ok": 39,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 15,
+   "p50": 377,
+   "p90": 474,
+   "max": 692,
+   "mean": 399
+  },
+  "final_after_speech_reached_agent": {
+   "n": 15,
+   "p50": 299,
+   "p90": 412,
+   "max": 629,
+   "mean": 329
+  },
+  "first_interim_after_speech_start": {
+   "n": 15,
+   "p50": 1530,
+   "p90": 1737,
+   "max": 1755,
+   "mean": 1551
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 30,
+   "p50": 397,
+   "p90": 493,
+   "max": 712,
+   "mean": 418
+  },
+  "relay_http_after_speech_end": {
+   "n": 15,
+   "p50": 378,
+   "p90": 476,
+   "max": 694,
+   "mean": 400
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Ada",
+    "track_s": 150.4,
+    "muted_frames_s": 0,
+    "pushed_s": 30.9,
+    "usage_s": 30.7,
+    "sessions": 7
+   },
+   {
+    "who": "Bo",
+    "track_s": 150.4,
+    "muted_frames_s": 0,
+    "pushed_s": 44.28,
+    "usage_s": 44.1,
+    "sessions": 5
+   },
+   {
+    "who": "Cy",
+    "track_s": 150.5,
+    "muted_frames_s": 0,
+    "pushed_s": 47.12,
+    "usage_s": 47,
+    "sessions": 5
+   }
+  ],
+  "stt_s": 121.9,
+  "track_s": 451.3,
+  "speech_s": 111.7,
+  "gated_fraction": 0.27
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": true,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0000",
+   "muted": false,
+   "ref": "also a popular contrivance whereby love making may be suspended but not stopped during the picnic season",
+   "hyp": "Also, a popular condrivance whereby lovemaking may be suspended but not stopped. During the picnic season.",
+   "wer": 0.176,
+   "final_ms": 474,
+   "final_after_rx_ms": 330
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0000",
+   "muted": false,
+   "ref": "he hoped there would be stew for dinner turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick peppered flour fattened sauce",
+   "hyp": "He hoped there would be stew for dinner, turnips and carrots and brewed potatoes and fat mutton pieces to be ladled out in thick peppered flour fattened sauce.",
+   "wer": 0.036,
+   "final_ms": 692,
+   "final_after_rx_ms": 629
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0001",
+   "muted": false,
+   "ref": "the influence with the timaeus has exercised upon posterity is due partly to a misunderstanding",
+   "hyp": "The influence which the Timaeus has exercised upon posterity is due partly to a misunderstanding.",
+   "wer": 0.067,
+   "final_ms": 370,
+   "final_after_rx_ms": 299
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0001",
+   "muted": false,
+   "ref": "harangue the tiresome product of a tireless tongue",
+   "hyp": "Harang. The tiresome product of a tireless tongue.",
+   "wer": 0.125,
+   "final_ms": 448,
+   "final_after_rx_ms": 297
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0002",
+   "muted": false,
+   "ref": "after early nightfall the yellow lamps would light up here and there the squalid quarter of the brothels",
+   "hyp": "After early nightfall, the yellow lamps would light up here and there. The squalid quarter of the brothels.",
+   "wer": 0,
+   "final_ms": 389,
+   "final_after_rx_ms": 344
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0004",
+   "muted": false,
+   "ref": "there is no danger of the modern commentators on the timaeus falling into the absurdities of the neo platonists",
+   "hyp": "There is no danger of the modern commentators on the Timaeus falling into the absurdities of the Neoplatonists.",
+   "wer": 0.105,
+   "final_ms": 282,
+   "final_after_rx_ms": 244
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0002",
+   "muted": false,
+   "ref": "angor pain painful to hear",
+   "hyp": "Angor pain, painful to hear.",
+   "wer": 0,
+   "final_ms": 381,
+   "final_after_rx_ms": 293
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0004",
+   "muted": false,
+   "ref": "number ten fresh nelly is waiting on you good night husband",
+   "hyp": "Number ten. Fresh Nelly is waiting on you. Good night, husband.",
+   "wer": 0,
+   "final_ms": 450,
+   "final_after_rx_ms": 380
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0005",
+   "muted": false,
+   "ref": "in the present day we are well aware that an ancient philosopher is to be interpreted from himself and by the contemporary history of thought",
+   "hyp": "In the present day, we are well aware that an ancient philosopher is to be interpreted from himself and by the contemporary history of thought.",
+   "wer": 0,
+   "final_ms": 289,
+   "final_after_rx_ms": 223
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0003",
+   "muted": false,
+   "ref": "hay fever a heart trouble caused by falling in love with a grass widow",
+   "hyp": "Hay fever. A heart trouble caused by falling in love with a grass widow.",
+   "wer": 0,
+   "final_ms": 369,
+   "final_after_rx_ms": 327
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0005",
+   "muted": false,
+   "ref": "the music came nearer and he recalled the words the words of shelley's fragment upon the moon wandering companionless pale for weariness",
+   "hyp": "The music came nearer, and he recalled the words. Words of Shelley's fragment upon the moon wandering companionless. Pale for weariness,",
+   "wer": 0.045,
+   "final_ms": 453,
+   "final_after_rx_ms": 412
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0007",
+   "muted": false,
+   "ref": "but they have nothing to do with the interpretation of plato and in spirit they are opposed to him",
+   "hyp": "But they have nothing to do with the interpretation of Plato and in spirit they are opposed to him.",
+   "wer": 0,
+   "final_ms": 349,
+   "final_after_rx_ms": 292
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0004",
+   "muted": false,
+   "ref": "heaven a good place to be raised to",
+   "hyp": "Heaven, a good place to be raised to.",
+   "wer": 0,
+   "final_ms": 377,
+   "final_after_rx_ms": 332
+  },
+  {
+   "who": "Bo",
+   "utt": "1089-134686-0006",
+   "muted": false,
+   "ref": "the dull light fell more faintly upon the page whereon another equation began to unfold itself slowly and to spread abroad its widening tail",
+   "hyp": "The dull light fell more faintly upon the page where on another equation began to unfold itself slowly and to spread abroad its widening tail.",
+   "wer": 0.083,
+   "final_ms": 337,
+   "final_after_rx_ms": 269
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0009",
+   "muted": false,
+   "ref": "the dialogue is primarily concerned with the animal creation including under this term the heavenly bodies and with man only as one among the animals",
+   "hyp": "The dialogue is primarily concerned with the animal creation including under this term the heavenly bodies, and with man, only as one among the animals.",
+   "wer": 0,
+   "final_ms": 320,
+   "final_after_rx_ms": 265
+  }
+ ]
+}

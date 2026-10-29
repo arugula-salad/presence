@@ -1,0 +1,11 @@
+{
+ "scenario": "turns",
+ "room": "s45:turns-assembly:voice",
+ "dispatch": "api",
+ "run": "turns-assembly",
+ "model": "assemblyai/universal-streaming",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793316701669
+}

@@ -1,0 +1,15 @@
+{"t":1793316474677,"page":"Ada","ev":"join_call"}
+{"t":1793316474877,"page":"Ada","ev":"joined","people":[]}
+{"t":1793316474931,"page":"Ada","ev":"published"}
+{"t":1793316475268,"page":"Bo","ev":"join_call"}
+{"t":1793316475351,"page":"Ada","ev":"participant_connected","id":"sub_bo","kind":0,"people":[{"id":"sub_bo","kind":0,"isAgent":false}]}
+{"t":1793316475456,"page":"Bo","ev":"joined","people":[{"id":"sub_ada","kind":0,"isAgent":false}]}
+{"t":1793316475513,"page":"Bo","ev":"published"}
+{"t":1793316489514,"page":"Ada","ev":"people_end","people":[{"id":"sub_bo","kind":0,"isAgent":false}]}
+{"t":1793316489516,"page":"Bo","ev":"people_end","people":[{"id":"sub_ada","kind":0,"isAgent":false}]}
+{"t":1793316489536,"page":"Bo","ev":"participant_disconnected","id":"sub_ada","people":[]}
+{"t":1793316489537,"page":"Ada","ev":"disconnected","why":1}
+{"t":1793316489537,"page":"Ada","ev":"left"}
+{"t":1793316489558,"page":"Bo","ev":"disconnected","why":1}
+{"t":1793316489558,"page":"Bo","ev":"left"}
+{"t":1793316489576,"ev":"end"}

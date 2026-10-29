@@ -1,0 +1,16 @@
+{"t":1793317402951,"page":"Ada","ev":"join_call"}
+{"t":1793317403201,"page":"Ada","ev":"joined","people":[]}
+{"t":1793317403255,"page":"Ada","ev":"published"}
+{"t":1793317403751,"ev":"dispatch","via":"api","result":{"status":200,"body":{"agent_name":"s45-transcriber","attributes":{},"deployment":"","id":"AD_Bap6EXQjQvzF","metadata":"{\"run\":\"empty-room\",\"model\":\"deepgram/nova-3\",\"gate\":\"vad\",\"keyterms\":[],\"text\":true,\"idle_s\":600}","restart_policy":"JRP_ON_FAILURE","room":"s45:empty-room:voice","state":{"created_at":"1793317403727162435","deleted_at":"0","jobs":[]}},"ms":184}}
+{"t":1793317403817,"page":"Bo","ev":"join_call"}
+{"t":1793317403899,"page":"Ada","ev":"participant_connected","id":"sub_bo","kind":0,"people":[{"id":"sub_bo","kind":0,"isAgent":false}]}
+{"t":1793317404105,"page":"Bo","ev":"joined","people":[{"id":"sub_ada","kind":0,"isAgent":false}]}
+{"t":1793317404159,"page":"Bo","ev":"published"}
+{"t":1793317418160,"page":"Ada","ev":"people_end","people":[{"id":"sub_bo","kind":0,"isAgent":false}]}
+{"t":1793317418162,"page":"Bo","ev":"people_end","people":[{"id":"sub_ada","kind":0,"isAgent":false}]}
+{"t":1793317418183,"page":"Bo","ev":"participant_disconnected","id":"sub_ada","people":[]}
+{"t":1793317418183,"page":"Ada","ev":"disconnected","why":1}
+{"t":1793317418183,"page":"Ada","ev":"left"}
+{"t":1793317418204,"page":"Bo","ev":"disconnected","why":1}
+{"t":1793317418204,"page":"Bo","ev":"left"}
+{"t":1793317418222,"ev":"end"}

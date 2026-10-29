@@ -1,0 +1,11 @@
+{
+ "scenario": "presence",
+ "room": "s45:presence-tokenall:voice",
+ "dispatch": "token-all",
+ "run": "presence-tokenall",
+ "model": "deepgram/nova-3",
+ "gate": "vad",
+ "keyterms": [],
+ "text": true,
+ "started": 1793316451576
+}

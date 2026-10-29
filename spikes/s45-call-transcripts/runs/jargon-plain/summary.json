@@ -1,0 +1,164 @@
+{
+ "run": "jargon-plain",
+ "meta": {
+  "scenario": "jargon",
+  "room": "s45:jargon-plain:voice",
+  "dispatch": "api",
+  "run": "jargon-plain",
+  "model": "deepgram/nova-3",
+  "gate": "vad",
+  "keyterms": [],
+  "text": true,
+  "started": 1793316958114
+ },
+ "wer": 0.0625,
+ "ref_words": 96,
+ "attribution": {
+  "ok": 11,
+  "bad": 0,
+  "misattributed": []
+ },
+ "duplicate_finals_dropped": 0,
+ "latency_ms": {
+  "final_after_speech_end": {
+   "n": 7,
+   "p50": 306,
+   "p90": 411,
+   "max": 411,
+   "mean": 273
+  },
+  "final_after_speech_reached_agent": {
+   "n": 7,
+   "p50": 256,
+   "p90": 342,
+   "max": 342,
+   "mean": 218
+  },
+  "first_interim_after_speech_start": {
+   "n": 7,
+   "p50": 1531,
+   "p90": 1694,
+   "max": 1694,
+   "mean": 1344
+  },
+  "caption_in_other_browsers_after_speech_end": {
+   "n": 14,
+   "p50": 324,
+   "p90": 428,
+   "max": 431,
+   "mean": 292
+  },
+  "relay_http_after_speech_end": {
+   "n": 0
+  }
+ },
+ "stt": {
+  "tracks": [
+   {
+    "who": "Ada",
+    "track_s": 63.4,
+    "muted_frames_s": 0,
+    "pushed_s": 10.93,
+    "usage_s": 10.8,
+    "sessions": 3
+   },
+   {
+    "who": "Cy",
+    "track_s": 63.4,
+    "muted_frames_s": 0,
+    "pushed_s": 23.86,
+    "usage_s": 23.8,
+    "sessions": 3
+   },
+   {
+    "who": "Di",
+    "track_s": 63.4,
+    "muted_frames_s": 0,
+    "pushed_s": 12.34,
+    "usage_s": 12.3,
+    "sessions": 2
+   }
+  ],
+  "stt_s": 46.9,
+  "track_s": 190.2,
+  "speech_s": 41.5,
+  "gated_fraction": 0.247
+ },
+ "agent_visible_in_participant_list": false,
+ "caption_sender_identities": [
+  ""
+ ],
+ "relay_signed_ok": null,
+ "utterances": [
+  {
+   "who": "Ada",
+   "utt": "121-121726-0001",
+   "muted": false,
+   "ref": "harangue the tiresome product of a tireless tongue",
+   "hyp": "Harang The tiresome product of a tireless tongue.",
+   "wer": 0.125,
+   "final_ms": 411,
+   "final_after_rx_ms": 342
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0001",
+   "muted": false,
+   "ref": "the influence with the timaeus has exercised upon posterity is due partly to a misunderstanding",
+   "hyp": "The influence which the Timaeus has exercised upon posterity is due partly to a misunderstanding.",
+   "wer": 0.067,
+   "final_ms": 306,
+   "final_after_rx_ms": 239
+  },
+  {
+   "who": "Di",
+   "utt": "61-70968-0001",
+   "muted": false,
+   "ref": "give not so earnest a mind to these mummeries child",
+   "hyp": "Give not so earnest a mind to these mummeries, child.",
+   "wer": 0,
+   "final_ms": 227,
+   "final_after_rx_ms": 160
+  },
+  {
+   "who": "Ada",
+   "utt": "121-121726-0002",
+   "muted": false,
+   "ref": "angor pain painful to hear",
+   "hyp": "Angor pain, painful to hear.",
+   "wer": 0,
+   "final_ms": 299,
+   "final_after_rx_ms": 256
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0004",
+   "muted": false,
+   "ref": "there is no danger of the modern commentators on the timaeus falling into the absurdities of the neo platonists",
+   "hyp": "There is no danger of the modern commentators on the Timaeus falling into the absurdities of the Neoplatonists.",
+   "wer": 0.105,
+   "final_ms": 321,
+   "final_after_rx_ms": 281
+  },
+  {
+   "who": "Di",
+   "utt": "61-70968-0011",
+   "muted": false,
+   "ref": "he gave way to the others very readily and retreated unperceived by the squire and mistress fitzooth to the rear of the tent",
+   "hyp": "He gave way to the others very readily and retreated unperceived by the squire mistress Fitzuth to the rear of the tent.",
+   "wer": 0.087,
+   "final_ms": 37,
+   "final_after_rx_ms": -16
+  },
+  {
+   "who": "Cy",
+   "utt": "2961-960-0012",
+   "muted": false,
+   "ref": "many if not all the elements of the pre socratic philosophy are included in the timaeus",
+   "hyp": "Many, if not all the elements of the pre Socratic philosophy are included in the Timaeus.",
+   "wer": 0,
+   "final_ms": 308,
+   "final_after_rx_ms": 266
+  }
+ ]
+}
