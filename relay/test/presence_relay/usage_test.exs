@@ -189,6 +189,31 @@ defmodule PresenceRelay.UsageTest do
     assert mau(app, ~D[2026-11-01]) == 1
   end
 
+  test "an expired cap is used at join while a task reloads it: the join doesn't wait", %{
+    app: app
+  } do
+    r = room()
+    on(~D[2026-10-29])
+    prev = Application.get_env(:presence_relay, :usage_cache_ms)
+    Application.put_env(:presence_relay, :usage_cache_ms, 0)
+    on_exit(fn -> Application.put_env(:presence_relay, :usage_cache_ms, prev || 30_000) end)
+
+    {:ok, app} = Usage.put_cap(app, 5)
+    {:ok, _, _} = member(app, :a, r, "alice")
+    # The cap drops to nothing behind this node's back (another node's
+    # change, say, whose word hasn't come).
+    Repo.update_all(from(a in PresenceRelay.Apps.App, where: a.id == ^app.id), set: [mau_cap: 0])
+
+    # Postgres busy: the join goes on the cached (expired) cap, at once.
+    release = hold_database()
+    {:ok, _, _} = member(app, :b, r, "bob")
+    release.()
+
+    # The reload lands; the next stranger meets the new cap.
+    Process.sleep(100)
+    assert {:error, %{reason: @full}} = member(app, :c, r, "carol")
+  end
+
   defp as(%Account{id: id}), do: build_conn() |> init_test_session(account_id: id)
 
   defp put_json(conn, path, body),

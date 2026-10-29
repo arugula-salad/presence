@@ -22,8 +22,10 @@ defmodule PresenceRelay.Metrics do
     `token`, `origin`, `guest` and `rate` at connect, `cap` (the app's
     monthly limit), `room_full`, `connections` (a member's),
     `app_connections` and `wrong_room` at join.
-  - `presence_frames_total{result}`: frames in, `relayed`, `too_big` or
-    `too_soon` (rate: frames a second); `presence_frame_bytes_total`.
+  - `presence_frames_total{result}`: frames in, `relayed`, `too_big`,
+    `too_soon` (over the member's rate) or `shed` (over the rate this
+    node could carry just then: `PresenceRelay.Load`) (rate: frames a
+    second); `presence_frame_bytes_total`.
   - `presence_messages_total{kind, result}`: say, react, wave, answer.
   - `presence_calls_started_total`; `presence_call_seconds_total`, each
     person's time in calls (over 60: call minutes).
@@ -37,7 +39,8 @@ defmodule PresenceRelay.Metrics do
   dashboard sums them), `presence_rooms`, `presence_members`,
   `presence_calls_active`, `presence_call_participants` (the cluster's,
   which every node sees alike: a dashboard takes the max),
-  `presence_cluster_nodes`, `presence_usage_unflushed_seconds` (since a
+  `presence_cluster_nodes`, `presence_frame_gap_stretch` (1 unless the
+  node is short of CPU), `presence_usage_unflushed_seconds` (since a
   flush last left nothing behind; it grows while Postgres refuses
   writes) and `presence_usage_kept`, `presence_db_pool_size`,
   `presence_db_pool_ready` and `presence_db_pool_queue`, and the BEAM's
@@ -64,7 +67,7 @@ defmodule PresenceRelay.Metrics do
       {:counter, "Connects and joins refused, by reason (token, origin, guest, rate, cap, …).",
        []},
     presence_frames_total:
-      {:counter, "Frames in: relayed, or dropped as too_big or too_soon.", []},
+      {:counter, "Frames in: relayed, or dropped as too_big, too_soon or shed (CPU short).", []},
     presence_frame_bytes_total: {:counter, "Bytes of frames relayed (before fan-out).", []},
     presence_messages_total:
       {:counter, "Room messages (say, react, wave, answer), kept or dropped.", []},
@@ -264,6 +267,9 @@ defmodule PresenceRelay.Metrics do
        "Connections in calls, cluster-wide (max across nodes).", [{[], rooms.in_calls}]},
       {:presence_cluster_nodes, :gauge, "Nodes this one sees, itself included.",
        [{[], length(Node.list()) + 1}]},
+      {:presence_frame_gap_stretch, :gauge,
+       "How far this node stretches the frame gap while short of CPU (1: not at all).",
+       [{[], PresenceRelay.Load.stretch() / 100}]},
       {:presence_usage_unflushed_seconds, :gauge,
        "Seconds since a usage flush last left nothing to retry.",
        [{[], usage_unflushed_seconds()}]},
@@ -298,7 +304,9 @@ defmodule PresenceRelay.Metrics do
   # CPU figure, it leaves out schedulers spinning while they wait for work.
   defp utilization do
     now = :erlang.statistics(:scheduler_wall_time) || []
-    n = :erlang.system_info(:schedulers)
+    # Online ones only: a container limited to part of a big machine has
+    # schedulers for every core, most of them offline.
+    n = :erlang.system_info(:schedulers_online)
     now = for {id, active, total} <- now, id <= n, do: {id, active, total}
     before = lookup(:scheduler_wall_time, [])
     :ets.insert(@table, {:scheduler_wall_time, now})
