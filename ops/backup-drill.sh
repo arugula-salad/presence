@@ -83,7 +83,7 @@ cleanup() {
   if [[ "${KEEP_DUMP:-0}" == 1 ]]; then
     say "dump kept: $DUMP"
   else
-    rm -f "$DUMP"
+    rm -f "$DUMP" "$DUMP_DIR/toc"
     if [[ "$own_dir" == 1 ]]; then rmdir "$DUMP_DIR" 2>/dev/null || true; fi
   fi
 }
@@ -155,7 +155,19 @@ say "creating $SCRATCH_DB and restoring"
 q "$SCRATCH_ADMIN_URL" "CREATE DATABASE $SCRATCH_DB" >/dev/null
 created=1
 t0=$(date +%s)
-pg pg_restore --no-owner --no-privileges --exit-on-error --dbname="$SCRATCH_URL" "$DUMP"
+# Extensions the target can't install are left out: Managed Postgres adds
+# its own (pg_stat_monitor), which a plain Postgres doesn't ship, and
+# nothing of ours uses them.
+available=" $(q "$SCRATCH_URL" "SELECT string_agg(name, ' ') FROM pg_available_extensions") "
+pg pg_restore --list "$DUMP" >"$DUMP_DIR/toc"
+while read -r ext; do
+  if [[ "$available" != *" $ext "* ]]; then
+    say "leaving out extension $ext (not available here)"
+    grep -vE "(EXTENSION|COMMENT) - (EXTENSION )?$ext( |\$)" "$DUMP_DIR/toc" >"$DUMP_DIR/toc.kept"
+    mv "$DUMP_DIR/toc.kept" "$DUMP_DIR/toc"
+  fi
+done < <(grep -oE ' EXTENSION - [a-z0-9_]+' "$DUMP_DIR/toc" | awk '{print $3}' | sort -u)
+pg pg_restore --no-owner --no-privileges --exit-on-error --use-list="$DUMP_DIR/toc" --dbname="$SCRATCH_URL" "$DUMP"
 say "restored in $(( $(date +%s) - t0 )) s"
 
 # 3. Check the copy.
