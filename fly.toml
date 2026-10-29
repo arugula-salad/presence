@@ -1,9 +1,16 @@
-# arugula.stream: the presence relay serving the demo (#315). `fly deploy`
-# from the repo root (the image builds demo/ into the relay). Secrets:
-# SECRET_KEY_BASE, DEMO_SECRET, and PRESENCE_APPS once a host app uses it.
-# One machine: rooms live in one node's memory until the relay clusters.
+# arugula.stream: the relay, the site, meet and the dashboard, in
+# production. `fly deploy` from the repo root (the image builds the sites
+# into the relay). Postgres: the Managed Postgres cluster arugula-stream-db
+# (iad), database and user presence_prod, attached as DATABASE_URL;
+# migrations run before each release. Secrets: SECRET_KEY_BASE,
+# DEMO_SECRET, DATABASE_URL, RELEASE_COOKIE, and the sign-in, mail and
+# calls ones (relay/README.md). Billing stays off (no STRIPE_*) until
+# live Stripe. Two machines in iad, beside the database, clustered.
 app = "arugula-stream"
-primary_region = "ewr"
+primary_region = "iad"
+
+[deploy]
+  release_command = "/app/bin/presence_relay eval PresenceRelay.Release.migrate()"
 
 [build]
   dockerfile = "relay/Dockerfile"
@@ -13,6 +20,11 @@ primary_region = "ewr"
   PORT = "4000"
   METRICS_PORT = "9091"
   DEMO = "1"
+  # meet's guests' publishable key works from meet.arugula.stream and from
+  # arugula.stream/meet.
+  MEET_ORIGINS = "https://meet.arugula.stream,https://arugula.stream"
+  # Fly's private network (and the Managed Postgres host on it) is IPv6.
+  ECTO_IPV6 = "true"
 
 [http_service]
   internal_port = 4000
@@ -42,5 +54,7 @@ primary_region = "ewr"
   path = "/metrics"
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  # shared-cpu-1x (512 MB) throttled under the load probe; two of these
+  # until the probe says otherwise (ops/README.md).
+  size = "shared-cpu-2x"
+  memory = "1gb"

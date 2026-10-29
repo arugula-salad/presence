@@ -5,13 +5,9 @@ defmodule PresenceRelay.Billing.Plans do
   script (`scripts/stripe_setup.exs`, which makes the prices from these)
   all read them here.
 
-  > #### Placeholders {: .warning}
-  >
-  > Jake hasn't set the numbers. Every figure marked PLACEHOLDER below is
-  > a guess from the /hosted pitch ("about $29/month, priced by the people
-  > who use it"), to be confirmed before going live. Changing a price
-  > means running the setup script again (it makes new Stripe prices and
-  > prints their ids) and setting the new ids.
+  The numbers are Jake's (confirmed 2026-10-29). Changing a price means
+  running the setup script again (it makes new Stripe prices and prints
+  their ids) and setting the new ids.
 
   - **Starter:** free, with a hard cap on monthly active users.
   - **Team:** a monthly base price that includes some monthly active
@@ -23,10 +19,10 @@ defmodule PresenceRelay.Billing.Plans do
   a cent per unit).
   """
 
-  # PLACEHOLDER: the most monthly active users a Starter app may have.
+  # The most monthly active users a Starter app may have.
   @starter_mau_cap 100
 
-  # PLACEHOLDER: Team's base price a month, the monthly active users it
+  # Team's base price a month, the monthly active users it
   # includes, and the price of each one past those and of each call minute.
   @team_base "29.00"
   @team_included_mau 500
