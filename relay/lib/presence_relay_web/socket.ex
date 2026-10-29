@@ -19,7 +19,9 @@ defmodule PresenceRelayWeb.Socket do
   upgrade is answered 429 with `Retry-After` (`handle_error/2`). Any
   other refusal is a 403, as Phoenix does.
   """
-  use Phoenix.Socket
+  # A connect at :info was a log line a client (RoomChannel's join, too):
+  # /metrics counts them.
+  use Phoenix.Socket, log: :debug
   require Logger
 
   alias PresenceRelay.{Apps, Issuers, Limits, Token, Usage}

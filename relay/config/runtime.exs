@@ -167,9 +167,18 @@ if config_env() == :prod do
       config :presence_relay, database: false
 
     url ->
+      # The pool's queue: DBConnection sheds checkouts that wait past
+      # queue_target (default 50 ms) for a whole queue_interval. That suits
+      # a database next door; ours is behind PgBouncer, and from a machine in
+      # another region (lhr to iad) every query is a ~75 ms round trip or
+      # two, so at 50 ms an ordinary queue was shed as an overload
+      # (staging's two-region probe). POOL_QUEUE_TARGET_MS and
+      # POOL_QUEUE_INTERVAL_MS change them.
       config :presence_relay, PresenceRelay.Repo,
         url: url,
         pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+        queue_target: String.to_integer(System.get_env("POOL_QUEUE_TARGET_MS") || "500"),
+        queue_interval: String.to_integer(System.get_env("POOL_QUEUE_INTERVAL_MS") || "2000"),
         # Fly's Managed Postgres pools through PgBouncer in transaction
         # mode: no named prepared statements.
         prepare: :unnamed,

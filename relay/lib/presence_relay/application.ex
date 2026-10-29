@@ -50,6 +50,11 @@ defmodule PresenceRelay.Application do
           {DNSCluster,
            query: Application.get_env(:presence_relay, :dns_cluster_query) || :ignore},
           {Phoenix.PubSub, name: PresenceRelay.PubSub},
+          # Rooms' database work, off their channels (RoomChannel's
+          # history and text).
+          {Task.Supervisor, name: PresenceRelay.Tasks},
+          # How far behind this node is: the frame rate's stretch.
+          PresenceRelay.Load,
           # Every room's connections, cluster-wide (PresenceRelay.Rooms).
           %{id: :pg, start: {:pg, :start_link, [PresenceRelay.Rooms.scope()]}},
           PresenceRelay.Presence,
@@ -59,6 +64,8 @@ defmodule PresenceRelay.Application do
           # Team apps' usage to Stripe's meters, every 15 minutes (billing on).
           PresenceRelay.Billing.Reporter,
           PresenceRelay.Chat.Memory,
+          # Text into Postgres, in batches.
+          PresenceRelay.Chat.Writer,
           PresenceRelayWeb.Endpoint,
           # Mails when deep health fails (PresenceRelay.Health).
           PresenceRelay.Watchdog

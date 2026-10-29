@@ -33,7 +33,32 @@ defmodule PresenceRelay.Rooms do
     them through, and that node alone sweeps them, so a stale frame says
     `off` once. A joiner asks every node for its fresh frames (`fresh/2`);
     forgetting a frame (`camera_off`) forgets it on every node.
-  - **Rate limits** stay where they are: per connection, on its node.
+  - **Rate limits** stay where they are: per member, on the node their
+    frames come through.
+
+  ## The frame rate
+
+  A member's frames are held to one per 70 ms on average, as a token
+  bucket of 3 (`:frame_burst`) refilling one per 70 ms (`:frame_gap_ms`):
+  kept as the member's "theoretical arrival time" (GCRA), one integer
+  beside their newest frame. The network doesn't deliver a client's
+  frames as evenly as it sent them (TCP, TLS and a proxy bunch them: two
+  frames sent 83 ms apart can arrive 10 ms apart), so a strict floor
+  dropped real frames that were never too fast; the bucket lets a short
+  bunch through and still holds the rate.
+
+  While this node is short of CPU, the gap is stretched
+  (`PresenceRelay.Load`): fewer frames in, rather than every frame late.
+  A frame dropped then is counted `shed`, not `too_soon`.
+
+  ## Fan-out
+
+  A frame goes to the room's internal topic with `PresenceRelay.Fanout`
+  as the dispatcher: each room channel subscribed with its socket's
+  transport (`fanout_meta/1`), so the frame is encoded once (per join ref)
+  and sent straight to each socket, without a stop in each channel's
+  process. Everything else on the topic (`off`, reactions, text) still
+  goes through the channel.
   """
   use GenServer
 
@@ -44,7 +69,6 @@ defmodule PresenceRelay.Rooms do
   @doc "The `:pg` scope connections are grouped in (started by the application)."
   def scope, do: @scope
   @max_frame 32 * 1024
-  @gap_ms 70
 
   def start_link(_), do: GenServer.start_link(__MODULE__, nil, name: __MODULE__)
 
@@ -62,8 +86,8 @@ defmodule PresenceRelay.Rooms do
 
   @doc """
   Keeps `frame` as `sub`'s newest and passes it to the rest of the room,
-  prefixed with who sent it; `:drop` for one too big, or too soon after
-  the member's last (70 ms).
+  prefixed with who sent it; `:drop` for one too big, or over the
+  member's rate (a burst of 3, then one per 70 ms: "The frame rate").
   """
   def frame(app, room, sub, frame, from \\ self())
 
@@ -75,26 +99,45 @@ defmodule PresenceRelay.Rooms do
   def frame(app, room, sub, frame, from) do
     now = System.monotonic_time(:millisecond)
     key = {app, room, sub}
+    # Stretched while this node is short of CPU (PresenceRelay.Load).
+    stretch = PresenceRelay.Load.stretch()
+    gap = div(gap_ms() * stretch, 100)
 
-    case :ets.lookup(@table, key) do
-      [{^key, at, _}] when now - at < @gap_ms ->
-        framed(:too_soon, frame)
-        :drop
+    # The member's theoretical arrival time: when their next frame would
+    # be due if every one so far had come exactly a gap apart. A frame
+    # may come early by up to the burst's worth of gaps.
+    tat =
+      case :ets.lookup(@table, key) do
+        [{^key, _, _, tat}] -> max(tat, now)
+        _ -> now
+      end
 
-      _ ->
-        :ets.insert(@table, {key, now, frame})
-        framed(:relayed, frame)
+    if tat - now > (burst() - 1) * gap do
+      # Over the rate, or over the rate this node can carry just now.
+      framed(if(stretch > 100, do: :shed, else: :too_soon), frame)
+      :drop
+    else
+      :ets.insert(@table, {key, now, frame, tat + gap})
+      framed(:relayed, frame)
 
-        PubSub.broadcast_from(
-          PresenceRelay.PubSub,
-          from,
-          room_topic(app, room),
-          {:relay_frame, prefixed(sub, frame)}
-        )
+      PubSub.broadcast_from(
+        PresenceRelay.PubSub,
+        from,
+        room_topic(app, room),
+        {:relay_frame, prefixed(sub, frame)},
+        PresenceRelay.Fanout
+      )
 
-        :ok
+      :ok
     end
   end
+
+  @doc """
+  The metadata a room channel subscribes to the room's topic with, so
+  `PresenceRelay.Fanout` can send frames straight to its socket.
+  """
+  def fanout_meta(%Phoenix.Socket{} = s),
+    do: {:fanout, s.transport_pid, s.serializer, s.join_ref, s.topic}
 
   @doc """
   Every member's newest frame younger than the stale age, prefixed, from
@@ -117,7 +160,7 @@ defmodule PresenceRelay.Rooms do
   def local_fresh(app, room) do
     cutoff = System.monotonic_time(:millisecond) - stale_ms()
 
-    for {{_, _, sub}, at, frame} <- :ets.match_object(@table, {{app, room, :_}, :_, :_}),
+    for {{_, _, sub}, at, frame, _} <- :ets.match_object(@table, {{app, room, :_}, :_, :_, :_}),
         at >= cutoff,
         do: prefixed(sub, frame)
   end
@@ -212,6 +255,8 @@ defmodule PresenceRelay.Rooms do
         %{result: result}
       )
 
+  defp gap_ms, do: Application.get_env(:presence_relay, :frame_gap_ms, 70)
+  defp burst, do: Application.get_env(:presence_relay, :frame_burst, 3)
   defp stale_ms, do: Application.get_env(:presence_relay, :stale_ms, 10_000)
   defp sweep_ms, do: Application.get_env(:presence_relay, :sweep_ms, 2_000)
   defp max_members, do: Application.get_env(:presence_relay, :max_members, 64)
@@ -280,7 +325,7 @@ defmodule PresenceRelay.Rooms do
 
   def handle_info(:sweep, s) do
     cutoff = System.monotonic_time(:millisecond) - stale_ms()
-    stale = :ets.select(@table, [{{:"$1", :"$2", :_}, [{:<, :"$2", cutoff}], [:"$1"]}])
+    stale = :ets.select(@table, [{{:"$1", :"$2", :_, :_}, [{:<, :"$2", cutoff}], [:"$1"]}])
     for {app, r, sub} <- stale, do: camera_off(app, r, sub, self())
     Process.send_after(self(), :sweep, sweep_ms())
     {:noreply, s}

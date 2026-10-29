@@ -32,6 +32,15 @@ primary_region = "iad"
   auto_start_machines = true
   min_machines_running = 1
 
+  # Past 300 connections a machine is "busy" to Fly's proxy, which then
+  # sends new ones to the other machine (and starts it if it's stopped):
+  # one performance-1x holds about 400 people sending frames (#330).
+  # Fly's default (20) would spread them long before one is busy.
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 300
+    hard_limit = 10000
+
   [[http_service.checks]]
     method = "GET"
     path = "/healthz"
@@ -48,7 +57,8 @@ primary_region = "iad"
   path = "/metrics"
 
 [[vm]]
-  # shared-cpu-1x (512 MB) throttled under the load probe; two of these
-  # until the probe says otherwise (ops/README.md).
-  size = "shared-cpu-2x"
-  memory = "1gb"
+  # A real core each: 10× team scale (800 people sending frames) needs
+  # about two thirds of one per machine, and a shared CPU's quota (1/16 of
+  # a core, 1/8 for shared-cpu-2x) can't hold it (#330, ops/README.md).
+  size = "performance-1x"
+  memory = "2gb"

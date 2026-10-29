@@ -67,7 +67,10 @@ defmodule PresenceRelay.Usage do
   flush writes the app, when the new count goes to every node), the
   people it has seen this month, and how many new ones it has let in
   since its last count. A join costs no query while the count plus those
-  is under the cap. At the cap, this node flushes the app and asks
+  is under the cap. An expired cache is still used while one task
+  reloads it, so only an app's first join on a node waits for Postgres
+  (a burst of joins as the cache expired each queried it, on the join's
+  clock). At the cap, this node flushes the app and asks
   Postgres whether this person is already counted and what the count is
   now, and decides on that. So one node never overshoots; across nodes
   the overshoot is at most the new people the other nodes let in and
@@ -295,14 +298,41 @@ defmodule PresenceRelay.Usage do
     end
   end
 
-  # The app's cap and month count, cached for `usage_cache_ms`.
+  # The app's cap and month count, cached for `usage_cache_ms`; once
+  # that's past, still used while one task reloads it.
   defp cached(app, m) do
     now = System.monotonic_time(:millisecond)
     fresh = now - cache_ms()
 
     case :ets.lookup(@caps, app) do
-      [{^app, cap, ^m, count, at}] when at > fresh -> {cap, count}
-      _ -> load(app, m, now)
+      [{^app, cap, ^m, count, at}] when at > fresh ->
+        {cap, count}
+
+      [{^app, cap, ^m, count, _}] ->
+        reload(app, m)
+        {cap, count}
+
+      _ ->
+        load(app, m, now)
+    end
+  end
+
+  # One reload at a time per app on this node (the marker row says one's
+  # running).
+  defp reload(app, m) do
+    if :ets.insert_new(@caps, {{:loading, app}}) do
+      Task.Supervisor.start_child(PresenceRelay.Tasks, fn ->
+        try do
+          load(app, m, System.monotonic_time(:millisecond))
+        rescue
+          e in [DBConnection.ConnectionError, Postgrex.Error] ->
+            Logger.warning("usage: couldn't reload a cap: #{Exception.message(e)}")
+        catch
+          :exit, _ -> :ok
+        after
+          :ets.delete(@caps, {:loading, app})
+        end
+      end)
     end
   end
 

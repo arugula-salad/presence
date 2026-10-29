@@ -4,15 +4,15 @@ defmodule PresenceRelay.Chat do
   P5): checked, kept per app and room in order with a stable id, and read
   back newest-last, 50 at a time.
 
-  Kept in Postgres when the relay has a database (`database: true`); a
-  relay without one keeps each room's last 50 in memory (`Chat.Memory`),
-  so the demo can talk too. Either way a message is
+  Kept in Postgres when the relay has a database (`database: true`), in
+  batches (`Chat.Writer`); a relay without one keeps each room's last 50
+  in memory (`Chat.Memory`), so the demo can talk too. Either way a message is
   `%{id, sub, name, text, at}`, `at` in Unix milliseconds.
   """
   import Ecto.Query
   require Logger
 
-  alias PresenceRelay.Chat.{Memory, Message}
+  alias PresenceRelay.Chat.{Memory, Message, Writer}
   alias PresenceRelay.Repo
 
   @max_chars 2000
@@ -65,21 +65,17 @@ defmodule PresenceRelay.Chat do
     if database?(), do: query(app, room, before), else: Memory.history(app, room, before, @page)
   end
 
+  # In a batch with whatever else this node is keeping just now
+  # (Chat.Writer): one connection for a node's text, however far the
+  # database is.
   defp insert(app, room, sub, name, text) do
-    %Message{}
-    |> Ecto.Changeset.change(app: app, room: room, sub: sub, name: name, text: text)
-    |> Repo.insert()
-    |> case do
+    case Writer.insert(%{app: app, room: room, sub: sub, name: name, text: text}) do
       {:ok, m} -> {:ok, view(m)}
       {:error, _} -> {:error, :not_kept}
     end
-  rescue
-    # Postgres slow or away (the pool's queue gave up): the message isn't
-    # kept and the sender hears so; the room stays up (#318's P12 found a
-    # busy pool crashing rooms' channels here).
-    e in [DBConnection.ConnectionError, Postgrex.Error] ->
-      Logger.warning("chat: a message wasn't kept: #{Exception.message(e)}")
-      {:error, :not_kept}
+  catch
+    # The writer didn't answer in time (or is restarting): not kept.
+    :exit, _ -> {:error, :not_kept}
   end
 
   defp query(app, room, before) do
@@ -97,6 +93,8 @@ defmodule PresenceRelay.Chat do
     e in [DBConnection.ConnectionError, Postgrex.Error] ->
       Logger.warning("chat: no history: #{Exception.message(e)}")
       []
+  catch
+    :exit, _ -> []
   end
 
   defp view(%Message{} = m),

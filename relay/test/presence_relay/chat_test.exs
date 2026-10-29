@@ -98,5 +98,84 @@ defmodule PresenceRelay.ChatTest do
       assert_receive {:replied, :a, :error, %{reason: "too fast"}}
       refute_receive {:pushed, :b, "said", %{text: "msg 6"}}, 100
     end
+
+    test "a busy database holds up text, never a join, presence or frames" do
+      r = room()
+      {:ok, a, _} = client(:a, r, "alice")
+      send_as(a, "say", %{"text" => "before"})
+      assert_receive {:replied, :a, :ok, %{id: kept}}
+
+      # Another process holds the test's one connection: every query waits.
+      release = hold_database()
+
+      {:ok, b, _} = client(:b, r, "bob")
+      assert_receive {:pushed, :b, "presence_state", %{"alice" => _}}
+      send_as(a, "frame", {:binary, <<1>>})
+      assert_receive {:pushed, :b, "frame", {:binary, <<5, "alice", 1>>}}
+      refute_received {:pushed, :b, "history", _}
+
+      # Said meanwhile (say, on another node): held until the history's
+      # out, and one the history already has isn't sent twice.
+      for id <- [kept, kept + 1_000] do
+        Phoenix.PubSub.broadcast(
+          PresenceRelay.PubSub,
+          PresenceRelay.Rooms.room_topic("acme", r),
+          {:relay_said, %{id: id, sub: "carol", name: "Carol", text: "t#{id}", at: 0}}
+        )
+      end
+
+      # This connection's own say waits for the database too; its frames don't.
+      send_as(b, "say", %{"text" => "while busy"})
+      Process.sleep(80)
+      send_as(b, "frame", {:binary, <<2>>})
+      assert_receive {:pushed, :a, "frame", {:binary, <<3, "bob", 2>>}}
+      refute_received {:pushed, :b, "said", _}
+      refute_received {:replied, :b, _, _}
+
+      release.()
+      assert_receive {:pushed, :b, "history", %{messages: [%{id: ^kept, text: "before"}]}}
+      later = kept + 1_000
+      assert_receive {:pushed, :b, "said", %{id: ^later}}
+      refute_received {:pushed, :b, "said", %{id: ^kept}}
+      assert_receive {:replied, :b, :ok, %{text: "while busy"}}
+      assert_receive {:pushed, :a, "said", %{text: "while busy"}}
+    end
+  end
+
+  test "messages said while a write is out go together in one batch, each back to its sender" do
+    r = room()
+    test = self()
+    ref = make_ref()
+
+    :telemetry.attach(
+      ref,
+      [:presence_relay, :repo, :query],
+      fn _, _, %{source: "messages", query: q}, _ ->
+        if q =~ "INSERT", do: send(test, {:insert, ref})
+      end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach(ref) end)
+
+    # The database busy: the first message's write waits, and the rest
+    # wait behind it.
+    release = hold_database()
+    tasks = for i <- 1..20, do: Task.async(fn -> Chat.say("acme", r, "s#{i}", "S", "m#{i}") end)
+    Process.sleep(100)
+    release.()
+
+    results = Task.await_many(tasks)
+    assert Enum.all?(results, &match?({:ok, _}, &1))
+    # Each sender has its own message back.
+    for {{:ok, m}, i} <- Enum.with_index(results, 1),
+        do: assert(m.text == "m#{i}" and m.sub == "s#{i}")
+
+    assert results |> Enum.map(fn {:ok, m} -> m.id end) |> Enum.uniq() |> length() == 20
+    assert length(Chat.history("acme", r)) == 20
+
+    # The first alone, then everything that came while it waited.
+    inserts = Stream.repeatedly(fn -> receive(do: ({:insert, ^ref} -> 1), after: (0 -> nil)) end)
+    assert inserts |> Enum.take_while(& &1) |> length() == 2
   end
 end

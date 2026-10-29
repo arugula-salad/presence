@@ -155,7 +155,7 @@ it's in voice, whether it's muted (the page says, with `voice_mute`).
 
 | event | payload | |
 |---|---|---|
-| `frame` | binary, ≤ 32 KiB | the member's newest frame (below). Frames closer than 70 ms to the member's last are dropped. |
+| `frame` | binary, ≤ 32 KiB | the member's newest frame (below). A member's frames are held to one per 70 ms on average, with a burst of 3 ("Limits"); over that, they're dropped. |
 | `state` | `{mode?, look?, away?, watching?}` | updates the member's presence meta |
 | `wave` | `{to: <sub>}` | wave at someone: a hello (where the relay has calls, a page asks to talk with `call` instead) |
 | `answer` | `{to: <sub>, yes: bool}` | answer a wave |
@@ -174,12 +174,12 @@ it's in voice, whether it's muted (the page says, with `voice_mute`).
 | `wave` | `{from: <sub>}` | to the waved member only |
 | `answer` | `{from: <sub>, yes}` | to the waver only |
 | `said` | `{id, sub, name, text, at}` | a message, to everyone in the room but the connection that said it (which has it in its reply); `id` only goes up in a room, `at` is Unix ms |
-| `history` | `{messages: [...]}` | on join: the room's last 50 messages, oldest first |
+| `history` | `{messages: [...]}` | on join, after `presence_state` and the newest frames: the room's last 50 messages, oldest first. No `said` comes before it, and none it already holds comes after it |
 | `react` | `{from: <sub>, emoji}` | someone's reaction, to everyone else in the room (not stored: a joiner doesn't get old ones) |
 | `call`, `call_cancel`, `call_answer`, `call_join` | | see "Calls" |
 | `voice_left` | | see "Voice" |
 
-Limits: 32 KiB a frame, 70 ms between a member's frames, 64 members a room,
+Limits: 32 KiB a frame, one frame per 70 ms a member on average, 64 members a room,
 8 connections a member, 2,000 connections at once an app (a hosted
 relay's default; the operator may set an app's own). Over a limit, the
 frame is dropped (no error); too many members or connections, the join
@@ -187,6 +187,16 @@ is refused (`{reason: "room full" | "too many connections" | "this app
 has too many connections"}`). A hosted app at its cap on monthly active
 users refuses someone new this month with `{reason: "this app is at its
 monthly limit"}` ("Usage and caps").
+
+**The frame rate** is a token bucket a member: it holds 3 frames and
+refills one every 70 ms, so a member sending at 12 a second (one per
+83 ms) always gets through, even when the network delivers two or three
+of their frames together (TCP, TLS and proxies bunch a stream: frames
+sent 83 ms apart can arrive 10 ms apart), and nobody sends more than one
+per 70 ms for long. A relay that's short of CPU stretches the 70 ms for
+everyone until it catches up (up to 8×: under 2 frames a second),
+dropping frames rather than sending every frame late; a client needs do
+nothing (it already shows each member's newest frame).
 
 ## Calls
 
