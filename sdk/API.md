@@ -12,6 +12,7 @@ this; the site's docs show exactly this. PROTOCOL.md is underneath.
       <arugula-people></arugula-people>   <!-- a tile per person in the room -->
       <arugula-chat></arugula-chat>       <!-- the room's text: messages and an input -->
       <arugula-call></arugula-call>       <!-- the call bar: a ring to answer, mute, video, leave -->
+      <arugula-voice></arugula-voice>     <!-- the room's voice channel: who's in it, join (muted), unmute, video, leave -->
     </arugula-room>
 
     <!-- anywhere inside a room: one person's live face, e.g. beside their name -->
@@ -28,7 +29,7 @@ this; the site's docs show exactly this. PROTOCOL.md is underneath.
 
 `<arugula-people>`: attributes `size` (`bust`, default; `head` for a compact strip), `self` (`first`|`hide`), `calls` (`off` hides the Call button on tiles; it shows only where the relay has calls). `<arugula-camera>`: attribute `controls` (`full`, default; `button` for just the toggle). `<arugula-avatar>`: `user`, `size` (`head`|`bust`). Theming: CSS custom properties on any ancestor: `--arugula-accent`, `--arugula-bg`, `--arugula-fg`, `--arugula-dim`, `--arugula-radius`.
 
-Events (bubbling, on the room element): `arugula:members` (`detail.members`), `arugula:wave` (`detail.from`), `arugula:answer` (`detail.from, detail.yes`), `arugula:react` (`detail.from, detail.emoji`), `arugula:message` (`detail.message`), `arugula:ring` (`detail.from, detail.id`), `arugula:call` (`detail.call`, null when it's over), `arugula:live` (`detail.state`). `<arugula-camera>` also has a row of reactions.
+Events (bubbling, on the room element): `arugula:members` (`detail.members`), `arugula:wave` (`detail.from`), `arugula:answer` (`detail.from, detail.yes`), `arugula:react` (`detail.from, detail.emoji`), `arugula:message` (`detail.message`), `arugula:ring` (`detail.from, detail.id`), `arugula:call` (`detail.call`, null when it's over), `arugula:voice` (`detail.members` in voice, `detail.joined`: you in it, or null), `arugula:live` (`detail.state`). `<arugula-camera>` also has a row of reactions.
 
 ## Browser: JS API (same bundle, or npm `@arugula/presence`)
 
@@ -40,8 +41,8 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
       // or, no server: key: "pk_live_…", auth: () => getToken()   (or guest: "Ada")
       // relay: "wss://arugula.stream/socket",
     });
-    room.members;                       // [{ sub, name, look, mode, away, watching, call }]
-    room.on("members", (members) => {}); // also "wave", "answer", "react", "message", "ring", "call", "live"
+    room.members;                       // [{ sub, name, look, mode, away, watching, call, voice, muted }]
+    room.on("members", (members) => {}); // also "wave", "answer", "react", "message", "ring", "call", "voice", "live"
     await room.camera.start({ mode: "avatar" });   // or "outline"
     room.camera.stop();
     room.setLook({ character: 2, colour: 0 });
@@ -58,6 +59,15 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
     room.setMuted(true); room.leaveCall();
     await room.setVideo(true);                     // your camera's real video, to the people in the call
     room.callBar(element);                         // draw the call bar into an element
+    room.voice.available;                          // whether the relay has voice (it does wherever it has calls)
+    await room.voice.join();                       // the room's voice channel: in, muted (out of your call first)
+    room.voice.setMuted(false); room.voice.leave();
+    await room.voice.setVideo(true);               // as in a call: real video, to the people in voice
+    room.voice.members;                            // who's in voice (presence: everyone in the room sees it)
+    room.voice.joined;                             // you in voice: { state, people: [{ sub, name, muted, speaking, video }], muted, video }, or null
+    room.voice.speaking(sub);                      // whether they're speaking (known while you're in voice)
+    room.on("voice", (members, joined) => {});
+    room.voiceBar(element);                        // draw the voice bar into an element
     room.mount(element, { size: "bust" });          // draw everyone into an element
     room.avatar(element, sub, { size: "head" });    // draw one person
     room.leave();
@@ -69,8 +79,10 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
       <People />
       <Avatar user={id} size="head" />
       <CallControls />
+      <VoiceBar />
     </PresenceRoom>
-    const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo } = usePresence();
+    const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo, voice } = usePresence();
+    // voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }
 
 **Video in a call is real video.** Presence sends a rig or an outline,
 never a picture. A call's video (`setVideo(true)`, or the call bar's Start
@@ -78,6 +90,14 @@ video) is the camera's actual picture, sent to the people in that call
 while it's on; tiles in the call show it in place of the character. It
 shares the presence camera (no second camera prompt), with simulcast and
 adaptive stream so each tile gets only the size it shows.
+
+**Every room has a voice channel.** Besides a wave's private call, each
+room has one drop-in voice channel (PROTOCOL.md, "Voice"): `room.voice.join()`
+(or `<arugula-voice>`, `<VoiceBar />`) puts the person in it muted, they
+unmute to talk, and everyone in the room sees who's in it. A page is in
+voice or in a call, never both: joining voice leaves the call, and taking
+a call leaves voice, with a short notice. At most 25 people in a room's
+voice; voice minutes count as call minutes.
 
 ## Publishable keys (hosted, no server of yours)
 

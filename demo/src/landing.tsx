@@ -119,6 +119,10 @@ export function Developers() {
             underneath. Add <code>&lt;arugula-call&gt;</code> for the call bar (mute, video, leave), or use <code>room.call(sub)</code>; anyone in the
             call can start video from the same camera (<code>room.setVideo(true)</code>). Calls are real audio and video; presence never sends a picture.
           </p>
+          <p class="sub">
+            Every room also has a voice channel: <code>&lt;arugula-voice&gt;</code> (or <code>room.voice.join()</code>) drops people in muted, they
+            unmute to talk, and everyone in the room sees who's in it.
+          </p>
         </Step>
 
         <section class="points">

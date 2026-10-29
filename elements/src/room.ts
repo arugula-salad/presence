@@ -1,19 +1,19 @@
 // connect(): a room on arugula.stream (or any presence relay) for a page
 // to show (../../sdk/API.md). A Room is a PresenceClient over the Phoenix
 // transport, its changes as events (members, wave, answer, ring, call,
-// live), and mount/avatar/calls to draw people and a call bar into an
-// element. Who's in which room is the
+// voice, live), and mount/avatar/callBar/voiceBar to draw people, a call
+// bar and the room's voice channel into an element. Who's in which room is the
 // token's business: your server signs it (or, to prototype, the relay's
 // demo tokens); or, with no server, the app's publishable key with the
 // person's own sign-in token (`auth`) or a guest's name.
 
-import { PresenceClient, phoenixTransport, type Call, type Member, type Transport, type Message, type PhoenixTransportOptions } from "@arugula/presence";
+import { PresenceClient, phoenixTransport, type Call, type Member, type Transport, type Message, type PhoenixTransportOptions, type Voice } from "@arugula/presence";
 import { setAssetBase } from "@arugula/presence-core/assets";
 import type { Look } from "@arugula/presence-core/avatar/rig";
 import { mountAvatar, mountPeople, type AvatarOptions, type PeopleOptions } from "./view.ts";
 import { CSS } from "./styles.ts";
 import { mountChat, type ChatOptions } from "./chat.ts";
-import { mountCall } from "./controls.ts";
+import { mountCall, mountVoice } from "./controls.ts";
 
 export const RELAY = "wss://arugula.stream/socket";
 
@@ -60,6 +60,9 @@ export interface RoomEvents {
   /** Your call changed: ringing, joining, on, who's in it, muted; null
    * when it's over. */
   call: (call: Call | null) => void;
+  /** Who's in the room's voice channel changed (joined, left, muted), or
+   * you in it did (`joined`: joining, on, speaking, muted; null when out). */
+  voice: (members: Member[], joined: Voice | null) => void;
   live: (state: "connecting" | "on" | "refused" | "off") => void;
 }
 
@@ -86,10 +89,10 @@ export class Room {
   readonly room: string;
   /** Your own sub, once a token has been read. */
   me = "";
-  private handlers: { [K in keyof RoomEvents]: Set<RoomEvents[K]> } = { members: new Set(), wave: new Set(), answer: new Set(), react: new Set(), message: new Set(), ring: new Set(), call: new Set(), live: new Set() };
+  private handlers: { [K in keyof RoomEvents]: Set<RoomEvents[K]> } = { members: new Set(), wave: new Set(), answer: new Set(), react: new Set(), message: new Set(), ring: new Set(), call: new Set(), voice: new Set(), live: new Set() };
   private stop: () => void;
   private unsub: () => void;
-  private seen = { members: [] as Member[], waves: 0, answers: 0, live: "off" as string, reactedAt: 0, messageId: 0, rings: new Set<string>(), call: null as Call | null };
+  private seen = { members: [] as Member[], waves: 0, answers: 0, live: "off" as string, reactedAt: 0, messageId: 0, rings: new Set<string>(), call: null as Call | null, voice: "", joined: null as Voice | null };
 
   constructor(o: ConnectOptions) {
     this.room = o.room;
@@ -116,6 +119,22 @@ export class Room {
       stop: () => client.stopCamera(),
       get on() {
         return client.cameraOn;
+      },
+    };
+    this.voice = {
+      join: () => client.joinVoice(),
+      leave: () => client.leaveVoice(),
+      setMuted: (muted) => client.setVoiceMuted(muted),
+      setVideo: (on) => client.setVoiceVideo(on),
+      speaking: (sub) => client.speakingInVoice(sub),
+      get available() {
+        return client.voiceOn;
+      },
+      get members() {
+        return client.voiceMembers;
+      },
+      get joined() {
+        return client.inVoice;
       },
     };
     this.unsub = this.client.subscribe(() => this.changed());
@@ -230,6 +249,33 @@ export class Room {
     return this.client.setVideo(on);
   }
 
+  /** The room's voice channel (PROTOCOL.md "Voice"): every room has one.
+   * Join it muted (unmute to talk), leave it when you like; everyone in the
+   * room sees who's in it. Separate from calls, which stay private 1:1
+   * (and growing); a page is in one or the other, never both. */
+  readonly voice: {
+    /** In, muted; out of your call first. Rejects with why ("voice is full"). */
+    join(): Promise<void>;
+    leave(): void;
+    setMuted(muted: boolean): Promise<void>;
+    /** Your camera's real video, to the people in voice. */
+    setVideo(on: boolean): Promise<void>;
+    /** Whether `sub` is speaking (known while you're in voice). */
+    speaking(sub: string): boolean;
+    /** Whether this relay has voice (it hides the voice bar where not). */
+    readonly available: boolean;
+    /** Who's in voice, as presence says: everyone in the room sees it. */
+    readonly members: Member[];
+    /** You in voice (joining, on; who's speaking, muted), or null. */
+    readonly joined: Voice | null;
+  };
+
+  /** The voice bar (who's in voice, with speaking rings; join, mute,
+   * video, leave) into `el`, likewise. Empty where the relay has no voice. */
+  voiceBar(el: Element): () => void {
+    return styled(el, (root) => mountVoice(this, root));
+  }
+
   /** The call bar (a ring to answer, who you're calling, mute, video and
    * leave)
    * into `el`, likewise. Empty while there's no call, or no calls here. */
@@ -280,6 +326,13 @@ export class Room {
     if (c.inCall !== this.seen.call) {
       this.seen.call = c.inCall;
       this.emit("call", c.inCall);
+    }
+    // Voice: who's in it (and muted), or you in it, changed.
+    const voice = c.voiceMembers.map((m) => `${m.sub}${m.muted ? "-" : "+"}`).join(" ");
+    if (voice !== this.seen.voice || c.inVoice !== this.seen.joined) {
+      this.seen.voice = voice;
+      this.seen.joined = c.inVoice;
+      this.emit("voice", c.voiceMembers, c.inVoice);
     }
     for (const m of c.messages) if (m.id > this.seen.messageId) this.emit("message", m);
     this.seen.messageId = Math.max(this.seen.messageId, ...c.messages.map((m) => m.id));

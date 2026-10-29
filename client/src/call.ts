@@ -5,6 +5,11 @@
 // is on. livekit-client loads only when a call starts, so a page that
 // never calls doesn't pay for it.
 //
+// A room's voice channel (PROTOCOL.md "Voice") joins the same way, but
+// muted: the microphone opens on joining (its permission asked then, not
+// mid-conversation) and is published muted, so unmuting is instant and
+// nobody hears a thing until then.
+//
 // Video is off until you turn it on, and it comes from the presence
 // camera: the client hands setVideo the camera's own track, and this
 // publishes a clone of it (one device, opened once; the rig keeps reading
@@ -50,15 +55,20 @@ export interface LiveCall {
   leave(): Promise<void>;
 }
 
+export interface JoinOptions {
+  /** Join with the microphone published muted (the room's voice channel). */
+  muted?: boolean;
+}
+
 /** Joins a call's LiveKit room (a test passes a fake). */
-export type JoinCall = (j: CallJoin, on: LiveCallEvents) => Promise<LiveCall>;
+export type JoinCall = (j: CallJoin, on: LiveCallEvents, o?: JoinOptions) => Promise<LiveCall>;
 
 /** A call's video at the top: 640×360 at 24 fps, half a megabit. With
  * simulcast, a 320×180 layer goes up beside it for small tiles. */
 export const VIDEO = { width: 640, height: 360, fps: 24, maxBitrate: 500_000 };
 
-export const joinLiveKit: JoinCall = async (j, on) => {
-  const { Room, RoomEvent, Track, DisconnectReason, VideoPresets } = await import("livekit-client");
+export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
+  const { Room, RoomEvent, Track, DisconnectReason, VideoPresets, createLocalAudioTrack } = await import("livekit-client");
   const room = new Room({
     // Each video element gets the layer its size needs, and none while
     // it's hidden or off screen; a publisher stops encoding a layer
@@ -71,8 +81,10 @@ export const joinLiveKit: JoinCall = async (j, on) => {
       videoSimulcastLayers: [VideoPresets.h180],
     },
   });
-  // Everyone else's audio plays from elements of its own, out of sight.
-  const players = new Set<HTMLMediaElement>();
+  // Everyone else's audio plays from elements of its own, out of sight, by
+  // track: a track that goes may already be detached (LiveKit stops a
+  // departing participant's first), so its element is found here.
+  const players = new Map<object, HTMLMediaElement>();
   // The video elements views attached, by whose video they show.
   const views = new Map<string, Set<HTMLVideoElement>>();
   const me = room.localParticipant;
@@ -135,7 +147,7 @@ export const joinLiveKit: JoinCall = async (j, on) => {
         const el = track.attach();
         el.hidden = true;
         document.body.append(el);
-        players.add(el);
+        players.set(track, el);
       }
       tell();
     })
@@ -143,10 +155,9 @@ export const joinLiveKit: JoinCall = async (j, on) => {
       // Audio's elements go; video's views are the page's, and tell()
       // shows them whatever's on now (or blanks them).
       if (track.kind === Track.Kind.Audio) {
-        for (const el of track.detach()) {
-          el.remove();
-          players.delete(el);
-        }
+        for (const el of track.detach()) el.remove();
+        players.get(track)?.remove();
+        players.delete(track);
       }
       tell();
     })
@@ -163,7 +174,7 @@ export const joinLiveKit: JoinCall = async (j, on) => {
     .on(RoomEvent.Reconnecting, () => on.state("reconnecting"))
     .on(RoomEvent.Reconnected, () => on.state("on"))
     .on(RoomEvent.Disconnected, (why) => {
-      for (const el of players) el.remove();
+      for (const el of players.values()) el.remove();
       players.clear();
       for (const els of views.values())
         for (const el of els) {
@@ -178,7 +189,13 @@ export const joinLiveKit: JoinCall = async (j, on) => {
   await room.connect(j.url, j.token);
   on.state("on");
   try {
-    await me.setMicrophoneEnabled(true);
+    if (o.muted) {
+      // Opened now and published muted: LiveKit tells the others it's
+      // muted, nothing is heard, and unmuting (setMuted) just enables it.
+      const mic = await createLocalAudioTrack();
+      await mic.mute();
+      await me.publishTrack(mic, { source: Track.Source.Microphone });
+    } else await me.setMicrophoneEnabled(true);
   } catch {
     // No microphone, or not allowed: in the call, listening, shown muted.
   }

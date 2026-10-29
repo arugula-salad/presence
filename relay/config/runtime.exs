@@ -105,13 +105,16 @@ end
 # Abuse limits and caps (#318's P12): RATE_LIMITS="socket_connect=600/60,
 # demo_token=off" changes the named limits (PresenceRelay.Limits);
 # APP_MAX_CONNECTIONS is any app's most connections at once (default
-# 2000), APP_CONNECTIONS="meet:10000,app_x:off" one app's.
+# 2000), APP_CONNECTIONS="meet:10000,app_x:off" one app's. VOICE_CAP is
+# the most connections in one room's voice (default 25; PresenceRelay.Voice).
 if config_env() != :test do
   # Applied over config.exs's at boot (PresenceRelay.Limits.configure!/0).
   if spec = System.get_env("RATE_LIMITS"), do: config(:presence_relay, rate_limits_spec: spec)
 
   if n = System.get_env("APP_MAX_CONNECTIONS"),
     do: config(:presence_relay, max_app_connections: String.to_integer(n))
+
+  if n = System.get_env("VOICE_CAP"), do: config(:presence_relay, voice_cap: String.to_integer(n))
 
   if spec = System.get_env("APP_CONNECTIONS") do
     config :presence_relay,

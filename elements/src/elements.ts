@@ -2,12 +2,13 @@
 // token from your endpoint; or a publishable key with the person's own
 // sign-in token, or as a guest; or the relay's demo tokens to prototype) and
 // re-dispatches its events; <arugula-camera>, <arugula-people>,
-// <arugula-avatar>, <arugula-chat> and <arugula-call> inside it draw from
-// it, each in a shadow root styled from --arugula-* custom properties.
+// <arugula-avatar>, <arugula-chat>, <arugula-call> and <arugula-voice>
+// inside it draw from it, each in a shadow root styled from --arugula-*
+// custom properties.
 
 import { connect, httpOrigin, RELAY, type ConnectOptions, type Room } from "./room.ts";
 import { mountPeople, mountAvatar } from "./view.ts";
-import { mountCall, mountCamera } from "./controls.ts";
+import { mountCall, mountCamera, mountVoice } from "./controls.ts";
 import { mountChat } from "./chat.ts";
 import { CSS } from "./styles.ts";
 
@@ -85,6 +86,7 @@ export class ArugulaRoom extends HTMLElement {
         r.on("message", (message) => fire("message", { message }));
         r.on("ring", (from, id) => fire("ring", { from, id }));
         r.on("call", (call) => fire("call", { call }));
+        r.on("voice", (members, joined) => fire("voice", { members, joined }));
         r.on("live", (state) => fire("live", { state }));
         fire("members", { members: r.members });
         for (const ok of this.waiting.splice(0)) ok(r);
@@ -172,6 +174,13 @@ export class ArugulaCall extends InRoom {
   }
 }
 
+/** The room's voice channel: who's in it, join, mute, video and leave. */
+export class ArugulaVoice extends InRoom {
+  protected draw(room: Room) {
+    return mountVoice(room, this.root);
+  }
+}
+
 /** Define the elements (once; safe to call again). */
 export function defineElements() {
   if (typeof customElements === "undefined") return;
@@ -182,6 +191,7 @@ export function defineElements() {
     ["arugula-avatar", ArugulaAvatar],
     ["arugula-chat", ArugulaChat],
     ["arugula-call", ArugulaCall],
+    ["arugula-voice", ArugulaVoice],
   ];
   for (const [name, el] of all) if (!customElements.get(name)) customElements.define(name, el);
 }

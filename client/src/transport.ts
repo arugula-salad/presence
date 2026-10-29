@@ -19,12 +19,23 @@ export interface Member {
   watching: boolean;
   /** The call they're in (PROTOCOL.md "Calls"), if any. */
   call: string | null;
+  /** In the room's voice channel (PROTOCOL.md "Voice"), and muted there. */
+  voice: boolean;
+  muted: boolean;
 }
 
 /** A LiveKit room to join for a call (PROTOCOL.md `call_join`): its URL,
  * the room's name, and a token for this page alone. */
 export interface CallJoin {
   id: string;
+  url: string;
+  room: string;
+  token: string;
+}
+
+/** The room's voice channel to join (PROTOCOL.md `voice_join`): LiveKit's
+ * URL, the voice room's name, and a token for this page alone. */
+export interface VoiceJoin {
   url: string;
   room: string;
   token: string;
@@ -76,6 +87,11 @@ export interface TransportEvents {
   callAnswer?(id: string, from: string, yes: boolean, reason?: string): void;
   /** Join this LiveKit room: you're in the call. */
   callJoin?(j: CallJoin): void;
+  /** Whether the relay has a voice channel in every room, on (re)joining. */
+  voice?(on: boolean): void;
+  /** The relay took this page out of voice: for a call ("call"), or the
+   * same person joined voice from another page ("elsewhere"). */
+  voiceLeft?(reason: string): void;
 }
 
 export interface Transport {
@@ -105,4 +121,12 @@ export interface Transport {
   callLeave?(id: string): void;
   /** A fresh token for the call you're in (after dropping out of it). */
   callToken?(id: string): Promise<CallJoin>;
+  /** Into the room's voice (muted); resolves with its LiveKit room, rejects
+   * with the reason ("voice is full"). Already in: a fresh token. */
+  voiceJoin?(): Promise<VoiceJoin>;
+  voiceLeave?(): void;
+  /** Say whether you're muted in voice (presence carries it). */
+  voiceMute?(muted: boolean): void;
+  /** A fresh token for the room's voice (after dropping out of it). */
+  voiceToken?(): Promise<VoiceJoin>;
 }

@@ -118,7 +118,7 @@ test("the relay's frames say who sent them; a member is on camera if any page is
     { name: "Jake", mode: "none", away: true, watching: false },
     { name: "Jake", mode: "avatar", look: { character: 2, colour: 0 }, away: false, watching: true },
   ]);
-  assert.deepEqual(m, { sub: "jake", name: "Jake", look: { character: 2, colour: 0 }, mode: "avatar", away: false, watching: true, call: null });
+  assert.deepEqual(m, { sub: "jake", name: "Jake", look: { character: 2, colour: 0 }, mode: "avatar", away: false, watching: true, call: null, voice: false, muted: false });
 });
 
 test("the socket's params: a room token, or a publishable key with the room and a guest's name", () => {
@@ -332,5 +332,114 @@ test("video in a call: off until turned on, from the camera's own track; a tile 
   await c.setVideo(true);
   assert.equal(c.inCall.video, false);
   assert.match(c.inCall.error, /camera/i);
+  stop();
+});
+
+test("voice: in a member's metas, muted as their voice page says", () => {
+  const m = memberOf("a", [{ name: "A", voice: false }, { name: "A", voice: true, muted: true }]);
+  assert.deepEqual([m.voice, m.muted], [true, true]);
+  assert.deepEqual([memberOf("a", [{ name: "A" }]).voice, memberOf("a", [{ name: "A" }]).muted], [false, false]);
+});
+
+test("voice: joined muted, LiveKit with the microphone muted, unmuting tells the relay, and leaving", async () => {
+  const t = fake();
+  const sent = [];
+  t.transport.voiceJoin = async () => (sent.push(["join"]), { url: "ws://lk", room: "acme:r:voice", token: "vtok" });
+  t.transport.voiceLeave = () => sent.push(["leave"]);
+  t.transport.voiceMute = (m) => sent.push(["mute", m]);
+  const lk = { joins: [], muted: [], left: 0 };
+  const joinCall = async (j, on, o) => {
+    lk.joins.push({ j, o });
+    lk.on = on;
+    return { setMuted: async (m) => void lk.muted.push(m), setVideo: async () => {}, startAudio: async () => {}, leave: async () => void lk.left++ };
+  };
+  const c = new PresenceClient({ transport: t.transport, storage: "tv1.", joinCall });
+  const stop = c.watch();
+  assert.equal(c.voiceOn, false, "off until the relay says");
+  t.on.voice(true);
+  assert.equal(c.voiceOn, true);
+
+  await c.joinVoice();
+  assert.deepEqual(lk.joins[0].o, { muted: true }, "the microphone goes up muted");
+  assert.equal(lk.joins[0].j.room, "acme:r:voice");
+  assert.equal(c.inVoice.muted, true);
+  lk.on.state("on");
+  lk.on.people([{ sub: "me", name: "Me", muted: true, speaking: false, audio: true, video: false }, { sub: "bob", name: "Bob", muted: false, speaking: true, audio: true, video: false }]);
+  assert.equal(c.inVoice.state, "on");
+  assert.equal(c.speakingInVoice("bob"), true);
+  assert.equal(c.speakingInVoice("me"), false);
+
+  // Who's in voice is presence's: everyone sees it.
+  t.on.members([
+    { sub: "me", name: "Me", look: null, mode: "none", away: false, watching: true, call: null, voice: true, muted: true },
+    { sub: "bob", name: "Bob", look: null, mode: "none", away: false, watching: true, call: null, voice: true, muted: false },
+    { sub: "cy", name: "Cy", look: null, mode: "none", away: false, watching: true, call: null, voice: false, muted: false },
+  ]);
+  assert.deepEqual(c.voiceMembers.map((m) => m.sub), ["me", "bob"]);
+
+  await c.setVoiceMuted(false);
+  assert.deepEqual([c.inVoice.muted, lk.muted, sent.at(-1)], [false, [false], ["mute", false]]);
+  // Bob leaving LiveKit doesn't end voice: it's the room's, not a call.
+  lk.on.people([{ sub: "me", name: "Me", muted: false, speaking: false, audio: true, video: false }]);
+  assert.notEqual(c.inVoice, null);
+
+  c.leaveVoice();
+  assert.equal(c.inVoice, null);
+  assert.deepEqual(sent.at(-1), ["leave"]);
+  assert.equal(lk.left, 1);
+  stop();
+});
+
+test("voice: a refusal (voice is full) leaves you out", async () => {
+  const t = fake();
+  t.transport.voiceJoin = async () => {
+    throw new Error("voice is full");
+  };
+  const c = new PresenceClient({ transport: t.transport, storage: "tv2.", joinCall: async () => ({}) });
+  const stop = c.watch();
+  await assert.rejects(c.joinVoice(), /voice is full/);
+  assert.equal(c.inVoice, null);
+  stop();
+});
+
+test("voice: one audio session a page; taking a call leaves voice, joining voice leaves the call, each with a notice", async () => {
+  const t = fake();
+  const sent = [];
+  t.transport.voiceJoin = async () => ({ url: "ws://lk", room: "acme:r:voice", token: "vtok" });
+  t.transport.voiceLeave = () => sent.push(["voice_leave"]);
+  t.transport.voiceMute = () => {};
+  t.transport.call = async () => ({ id: "c1" });
+  t.transport.callAnswer = async (id, yes) => void sent.push(["answer", id, yes]);
+  t.transport.callLeave = (id) => sent.push(["call_leave", id]);
+  let left = 0;
+  const joinCall = async () => ({ setMuted: async () => {}, setVideo: async () => {}, startAudio: async () => {}, leave: async () => void left++ });
+  const c = new PresenceClient({ transport: t.transport, storage: "tv3.", joinCall });
+  const stop = c.watch();
+  t.on.calls(true);
+  t.on.voice(true);
+
+  await c.joinVoice();
+  t.on.call("bob", "c9");
+  await c.answerCall("c9", true);
+  assert.equal(c.inVoice, null, "out of voice for the call");
+  assert.deepEqual(sent.slice(-2), [["voice_leave"], ["answer", "c9", true]], "voice left before answering");
+  assert.match(c.notice.text, /left voice/);
+  t.on.callJoin({ id: "c9", url: "ws://lk", room: "acme:r:c9", token: "tok" });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(c.inCall.id, "c9");
+
+  await c.joinVoice();
+  assert.equal(c.inCall, null, "out of the call for voice");
+  assert.deepEqual(sent.at(-1), ["call_leave", "c9"]);
+  assert.match(c.notice.text, /left the call/);
+  assert.equal(c.inVoice.state, "joining");
+
+  // The relay takes this page out (it rang someone who said yes).
+  t.on.voiceLeft("call");
+  assert.equal(c.inVoice, null);
+  assert.match(c.notice.text, /left voice for the call/);
+  c.dismissNotice();
+  assert.equal(c.notice, null);
+  assert.ok(left >= 2);
   stop();
 });

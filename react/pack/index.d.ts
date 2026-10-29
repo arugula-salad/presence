@@ -15,15 +15,19 @@ export interface Member {
   watching: boolean;
   /** The call they're in, if any. */
   call: string | null;
+  /** In the room's voice channel, and muted there. */
+  voice: boolean;
+  muted: boolean;
 }
 
-/** Someone in your call, you included. */
+/** Someone in your call (or voice), you included. */
 export interface CallPerson {
   sub: string;
   name: string;
   muted: boolean;
   speaking: boolean;
   audio: boolean;
+  video: boolean;
 }
 
 /** Your call, or the one you're ringing someone into. */
@@ -33,6 +37,19 @@ export interface Call {
   ringing: string[];
   people: CallPerson[];
   muted: boolean;
+  video: boolean;
+  blocked: boolean;
+  error: string;
+}
+
+/** You in the room's voice channel. */
+export interface Voice {
+  state: "joining" | "on" | "reconnecting";
+  /** Who's in it, you included, as LiveKit says: speaking, muted, video. */
+  people: CallPerson[];
+  /** You join muted. */
+  muted: boolean;
+  video: boolean;
   blocked: boolean;
   error: string;
 }
@@ -57,8 +74,11 @@ export function Avatar(props: { user: string; size?: "head" | "bust"; className?
 
 export function CameraControls(props: { controls?: "full" | "button"; className?: string }): JSX.Element;
 
-/** The call bar: a ring to answer, who you're calling, mute and leave. */
+/** The call bar: a ring to answer, who you're calling, mute, video and leave. */
 export function CallControls(props: { className?: string }): JSX.Element;
+
+/** The room's voice channel: who's in it with speaking rings, Join voice (muted), Unmute, video, Leave voice. */
+export function VoiceBar(props: { className?: string }): JSX.Element;
 
 export interface Message {
   id: number;
@@ -99,6 +119,24 @@ export function usePresence(): {
   answerCall(id: string, yes: boolean): Promise<void> | void;
   leaveCall(): void;
   setMuted(muted: boolean): Promise<void> | void;
+  /** Your video in the call: your camera's real picture, for the people in it. */
+  setVideo(on: boolean): Promise<void> | void;
+  /** The room's voice channel (every room has one). */
+  voice: {
+    /** Whether this relay has voice. */
+    available: boolean;
+    /** Who's in voice: everyone in the room sees it. */
+    members: Member[];
+    /** You in voice, or null. */
+    joined: Voice | null;
+    /** Whether someone's speaking (known while you're in voice). */
+    speaking(sub: string): boolean;
+    /** In, muted (out of your call first). Rejects with why ("voice is full"). */
+    join(): Promise<void>;
+    leave(): void;
+    setMuted(muted: boolean): Promise<void> | void;
+    setVideo(on: boolean): Promise<void> | void;
+  };
   setLook(look: Look): void;
   camera: { on: boolean; start(o?: { mode?: "avatar" | "outline" }): Promise<void> | void; stop(): void };
 };
