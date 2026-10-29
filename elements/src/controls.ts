@@ -3,13 +3,15 @@
 // call bar (<arugula-call>, the React CallControls): a ring to answer, who
 // you're calling, mute, video and leave. And the room's voice channel
 // (<arugula-voice>, the React VoiceBar): who's in it with speaking rings,
-// join, unmute, video and leave. Redrawn from the room's state whenever it
-// changes; nothing kept here.
+// join, unmute, video and leave. Both, while you're in a call or voice,
+// with your microphone's noise filter: Krisp, Standard or Off. Redrawn
+// from the room's state whenever it changes; nothing kept here.
 
 import { CHARACTERS } from "@arugula/presence-core/avatar/characters/index";
 import { COLOURS } from "@arugula/presence-core/avatar/stage";
 import type { Room } from "./room.ts";
 import { NOTICE_MS, REACTIONS } from "@arugula/presence/client";
+import { KRISP_FALLBACK, NOISE_FILTERS, type NoiseFilter } from "@arugula/presence/noise";
 
 export interface CameraOptions {
   /** Everything (default), or the on/off button alone. */
@@ -85,6 +87,50 @@ export function mountCamera(room: Room, el: Element | ShadowRoot, o: CameraOptio
 }
 
 
+const NOISE: Record<NoiseFilter, [label: string, title: string]> = {
+  krisp: ["Krisp", "Krisp noise cancellation (LiveKit Cloud): takes out the noise around you"],
+  standard: ["Standard", "Your browser's own noise suppression"],
+  off: ["Off", "No noise suppression (echo cancellation stays on)"],
+};
+
+/** Your microphone's noise filter, a choice of three (in a call or voice),
+ * and a note while Krisp is your choice and can't run. */
+export function noiseChoice(room: Room): { choice: HTMLElement; note: HTMLElement | null } {
+  const n = room.noise;
+  const choice = document.createElement("span");
+  choice.className = "seg noise";
+  choice.setAttribute("role", "radiogroup");
+  choice.setAttribute("aria-label", "Noise filter");
+  choice.dataset.mode = n.mode;
+  choice.dataset.active = n.active ?? "";
+  const label = document.createElement("span");
+  label.className = "noise-label";
+  label.textContent = "Noise";
+  choice.append(
+    label,
+    ...NOISE_FILTERS.map((m) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = NOISE[m][0];
+      b.title = m === "krisp" && n.krisp === false ? "Krisp doesn't run in this browser" : NOISE[m][1];
+      b.className = n.mode === m ? "on" : "";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(n.mode === m));
+      b.disabled = m === "krisp" && n.krisp === false;
+      b.addEventListener("click", () => void room.setNoiseFilter(m));
+      return b;
+    }),
+  );
+  let note: HTMLElement | null = null;
+  if (n.fallback) {
+    note = document.createElement("span");
+    note.className = "notice noise-fallback";
+    note.textContent = KRISP_FALLBACK;
+    note.title = n.fallback;
+  }
+  return { choice, note };
+}
+
 /** A member's name, by sub (their sub if they've gone). */
 export function nameOf(room: Room, sub: string): string {
   return room.client.members.find((m) => m.sub === sub)?.name ?? sub;
@@ -141,11 +187,14 @@ export function mountCall(room: Room, el: Element | ShadowRoot): () => void {
           video.title = "Video is your camera's real picture, for the people in this call";
           buttons.push(video);
         }
+        const noise = call.state !== "ringing" ? noiseChoice(room) : null;
+        if (noise) buttons.push(noise.choice);
         if (call.blocked) buttons.push(button("Play the call", () => void c.startAudio(), "primary"));
         buttons.push(button(call.state === "ringing" ? "Cancel" : "Leave", () => room.leaveCall(), "danger"));
         const row = line(what, ...buttons);
         row.classList.add("in-call");
         rows.push(row);
+        if (noise?.note) rows.push(noise.note);
         if (call.error) {
           const err = document.createElement("span");
           err.className = "error";
@@ -233,6 +282,7 @@ export function mountVoice(room: Room, el: Element | ShadowRoot): () => void {
     const c = room.client;
     const v = c.inVoice;
     const rows: HTMLElement[] = [];
+    let note: HTMLElement | null = null;
     if (c.voiceOn) {
       const row = document.createElement("div");
       row.className = v ? "row in-voice" : "row";
@@ -253,10 +303,14 @@ export function mountVoice(room: Room, el: Element | ShadowRoot): () => void {
           video.title = "Video is your camera's real picture, for the people in voice";
           row.append(mute, video);
         }
+        const noise = noiseChoice(room);
+        row.append(noise.choice);
+        if (noise.note) note = noise.note;
         if (v.blocked) row.append(button("Play voice", () => void c.startAudio(), "primary"));
         row.append(button("Leave voice", () => room.voice.leave(), "danger"));
       }
       rows.push(row);
+      if (note) rows.push(note);
       for (const text of [v?.error || error, c.notice && Date.now() - c.notice.at < NOTICE_MS ? c.notice.text : ""]) {
         if (!text) continue;
         const note = document.createElement("span");

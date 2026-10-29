@@ -9,7 +9,8 @@
 // voice, Speaker view (Arugula #332) shows whoever's talking big, the rest
 // of the call or voice in a strip, and the rest of the room in a row of
 // small tiles; click someone to pin them big. This browser remembers the
-// choice.
+// choice, and the microphone's noise filter (Krisp, Standard or Off) in
+// the call's or voice's bar.
 //
 // Into the socket: signed in, with a room token meet's server signs for
 // you (api.roomToken, which also puts the room in your list); a guest,
@@ -17,7 +18,7 @@
 // and its join reply says it).
 
 import { useEffect, useRef, useState } from "preact/hooks";
-import { PresenceClient, phoenixTransport, NOTICE_MS, REACTIONS, type CallPerson, type Member, type Transport } from "@arugula/presence";
+import { PresenceClient, phoenixTransport, NOTICE_MS, REACTIONS, NOISE_FILTERS, KRISP_FALLBACK, type CallPerson, type Member, type NoiseFilter, type Transport } from "@arugula/presence";
 import { CHARACTERS, characterOf } from "@arugula/presence-core/avatar/characters/index";
 import { animate, COLOURS, type Source } from "@arugula/presence-core/avatar/stage";
 import { waving, type Look, type Rig } from "@arugula/presence-core/avatar/rig";
@@ -356,6 +357,46 @@ function ChatPanel({ client, me }: { client: PresenceClient; me: string }) {
   );
 }
 
+const NOISE: Record<NoiseFilter, [label: string, title: string]> = {
+  krisp: ["Krisp", "Krisp noise cancellation (LiveKit Cloud): takes out the noise around you"],
+  standard: ["Standard", "Your browser's own noise suppression"],
+  off: ["Off", "No noise suppression (echo cancellation stays on)"],
+};
+
+/** Your microphone's noise filter in a call or voice: Krisp, Standard or
+ * Off (kept in this browser). */
+function NoiseChoice({ client }: { client: PresenceClient }) {
+  const n = client.noise;
+  return (
+    <span class="seg noise" role="radiogroup" aria-label="Noise filter" data-mode={n.mode} data-active={n.active ?? ""}>
+      <span class="noise-label">Noise</span>
+      {NOISE_FILTERS.map((m) => (
+        <button
+          key={m}
+          role="radio"
+          aria-checked={n.mode === m}
+          class={n.mode === m ? "btn on" : "btn"}
+          disabled={m === "krisp" && n.krisp === false}
+          title={m === "krisp" && n.krisp === false ? "Krisp doesn't run in this browser" : NOISE[m][1]}
+          onClick={() => void client.setNoiseFilter(m)}
+        >
+          {NOISE[m][0]}
+        </button>
+      ))}
+    </span>
+  );
+}
+
+/** While Krisp is your choice and can't run here: saying so (why, on hover). */
+function NoiseNote({ client }: { client: PresenceClient }) {
+  const why = client.noise.fallback;
+  return why ? (
+    <span class="notice noise-fallback" title={why}>
+      {KRISP_FALLBACK}
+    </span>
+  ) : null;
+}
+
 /** Your call, in the room's bar: who's in it, mute, video and leave (or
  * who you're calling, and cancel). */
 function CallBar({ client, me, names, error }: { client: PresenceClient; me: string; names: Map<string, string>; error: string }) {
@@ -386,6 +427,7 @@ function CallBar({ client, me, names, error }: { client: PresenceClient; me: str
           </button>
         </>
       )}
+      {c.state !== "ringing" && <NoiseChoice client={client} />}
       {c.blocked && (
         <button class="btn primary" onClick={() => void client.startAudio()}>
           Play the call
@@ -395,6 +437,7 @@ function CallBar({ client, me, names, error }: { client: PresenceClient; me: str
         {c.state === "ringing" ? "Cancel" : "Leave"}
       </button>
       {(c.error || error) && <span class="error">{c.error || error}</span>}
+      {c.state !== "ringing" && <NoiseNote client={client} />}
     </div>
   );
 }
@@ -445,6 +488,7 @@ function VoiceStrip({ client, me }: { client: PresenceClient; me: string }) {
               </button>
             </>
           )}
+          <NoiseChoice client={client} />
           {v.blocked && (
             <button class="btn primary" onClick={() => void client.startAudio()}>
               Play voice
@@ -460,6 +504,7 @@ function VoiceStrip({ client, me }: { client: PresenceClient; me: string }) {
         </button>
       )}
       {(v?.error || err) && <span class="error">{v?.error || err}</span>}
+      {v && <NoiseNote client={client} />}
       {notice && (
         <span class="notice" role="status">
           {notice}

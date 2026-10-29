@@ -24,6 +24,11 @@
 // in a call. A page has one audio session: joining voice leaves your call,
 // and taking a call leaves voice, each saying so in `notice`.
 //
+// Your microphone's noise filter (./noise): Krisp, Standard or Off, the
+// same for calls and voice, kept in this browser, and switched in a call
+// or voice without leaving it (setNoiseFilter). `noise` says what you
+// picked, what's on your microphone now, and why Krisp isn't, if it isn't.
+//
 // Speaker view (Arugula #332): whichever you're in, a call or voice has one
 // current speaker (`activeSpeaker`, held steady by ./speaker), and a page
 // can pin someone in its place (`pin`, this page alone). `featured` is who
@@ -35,6 +40,7 @@ import { RIG, WAVE_MS, unpackRig, type Look, type Rig } from "@arugula/presence-
 import type { AvatarCamera } from "@arugula/presence-core/avatar/cam";
 import type { CallJoin, Member, Message, Mode, Transport, TransportEvents, VoiceJoin } from "./transport.ts";
 import { joinLiveKit, type CallPerson, type JoinCall, type LiveCall } from "./call.ts";
+import { isNoiseFilter, noiseAfter, type Noise, type NoiseFilter, type NoiseReport } from "./noise.ts";
 
 /** The most messages a page keeps (older ones are a loadEarlier() away). */
 export const MESSAGES_KEPT = 500;
@@ -143,8 +149,8 @@ export interface Mine {
 
 export interface PresenceClientOptions {
   transport: Transport;
-  /** Where this browser keeps your mode and look (localStorage keys
-   * `<storage>mode`, `<storage>look`). */
+  /** Where this browser keeps your mode, look and noise filter
+   * (localStorage keys `<storage>mode`, `<storage>look`, `<storage>noise`). */
   storage?: string;
   /** Tests: how a call's LiveKit room is joined. */
   joinCall?: JoinCall;
@@ -222,12 +228,20 @@ export class PresenceClient {
   /** Something the page should say for a moment (NOTICE_MS): you left
    * voice for a call, or a call for voice. */
   notice: { text: string; at: number } | null = null;
+  /** Your microphone's noise filter in calls and voice (./noise). */
+  noise: Noise;
+  /** The noise filter you picked (kept in this browser), or null for the
+   * default. */
+  private noiseChosen: NoiseFilter | null;
 
   constructor(o: PresenceClientOptions) {
     this.transport = o.transport;
     this.storage = o.storage ?? "arugula.presence.";
     this.mode = kept(`${this.storage}mode`, "outline");
     this.look = kept(`${this.storage}look`, { character: 2, colour: 0 });
+    const noise = kept<unknown>(`${this.storage}noise`, null);
+    this.noiseChosen = isNoiseFilter(noise) ? noise : null;
+    this.noise = { mode: this.noiseChosen ?? "krisp", active: null, krisp: null, fallback: "" };
     this.joinCall = o.joinCall ?? joinLiveKit;
   }
 
@@ -379,6 +393,31 @@ export class PresenceClient {
     await this.live_?.setMuted(muted);
   }
 
+  /** Your microphone's noise filter, for calls and voice: Krisp (LiveKit
+   * Cloud's noise cancellation), Standard (the browser's) or Off. Kept in
+   * this browser; in a call or voice it switches now, muted or not.
+   * Where Krisp can't run, Standard, and `noise.fallback` says why. */
+  async setNoiseFilter(mode: NoiseFilter) {
+    if (!isNoiseFilter(mode)) throw new Error(`no noise filter "${String(mode)}"`);
+    this.noiseChosen = mode;
+    keep(`${this.storage}noise`, mode);
+    this.noise = { ...this.noise, mode, fallback: mode === "krisp" ? this.noise.fallback : "" };
+    this.emit();
+    await Promise.all([this.live_?.setNoise(mode), this.voiceLive?.setNoise(mode)]);
+  }
+
+  /** A call's or voice's microphone said what's on it. */
+  private noiseReport(r: NoiseReport) {
+    this.noise = noiseAfter(this.noise, this.noiseChosen, r);
+    this.emit();
+  }
+
+  /** Out of a call or voice: no microphone, nothing on it. */
+  private noiseOff() {
+    if (this.noise.active === null && !this.noise.fallback) return;
+    this.noise = { ...this.noise, active: null, fallback: "" };
+  }
+
   /** Turn your video on or off in the call you're in. It's your camera's
    * real picture, for the people in the call alone (presence never sends
    * one); your character or outline carries on for everyone in the room.
@@ -488,6 +527,7 @@ export class PresenceClient {
     this.videoFrom = null;
     this.inCall = null;
     this.pinned = null;
+    if (!this.inVoice) this.noiseOff();
     clearTimeout(this.alone);
     void live?.leave();
     // A camera turned on for the call's video goes off with the call.
@@ -537,7 +577,8 @@ export class PresenceClient {
           void this.rejoin(j.id);
         },
         blocked: (blocked) => this.patchCall(j.id, { blocked }),
-      });
+        noise: (r) => this.inCall?.id === j.id && this.noiseReport(r),
+      }, { noise: this.noise.mode });
       if (this.inCall?.id !== j.id) return void live.leave();
       this.live_ = live;
       this.rejoined = false;
@@ -688,6 +729,7 @@ export class PresenceClient {
     this.voiceVideoFrom = null;
     this.inVoice = null;
     this.pinned = null;
+    if (!this.inCall) this.noiseOff();
     void live?.leave();
     if (this.cameraForVideo && !this.inCall?.video) {
       this.cameraForVideo = false;
@@ -717,8 +759,9 @@ export class PresenceClient {
             void this.voiceRejoin();
           },
           blocked: (blocked) => this.patchVoice({ blocked }),
+          noise: (r) => this.inVoice && this.noiseReport(r),
         },
-        { muted: true },
+        { muted: true, noise: this.noise.mode },
       );
       if (!this.inVoice) return void live.leave();
       this.voiceLive = live;

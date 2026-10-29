@@ -545,3 +545,44 @@
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   }
 }
+
+/* Your microphone's noise filter, in a call or voice: Krisp, Standard or
+   Off, a small choice beside mute and video. */
+.seg.noise {
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.seg.noise .noise-label {
+  padding: 0 6px 0 4px;
+  font: 10px var(--f-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+.seg.noise .btn,
+.voicebar .seg.noise .btn {
+  padding: 2px 8px;
+  font-size: 12px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.seg.noise .btn.on {
+  border-color: var(--accent);
+}
+
+.seg.noise .btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.callbar .notice {
+  flex-basis: 100%;
+  color: var(--info);
+  font-size: 12px;
+}

@@ -58,6 +58,20 @@ export interface Voice {
   error: string;
 }
 
+export type NoiseFilter = "krisp" | "standard" | "off";
+
+/** Your microphone's noise filter in calls and voice. */
+export interface Noise {
+  /** What you picked (kept in this browser), or the default: Krisp where this browser runs it, Standard where it doesn't. */
+  mode: NoiseFilter;
+  /** What's on your microphone now (Standard where Krisp couldn't run); null outside a call or voice. */
+  active: NoiseFilter | null;
+  /** Whether this browser runs Krisp: null until a call or voice has loaded it. */
+  krisp: boolean | null;
+  /** Why Krisp isn't running when it's your mode, or "". */
+  fallback: string;
+}
+
 export interface PresenceRoomProps {
   /** The room's id in your app. */
   room: string;
@@ -144,6 +158,10 @@ export function usePresence(): {
     setMuted(muted: boolean): Promise<void> | void;
     setVideo(on: boolean): Promise<void> | void;
   };
+  /** Your microphone's noise filter in calls and voice: Krisp (LiveKit Cloud's noise cancellation), Standard (the browser's) or Off. */
+  noise: Noise;
+  /** Kept in this browser; in a call or voice it switches now, muted or not. */
+  setNoiseFilter(mode: NoiseFilter): Promise<void> | void;
   /** The current speaker in your call or voice (held steady), or null. */
   activeSpeaker: string | null;
   /** Who you pinned big (this page alone), or null. */

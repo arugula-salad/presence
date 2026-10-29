@@ -198,7 +198,7 @@ export const roomRule = `// Members of org "acme" into acme:… rooms only:
 export const jsApi = `const room = await connect({ room, token, relay? });
 
 room.members                  // [{ sub, name, look, mode, away, watching, call, voice, muted }]
-room.on("members", (members) => {})   // also "wave", "answer", "react", "message", "ring", "call", "voice", "speaker", "live"
+room.on("members", (members) => {})   // also "wave", "answer", "react", "message", "ring", "call", "voice", "speaker", "noise", "live"
 await room.camera.start({ mode: "avatar" | "outline" })
 room.camera.stop()
 room.setLook({ character, colour })
@@ -220,6 +220,8 @@ room.voice.setMuted(false)  ·  room.voice.leave()  ·  await room.voice.setVide
 room.voice.members                   // who's in voice (everyone sees); room.voice.joined: you in it
 room.on("voice", (members, joined) => {})
 room.voiceBar(el)                    // who's in voice, join, unmute, video and leave, drawn into el
+await room.setNoiseFilter("krisp")   // or "standard" (the browser's), "off": kept, for calls and voice
+room.noise                           // { mode, active, krisp, fallback }: active is what's on your mic now
 room.activeSpeaker                   // who's talking in your call or voice, held steady
 room.pin(sub)  ·  room.pin(null)     // big on your page alone; null follows the speaker
 room.spotlight(el, { self: "hide" })  // speaker view, drawn into el
@@ -235,8 +237,9 @@ export const theming = `arugula-room {
   --arugula-radius: 12px;
 }`;
 
-export const reactHook = `const { members, messages, say, wave, react, camera, calls, call, inCall, leaveCall, setVideo, voice, activeSpeaker, pinned, pin } = usePresence();
-// voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }`;
+export const reactHook = `const { members, messages, say, wave, react, camera, calls, call, inCall, leaveCall, setVideo, voice, noise, setNoiseFilter, activeSpeaker, pinned, pin } = usePresence();
+// voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }
+// noise: { mode: "krisp" | "standard" | "off", active, krisp, fallback }; setNoiseFilter("standard")`;
 
 export const spotlight = `<arugula-room room="design-team" token-url="/api/presence-token">
   <arugula-voice></arugula-voice>

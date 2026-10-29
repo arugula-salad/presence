@@ -43,7 +43,7 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
       // relay: "wss://arugula.stream/socket",
     });
     room.members;                       // [{ sub, name, look, mode, away, watching, call, voice, muted }]
-    room.on("members", (members) => {}); // also "wave", "answer", "react", "message", "ring", "call", "voice", "speaker", "live"
+    room.on("members", (members) => {}); // also "wave", "answer", "react", "message", "ring", "call", "voice", "speaker", "noise", "live"
     await room.camera.start({ mode: "avatar" });   // or "outline"
     room.camera.stop();
     room.setLook({ character: 2, colour: 0 });
@@ -69,6 +69,8 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
     room.voice.speaking(sub);                      // whether they're speaking (known while you're in voice)
     room.on("voice", (members, joined) => {});
     room.voiceBar(element);                        // draw the voice bar into an element
+    await room.setNoiseFilter("krisp");            // or "standard" (the browser's) or "off": kept in this browser, calls and voice
+    room.noise;                                    // { mode, active, krisp, fallback }: what you picked, what's on your mic now, why not Krisp
     room.activeSpeaker;                            // the current speaker in your call or voice (held steady), or null
     room.pin(sub); room.pin(null);                 // show someone big on this page alone; null follows the speaker
     room.pinned; room.featured;                    // who you pinned; who a spotlight shows big now
@@ -88,8 +90,9 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
       <VoiceBar />
       <Spotlight />                                        {/* self="hide", pin={false} */}
     </PresenceRoom>
-    const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo, voice, activeSpeaker, pinned, pin } = usePresence();
+    const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo, voice, noise, setNoiseFilter, activeSpeaker, pinned, pin } = usePresence();
     // voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }
+    // noise: { mode, active, krisp, fallback }; setNoiseFilter("krisp" | "standard" | "off")
 
 **Video in a call is real video.** Presence sends a rig or an outline,
 never a picture. A call's video (`setVideo(true)`, or the call bar's Start
@@ -105,6 +108,23 @@ unmute to talk, and everyone in the room sees who's in it. A page is in
 voice or in a call, never both: joining voice leaves the call, and taking
 a call leaves voice, with a short notice. At most 25 people in a room's
 voice; voice minutes count as call minutes.
+
+**Noise filter.** In a call or voice the microphone runs one of three:
+Krisp (LiveKit Cloud's noise cancellation, a processor in the browser),
+Standard (the browser's own suppression) or Off. `room.setNoiseFilter(mode)`
+(or the call and voice bars' Noise choice) switches it in place, muted or
+not, and the browser keeps the choice for calls and voice alike. Krisp is
+the default where the browser runs it (not Safari before 17.4); where it
+can't start (unsupported, its code or models not loading, LiveKit refusing
+it), the microphone uses Standard and `room.noise.fallback` says why.
+Echo cancellation and gain control stay on in all three; while Krisp runs
+the browser's suppression is off. Krisp's code is LiveKit's
+(`@livekit/krisp-noise-filter`, under LiveKit's terms of service, not this
+repo's licence), about 2 MB compressed, loaded only when a call or voice
+wants it, from beside the SDK; its models come from integrations.livekit.io.
+A page with a Content Security Policy has to let Krisp fetch from that
+host and run WebAssembly and its audio worklet, or it falls back to
+Standard.
 
 **Speaker view.** In a call or voice, `<arugula-spotlight>` (`room.spotlight`,
 `<Spotlight />`) shows whoever's talking big (their video if it's on,

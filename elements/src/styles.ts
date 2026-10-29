@@ -95,6 +95,11 @@ figcaption button.call[hidden] { display: none; }
 .voice-person.speaking .dot { box-shadow: 0 0 0 2px var(--ok); }
 .voice-person .mic { font: 9px ui-monospace, monospace; text-transform: uppercase; color: var(--dim); }
 .arugula-voice .notice { color: var(--info); font-size: 12px; }
+.seg.noise { align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; }
+.seg.noise .noise-label { padding: 0 6px 0 4px; font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); }
+.seg.noise button { padding: 2px 8px; font-size: 12px; border-color: transparent; background: transparent; }
+.seg.noise button.on { border-color: var(--accent); }
+.arugula-call .notice { color: var(--info); font-size: 12px; }
 .arugula-spotlight { display: grid; gap: 8px; }
 .arugula-spotlight[hidden], .spot-strip[hidden] { display: none; }
 .spot-big .view { aspect-ratio: 16 / 9; max-height: 70vh; }

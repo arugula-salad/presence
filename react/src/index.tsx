@@ -11,7 +11,7 @@ import { connect, styled, type ConnectOptions, type Room } from "@arugula/presen
 import { mountCall, mountCamera, mountVoice, type CameraOptions } from "@arugula/presence-elements/controls";
 import type { AvatarOptions, PeopleOptions } from "@arugula/presence-elements/view";
 import type { SpotlightOptions } from "@arugula/presence-elements/spotlight";
-import type { Call, Member, Message, Voice } from "@arugula/presence";
+import type { Call, Member, Message, Noise, NoiseFilter, Voice } from "@arugula/presence";
 import type { ChatOptions } from "@arugula/presence-elements/chat";
 import type { Look } from "@arugula/presence-core/avatar/rig";
 
@@ -122,6 +122,13 @@ export function usePresence() {
       setMuted: (muted: boolean) => room?.voice.setMuted(muted),
       setVideo: (on: boolean) => room?.voice.setVideo(on),
     },
+    /** Your microphone's noise filter in calls and voice: `mode` (Krisp,
+     * Standard or Off; Krisp by default where it runs), `active` (on your
+     * microphone now), `krisp` (whether this browser runs it) and
+     * `fallback` (why Krisp isn't running, if it's your mode and isn't). */
+    noise: room?.noise ?? ({ mode: "krisp", active: null, krisp: null, fallback: "" } as Noise),
+    /** Kept in this browser; in a call or voice it switches now. */
+    setNoiseFilter: (mode: NoiseFilter) => room?.setNoiseFilter(mode),
     /** Speaker view: the current speaker in your call or voice (held
      * steady), who you pinned big (this page alone), and pin (null follows
      * the speaker again). */
@@ -193,4 +200,4 @@ export function Chat({ placeholder, className, style }: ChatOptions & { classNam
   return <div ref={ref} className={className} style={{ height: 360, ...style }} />;
 }
 
-export type { Member, Message, Look, Room, Call, Voice };
+export type { Member, Message, Look, Room, Call, Voice, Noise, NoiseFilter };

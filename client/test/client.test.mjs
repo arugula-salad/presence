@@ -360,7 +360,7 @@ test("voice: joined muted, LiveKit with the microphone muted, unmuting tells the
   assert.equal(c.voiceOn, true);
 
   await c.joinVoice();
-  assert.deepEqual(lk.joins[0].o, { muted: true }, "the microphone goes up muted");
+  assert.deepEqual(lk.joins[0].o, { muted: true, noise: "krisp" }, "the microphone goes up muted, Krisp by default");
   assert.equal(lk.joins[0].j.room, "acme:r:voice");
   assert.equal(c.inVoice.muted, true);
   lk.on.state("on");

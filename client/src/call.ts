@@ -17,6 +17,12 @@
 // attaches, and adaptive stream sends each one just the layer its size
 // needs, and nothing while it's out of sight.
 //
+// The microphone's noise filter (./noise): Krisp, Standard or Off, picked
+// on joining (JoinOptions' `noise`) and switched in the call (setNoise)
+// without rejoining, muted or not. Krisp's package starts loading as the
+// call does (alongside LiveKit's connect), and only when it's wanted; the
+// microphone opens for Standard until it has.
+//
 // Speaker view (Arugula #332): video goes up in three layers, 1280×720 at
 // the top where the camera gives that much (it's asked for 720p while
 // video is on, and back to its own size after), 640×360 and 320×180
@@ -29,9 +35,10 @@
 // energy, because LiveKit's own active speakers come on a 400 ms tick with
 // a tail that makes a cough look like a turn.
 
-import type { LocalVideoTrack, RemoteVideoTrack } from "livekit-client";
+import type { LocalAudioTrack, LocalVideoTrack, RemoteVideoTrack, TrackProcessor, Track as LKTrack, AudioProcessorOptions } from "livekit-client";
 import type { CallJoin } from "./transport.ts";
 import { SpeakerPicker } from "./speaker.ts";
+import { MicFilter, micConstraints, type FilterMic, type KrispModule, type NoiseFilter, type NoiseReport } from "./noise.ts";
 
 /** Someone in the call, you included. */
 export interface CallPerson {
@@ -55,6 +62,8 @@ export interface LiveCallEvents {
   /** The browser blocked playing the call (no click yet): `startAudio`
    * from a click plays it. */
   blocked?(blocked: boolean): void;
+  /** What's on your microphone now (./noise), and why not Krisp. */
+  noise?(r: NoiseReport): void;
 }
 
 export interface LiveCall {
@@ -65,6 +74,8 @@ export interface LiveCall {
   /** Show `sub`'s video (yours too) in `el`, now and whenever it comes
    * back; returns a function to stop. */
   attach(sub: string, el: HTMLVideoElement): () => void;
+  /** Your microphone's noise filter, switched in place (./noise). */
+  setNoise(mode: NoiseFilter): Promise<void>;
   /** From a click, if the browser blocked the call's audio. */
   startAudio(): Promise<void>;
   leave(): Promise<void>;
@@ -73,6 +84,8 @@ export interface LiveCall {
 export interface JoinOptions {
   /** Join with the microphone published muted (the room's voice channel). */
   muted?: boolean;
+  /** The microphone's noise filter (./noise). Default: standard. */
+  noise?: NoiseFilter;
 }
 
 /** Joins a call's LiveKit room (a test passes a fake). */
@@ -113,8 +126,26 @@ export const SAMPLE_MS = 100;
  * well above it; a room's hum, with its noise suppression, well below. */
 export const VOICE_LEVEL = 10 ** (-30 / 20);
 
+/** Krisp's package, once: loaded the first time a call wants it (and again
+ * after a failure). */
+let krispPackage: Promise<KrispModule> | null = null;
+let krispLoaded: KrispModule | null = null;
+export function loadKrisp(): Promise<KrispModule> {
+  krispPackage ??= import("./krisp.ts").then(
+    (m) => (krispLoaded = m),
+    (e) => {
+      krispPackage = null;
+      throw e;
+    },
+  );
+  return krispPackage;
+}
+
 export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
-  const { Room, RoomEvent, Track, DisconnectReason, VideoPreset, createLocalAudioTrack } = await import("livekit-client");
+  const noise = o.noise ?? "standard";
+  // Alongside connecting: by the time the microphone opens it's often here.
+  if (noise === "krisp") loadKrisp().catch(() => {});
+  const { Room, RoomEvent, Track, TrackEvent, DisconnectReason, VideoPreset, createLocalAudioTrack } = await import("livekit-client");
   const layers = LAYERS.map((l) => new VideoPreset(l.width, l.height, l.maxBitrate, l.fps));
   const room = new Room({
     // Each video element gets the layer its size needs, and none while
@@ -160,6 +191,26 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
       }
     }
   };
+  // The microphone's noise filter (./noise), over LiveKit's track.
+  const micTrack = () => me.getTrackPublication(Track.Source.Microphone)?.track as LocalAudioTrack | undefined;
+  const filter = new MicFilter(
+    {
+      mic: (): FilterMic | null => {
+        const t = micTrack();
+        if (!t) return null;
+        return {
+          restartTrack: (c) => t.restartTrack(c),
+          setProcessor: (p) => t.setProcessor(p as unknown as TrackProcessor<LKTrack.Kind.Audio, AudioProcessorOptions>),
+          stopProcessor: () => t.stopProcessor(),
+          getProcessor: () => t.getProcessor(),
+        };
+      },
+      load: loadKrisp,
+      running: () => room.canPlaybackAudio,
+      report: (r) => on.noise?.(r),
+    },
+    noise,
+  );
   // The clone this page publishes, stopped when it's taken down.
   let mine: MediaStreamTrack | null = null;
   // The camera raised to 720p for it, and what it asked for before.
@@ -280,9 +331,16 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
     .on(RoomEvent.TrackMuted, tell)
     .on(RoomEvent.TrackUnmuted, tell)
     .on(RoomEvent.ActiveSpeakersChanged, tell)
-    .on(RoomEvent.AudioPlaybackStatusChanged, () => on.blocked?.(!room.canPlaybackAudio))
+    .on(RoomEvent.AudioPlaybackStatusChanged, () => {
+      on.blocked?.(!room.canPlaybackAudio);
+      // Krisp waits for the page's audio to run.
+      if (room.canPlaybackAudio) void filter.refresh();
+    })
     .on(RoomEvent.Reconnecting, () => on.state("reconnecting"))
-    .on(RoomEvent.Reconnected, () => on.state("on"))
+    .on(RoomEvent.Reconnected, () => {
+      on.state("on");
+      void filter.refresh();
+    })
     .on(RoomEvent.Disconnected, (why) => {
       clearInterval(sampler);
       picker = null;
@@ -303,18 +361,27 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
   picker = new SpeakerPicker(me.identity);
   sampler = setInterval(() => void sample(), SAMPLE_MS);
   on.state("on");
+  // Krisp's mode opens the microphone as Krisp wants it (no browser
+  // suppression) if its package is here and runs in this browser, and as
+  // Standard until then.
+  const opened: NoiseFilter = noise === "krisp" ? (krispLoaded?.isKrispNoiseFilterSupported() ? "krisp" : "standard") : noise;
   try {
-    if (o.muted) {
-      // Opened now and published muted: LiveKit tells the others it's
-      // muted, nothing is heard, and unmuting (setMuted) just enables it.
-      const mic = await createLocalAudioTrack();
-      await mic.mute();
-      await me.publishTrack(mic, { source: Track.Source.Microphone });
-    } else await me.setMicrophoneEnabled(true);
+    // Muted for voice: opened now and published muted, so LiveKit tells
+    // the others it's muted, nothing is heard, and unmuting (setMuted)
+    // just enables it.
+    const mic = await createLocalAudioTrack(micConstraints(opened));
+    filter.openedFor(opened);
+    if (o.muted) await mic.mute();
+    await me.publishTrack(mic, { source: Track.Source.Microphone });
+    // Krisp turned off by itself (LiveKit stopped it): Standard.
+    mic.on(TrackEvent.AudioTrackFeatureUpdate, () => {
+      if (!mic.enhancedNoiseCancellation) filter.lost("LiveKit stopped it");
+    });
   } catch {
     // No microphone, or not allowed: in the call, listening, shown muted.
   }
   tell();
+  void filter.set(noise);
   const takeDown = async () => {
     const pub = me.getTrackPublication(Track.Source.Camera);
     if (pub?.track) await me.unpublishTrack(pub.track, true);
@@ -369,6 +436,7 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
         el.srcObject = null;
       };
     },
+    setNoise: (mode) => filter.set(mode),
     startAudio: () => room.startAudio(),
     leave: () => room.disconnect(),
   };
