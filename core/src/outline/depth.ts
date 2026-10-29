@@ -28,9 +28,14 @@ export async function startDepth(): Promise<Depth> {
   if (!("gpu" in navigator) || !(await (navigator as Navigator & { gpu: { requestAdapter(): Promise<unknown> } }).gpu.requestAdapter())) {
     throw new Error("this browser has no WebGPU");
   }
-  env.allowRemoteModels = false;
-  env.allowLocalModels = true;
-  env.localModelPath = `${base}models/`;
+  // The relay is the model's "remote" host: transformers.js checks which
+  // files a model has (preprocessor_config.json, so the pipeline gets its
+  // processor) only on a remote host or a file path, never on a local
+  // path that's a URL, and without it every estimate throws.
+  env.allowLocalModels = false;
+  env.allowRemoteModels = true;
+  env.remoteHost = `${base}models/`;
+  env.remotePathTemplate = "{model}/";
   env.useWasmCache = false;
   const wasm = env.backends.onnx.wasm;
   if (wasm) wasm.wasmPaths = { mjs: `${base}ort-wasm-simd-threaded.asyncify.mjs`, wasm: `${base}ort-wasm-simd-threaded.asyncify.wasm` };
