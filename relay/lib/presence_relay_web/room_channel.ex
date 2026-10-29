@@ -9,8 +9,26 @@ defmodule PresenceRelayWeb.RoomChannel do
   one member, and on a yes hand both connections a LiveKit token; see
   "Calls" below. The room's voice channel (`PresenceRelay.Voice`) is
   joined and left at will; see "Voice" below.
+
+  ## Off the database's clock
+
+  Nothing a join or a frame waits on touches Postgres. The joiner's
+  history is read in a task once presence and frames are out, and any
+  `said` that comes meanwhile is held and sent after it (those the
+  history already has, left out), so a page still sees history first. A
+  `say` is kept in a task too, one at a time per connection so a
+  connection's messages keep their order, and replied to when it's kept;
+  `history` pages likewise. A slow or busy pool makes text slow, never a
+  room's frames, presence or joins (staging's 10× probe, where the
+  channel waited on the pool and its frames piled up behind it).
+
+  Frames to this connection don't pass through it at all: see
+  `PresenceRelay.Fanout`.
   """
-  use Phoenix.Channel
+  # A join at :info was a log line a client, with the socket's connect
+  # another: in a join storm the logger fell back to blocking its callers,
+  # then to dropping lines. /metrics counts joins.
+  use Phoenix.Channel, log_join: :debug
   require Logger
 
   alias PresenceRelay.{Calls, Chat, Presence, Rooms, Usage, Voice}
@@ -40,18 +58,28 @@ defmodule PresenceRelayWeb.RoomChannel do
       Usage.joined(a.app, meter)
       :telemetry.execute([:presence_relay, :join, :ok], %{count: 1}, %{})
 
-      for topic <- [
-            Rooms.room_topic(a.app, room),
-            Rooms.member_topic(a.app, room, a.sub),
-            Rooms.presence_topic(a.app, room)
-          ],
+      # The room's own topic (frames, `off`, text) once joined:
+      # handle_info(:after_join).
+      for topic <- [Rooms.member_topic(a.app, room, a.sub), Rooms.presence_topic(a.app, room)],
           do: PubSub.subscribe(PresenceRelay.PubSub, topic)
 
       send(self(), :after_join)
       # A connection's calls: the rings it made and is waiting on
       # (id => callee), the rings it may answer (id => caller), and the
-      # call it's in ({id, joined at}).
-      socket = assign(socket, ringing: %{}, rung: %{}, in_call: nil, called_at: [])
+      # call it's in ({id, joined at}). Its text: `said`s held until
+      # its history is out (nil once it is), and the `say`s waiting to be
+      # kept behind the one in a task (`saying`: {task ref, reply ref}).
+      socket =
+        assign(socket,
+          ringing: %{},
+          rung: %{},
+          in_call: nil,
+          called_at: [],
+          held: [],
+          saying: nil,
+          says: :queue.new()
+        )
+
       {:ok, %{you: a.sub, calls: Calls.on?(), voice: Voice.on?()}, socket}
     else
       {:error, reason} ->
@@ -67,19 +95,58 @@ defmodule PresenceRelayWeb.RoomChannel do
 
   @impl true
   def handle_info(:after_join, %{assigns: a} = socket) do
+    # Frames come straight to the socket from here on (PresenceRelay.Fanout).
+    PubSub.subscribe(PresenceRelay.PubSub, Rooms.room_topic(a.app, a.room),
+      metadata: Rooms.fanout_meta(socket)
+    )
+
     meta = %{name: a.name, look: a.look, mode: "none", away: false, watching: true, call: nil}
     {:ok, _} = Presence.track(self(), presence_topic(socket), a.sub, meta)
     push(socket, "presence_state", Presence.list(presence_topic(socket)))
     for frame <- Rooms.fresh(a.app, a.room), do: push(socket, "frame", {:binary, frame})
-    push(socket, "history", %{messages: Chat.history(a.app, a.room)})
+
+    # History from Postgres, off this process: see "Off the database's clock".
+    channel = self()
+    {app, room} = {a.app, a.room}
+
+    Task.Supervisor.start_child(PresenceRelay.Tasks, fn ->
+      send(channel, {:history, Chat.history(app, room)})
+    end)
+
     {:noreply, socket}
   end
+
+  # The joiner's history, then the messages said since it was asked for
+  # that it doesn't have.
+  def handle_info({:history, messages}, %{assigns: %{held: held}} = socket)
+      when is_list(held) do
+    push(socket, "history", %{messages: messages})
+    last = with %{id: id} <- List.last(messages), do: id
+
+    for msg <- Enum.reverse(held), is_nil(last) or msg.id > last, do: push(socket, "said", msg)
+
+    {:noreply, assign(socket, :held, nil)}
+  end
+
+  def handle_info({:relay_said, msg}, %{assigns: %{held: held}} = socket) when is_list(held),
+    do: {:noreply, assign(socket, :held, [msg | held])}
 
   def handle_info({:relay_said, msg}, socket) do
     push(socket, "said", msg)
     {:noreply, socket}
   end
 
+  # The say in a task is kept (or not): reply, tell the room, start the next.
+  def handle_info({ref, result}, %{assigns: %{saying: {ref, reply_to}}} = socket) do
+    Process.demonitor(ref, [:flush])
+    {:noreply, socket |> said(reply_to, result) |> next_say()}
+  end
+
+  def handle_info({:DOWN, ref, :process, _, _}, %{assigns: %{saying: {ref, reply_to}}} = socket),
+    do: {:noreply, socket |> said(reply_to, {:error, :not_kept}) |> next_say()}
+
+  # A frame from a node that doesn't fan out straight to sockets (one
+  # mid-deploy), or a subscriber without the metadata: as before.
   def handle_info({:relay_frame, frame}, socket) do
     push(socket, "frame", {:binary, frame})
     {:noreply, socket}
@@ -254,29 +321,25 @@ defmodule PresenceRelayWeb.RoomChannel do
     now = System.monotonic_time(:millisecond)
     recent = Enum.filter(Map.get(a, :said_at, []), &(now - &1 < @say_window_ms))
 
-    if length(recent) >= @say_burst do
-      message(:say, :dropped)
+    with {:fast, false} <- {:fast, length(recent) >= @say_burst},
+         {:ok, _} <- Chat.check(text) do
+      # Kept in a task, behind any this connection is keeping already;
+      # the reply comes when it's kept (handle_info, said/3).
+      socket =
+        socket
+        |> assign(:said_at, [now | recent])
+        |> change(:says, &:queue.in({socket_ref(socket), text}, &1))
+        |> next_say()
 
-      {:reply, {:error, %{reason: "too fast"}}, assign(socket, :said_at, recent)}
+      {:noreply, socket}
     else
-      case Chat.say(a.app, a.room, a.sub, a.name, text) do
-        {:ok, msg} ->
-          # Everyone else, the sender's other connections included; this
-          # connection hears it in the reply.
-          PubSub.broadcast_from(
-            PresenceRelay.PubSub,
-            self(),
-            Rooms.room_topic(a.app, a.room),
-            {:relay_said, msg}
-          )
+      {:fast, true} ->
+        message(:say, :dropped)
+        {:reply, {:error, %{reason: "too fast"}}, assign(socket, :said_at, recent)}
 
-          message(:say, :ok)
-          {:reply, {:ok, msg}, assign(socket, :said_at, [now | recent])}
-
-        {:error, why} ->
-          message(:say, :dropped)
-          {:reply, {:error, %{reason: reason(why)}}, assign(socket, :said_at, recent)}
-      end
+      {:error, why} ->
+        message(:say, :dropped)
+        {:reply, {:error, %{reason: reason(why)}}, assign(socket, :said_at, recent)}
     end
   end
 
@@ -284,7 +347,14 @@ defmodule PresenceRelayWeb.RoomChannel do
 
   def handle_in("history", payload, %{assigns: a} = socket) do
     before = if is_map(payload) and is_integer(payload["before"]), do: payload["before"]
-    {:reply, {:ok, %{messages: Chat.history(a.app, a.room, before)}}, socket}
+    ref = socket_ref(socket)
+    {app, room} = {a.app, a.room}
+
+    Task.Supervisor.start_child(PresenceRelay.Tasks, fn ->
+      reply(ref, {:ok, %{messages: Chat.history(app, room, before)}})
+    end)
+
+    {:noreply, socket}
   end
 
   # Calls (PROTOCOL.md, "Calls").
@@ -424,6 +494,49 @@ defmodule PresenceRelayWeb.RoomChannel do
       :telemetry.execute([:presence_relay, :message], %{count: 1}, %{kind: kind, result: result})
 
   defp change(socket, key, fun), do: assign(socket, key, fun.(socket.assigns[key]))
+
+  # The next `say` waiting, into a task, unless one is being kept.
+  defp next_say(%{assigns: %{saying: nil} = a} = socket) do
+    case :queue.out(a.says) do
+      {{:value, {reply_to, text}}, says} ->
+        {app, room, sub, name} = {a.app, a.room, a.sub, a.name}
+
+        task =
+          Task.Supervisor.async_nolink(PresenceRelay.Tasks, fn ->
+            Chat.say(app, room, sub, name, text)
+          end)
+
+        assign(socket, saying: {task.ref, reply_to}, says: says)
+
+      {:empty, _} ->
+        socket
+    end
+  end
+
+  defp next_say(socket), do: socket
+
+  # A say kept: everyone else hears it (the sender's other connections
+  # included; this one has it in its reply). Or why it wasn't.
+  defp said(%{assigns: a} = socket, reply_to, result) do
+    case result do
+      {:ok, msg} ->
+        PubSub.broadcast_from(
+          PresenceRelay.PubSub,
+          self(),
+          Rooms.room_topic(a.app, a.room),
+          {:relay_said, msg}
+        )
+
+        message(:say, :ok)
+        reply(reply_to, {:ok, msg})
+
+      {:error, why} ->
+        message(:say, :dropped)
+        reply(reply_to, {:error, %{reason: reason(why)}})
+    end
+
+    assign(socket, :saying, nil)
+  end
 
   defp ring_ms, do: Application.get_env(:presence_relay, :ring_ms, 30_000)
 

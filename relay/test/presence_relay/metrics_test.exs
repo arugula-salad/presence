@@ -53,9 +53,9 @@ defmodule PresenceRelay.MetricsTest do
     {:ok, a, _} = client(:a, r, "u_a", [])
     {:ok, _b, _} = client(:b, r, "u_b", [])
 
-    send_as(a, "frame", {:binary, <<0, 0x40, 1, 2, 3>>})
-    assert_receive {:pushed, :b, "frame", _}
-    send_as(a, "frame", {:binary, <<0, 0x40, 1, 2, 3>>})
+    # A burst of 3 goes; a 4th straight after is too soon.
+    for _ <- 1..4, do: send_as(a, "frame", {:binary, <<0, 0x40, 1, 2, 3>>})
+    for _ <- 1..3, do: assert_receive({:pushed, :b, "frame", _})
     send_as(a, "react", %{"emoji" => "🎉"})
     assert_receive {:pushed, :b, "react", _}
 
@@ -63,9 +63,9 @@ defmodule PresenceRelay.MetricsTest do
     delta = &((value(after_, &1) || 0) - (value(before, &1) || 0))
 
     assert delta.("presence_joins_total") == 2
-    assert delta.(~s(presence_frames_total{result="relayed"})) == 1
+    assert delta.(~s(presence_frames_total{result="relayed"})) == 3
     assert delta.(~s(presence_frames_total{result="too_soon"})) == 1
-    assert delta.("presence_frame_bytes_total") == 5
+    assert delta.("presence_frame_bytes_total") == 15
     assert delta.(~s(presence_messages_total{kind="react",result="ok"})) == 1
     assert value(after_, "presence_rooms") >= 1
     assert value(after_, "presence_members") >= 2

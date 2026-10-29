@@ -16,11 +16,17 @@ defmodule PresenceRelay.RelayCase do
 
   alias PresenceRelay.Token
 
-  # Joins read a room's history (PresenceRelay.Chat): the channel processes
-  # share this test's sandboxed connection.
+  # Joins read a room's history (PresenceRelay.Chat), in tasks: they share
+  # this test's sandboxed connection, and the test's end waits for them
+  # (PresenceRelay.DataCase.settle/1).
   setup tags do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(PresenceRelay.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+
+    on_exit(fn ->
+      PresenceRelay.DataCase.settle()
+      Ecto.Adapters.SQL.Sandbox.stop_owner(pid)
+    end)
+
     :ok
   end
 
@@ -134,4 +140,29 @@ defmodule PresenceRelay.RelayCase do
   end
 
   def framed(sub, frame), do: {:binary, <<byte_size(sub)::8, sub::binary, frame::binary>>}
+
+  @doc """
+  Checks out the sandbox's (shared) connection in a process of its own
+  until the function it returns is called: every query meanwhile waits.
+  """
+  def hold_database do
+    test = self()
+
+    holder =
+      spawn(fn ->
+        PresenceRelay.Repo.checkout(fn ->
+          send(test, :holding)
+          receive do: (:release -> :ok)
+        end)
+
+        send(test, :released)
+      end)
+
+    receive do: (:holding -> :ok), after: (2000 -> raise "couldn't hold the database")
+
+    fn ->
+      send(holder, :release)
+      receive do: (:released -> :ok), after: (2000 -> raise "the database wasn't released")
+    end
+  end
 end

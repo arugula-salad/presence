@@ -32,14 +32,47 @@ defmodule PresenceRelay.RoomTest do
     assert_receive {:pushed, :late, "frame", ^expected}
   end
 
-  test "frames closer than 70 ms and frames over 32 KiB are dropped without a word" do
+  test "a member's frames may bunch up to a burst of 3, then go at one per 70 ms" do
     r = room()
     {:ok, a, _} = client(:a, r, "alice")
     {:ok, _b, _} = client(:b, r, "bob")
-    send_as(a, "frame", {:binary, <<1>>})
-    send_as(a, "frame", {:binary, <<2>>})
-    assert_receive {:pushed, :b, "frame", {:binary, <<5, "alice", 1>>}}
-    refute_receive {:pushed, :b, "frame", {:binary, <<5, "alice", 2>>}}, 100
+    # Four at once, as a network that held them delivers them: three go.
+    for n <- 1..4, do: send_as(a, "frame", {:binary, <<n>>})
+    for n <- 1..3, do: assert_receive({:pushed, :b, "frame", {:binary, <<5, "alice", ^n>>}})
+    refute_receive {:pushed, :b, "frame", {:binary, <<5, "alice", 4>>}}, 50
+    # A gap refills one: one more goes, the next straight after doesn't.
+    Process.sleep(75)
+    send_as(a, "frame", {:binary, <<5>>})
+    send_as(a, "frame", {:binary, <<6>>})
+    assert_receive {:pushed, :b, "frame", {:binary, <<5, "alice", 5>>}}
+    refute_receive {:pushed, :b, "frame", {:binary, <<5, "alice", 6>>}}, 50
+  end
+
+  test "the burst doesn't raise the rate: frames sent too often are held to one per 70 ms" do
+    r = room()
+    {:ok, a, _} = client(:a, r, "alice")
+    {:ok, _b, _} = client(:b, r, "bob")
+    # A frame every 10 ms for 700 ms: the burst (3) and one per 70 ms
+    # (about 10 more), not 70.
+    t0 = System.monotonic_time(:millisecond)
+
+    for n <- 1..70 do
+      send_as(a, "frame", {:binary, <<n>>})
+      Process.sleep(10)
+    end
+
+    elapsed = System.monotonic_time(:millisecond) - t0
+    Process.sleep(50)
+    got = count_frames(:b)
+
+    assert got >= 3 + div(elapsed, 70) - 2 and got <= 3 + div(elapsed, 70) + 1,
+           "#{got} in #{elapsed} ms"
+  end
+
+  test "frames over 32 KiB are dropped without a word" do
+    r = room()
+    {:ok, a, _} = client(:a, r, "alice")
+    {:ok, _b, _} = client(:b, r, "bob")
     send_as(a, "frame", {:binary, :binary.copy(<<7>>, 32 * 1024 + 1)})
     refute_receive {:pushed, :b, "frame", _}, 100
     big = :binary.copy(<<8>>, 32 * 1024)
@@ -49,6 +82,14 @@ defmodule PresenceRelay.RoomTest do
     Process.sleep(80)
     send_as(a, "frame", %{"not" => "binary"})
     refute_receive {:pushed, :b, "frame", _}, 100
+  end
+
+  defp count_frames(name, n \\ 0) do
+    receive do
+      {:pushed, ^name, "frame", _} -> count_frames(name, n + 1)
+    after
+      0 -> n
+    end
   end
 
   test "state updates the member's presence; only the known keys, checked" do

@@ -2,9 +2,15 @@
 // The relay's load probe (#318's P12): N rooms × M members as real
 // WebSocket clients speaking the protocol (../../PROTOCOL.md), each
 // sending rig-sized frames at the real rate (the client's 12 a second; the
-// relay's floor is one per 70 ms), text, waves
+// relay holds a member to one per 70 ms, with a burst of 3), text, waves
 // and reactions, while it measures fan-out latency (sent → heard by
 // another member), frames missing, and errors. Node 24, no packages.
+//
+// Frames missing are split two ways: missed by every member on this
+// machine who hears that sender (the relay dropped it on the way in: too
+// soon, or shed while short of CPU), and missed by only some (lost after
+// fan-out: a slow or closed socket). With --metrics (one URL a relay
+// node, comma-separated), the relay's own counts of each drop too.
 //
 //   node probe.mjs --url http://localhost:4214 --rooms 10 --members 8
 //
@@ -38,8 +44,8 @@ function usage() {
   --ramp S            seconds over which everyone connects (default 10)
   --warmup S          seconds after the ramp before measuring (default 5)
   --gap MS            ms between a member's frames (default 83: the client's 12 fps
-                      rig; 70 is the relay's floor, where network jitter makes it
-                      drop some as too soon)
+                      rig; the relay allows one per 70 ms on average, with a
+                      burst of 3 for frames the network bunched)
   --frame-bytes B     bytes a frame (default 32: a rig frame is 22–41)
   --say-every S       a text message per member about this often (default 20; 0: none)
   --react-every S     a reaction per member about this often (default 10; 0: none)
@@ -51,7 +57,8 @@ function usage() {
   --workers W         threads (default: one per 100 clients, at most the CPUs)
   --start-at T        Unix ms (or an ISO time) to start connecting at, for runs
                       from several machines at once
-  --metrics URL       the relay's /metrics, read before and after (local runs)
+  --metrics URLS      the relay's /metrics, read before and after: one URL a node,
+                      comma-separated (local runs, or \`fly proxy\` to each machine)
   --json              print the summary as JSON too`;
 }
 
@@ -113,7 +120,7 @@ async function main() {
   // A small number per machine for the frame header (other machines' frames are told apart by it).
   const tag = [...o.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) & 0xffff, 7);
 
-  const metricsBefore = o.metrics ? await scrape(o.metrics) : null;
+  const metricsBefore = o.metrics ? await scrapeAll(o.metrics) : null;
   if (o.startAt) {
     const wait = o.startAt - Date.now();
     if (wait > 0) {
@@ -159,7 +166,7 @@ async function main() {
   for (const w of threads) w.terminate();
 
   const s = merge(all);
-  const metricsAfter = o.metrics ? await scrape(o.metrics) : null;
+  const metricsAfter = o.metrics ? await scrapeAll(o.metrics) : null;
   const summary = summarize(o, s, clients, joinedAtStart, metricsBefore, metricsAfter);
   print(summary);
   if (o.json) console.log(JSON.stringify(summary));
@@ -170,6 +177,13 @@ function merge(all) {
   for (const x of all) {
     for (const k of Object.keys(s)) {
       if (k === "connectMs") s[k].push(...x[k]);
+      else if (k === "observers") for (const [key, n] of x[k]) s[k].set(key, (s[k].get(key) || 0) + n);
+      else if (k === "gaps")
+        for (const [key, seqs] of x[k]) {
+          let m = s[k].get(key);
+          if (!m) s[k].set(key, (m = new Map()));
+          for (const [seq, n] of seqs) m.set(seq, (m.get(seq) || 0) + n);
+        }
       else if (s[k] instanceof Uint32Array) for (let i = 0; i < x[k].length; i++) s[k][i] += x[k][i];
       else s[k] += x[k];
     }
@@ -200,14 +214,32 @@ function lat(h) {
   return { n, p50: pct(h, 0.5), p95: pct(h, 0.95), p99: pct(h, 0.99), max: maxOf(h) };
 }
 
+// Each missing frame (a sender's sequence number some receiver here never
+// heard) as missed by every receiver here who hears that sender (dropped
+// by the relay on the way in) or by only some (lost after fan-out); in
+// receiver-frames, as "missing" counts them.
+function classify(s) {
+  let atRelay = 0;
+  let after = 0;
+  for (const [key, seqs] of s.gaps) {
+    const observers = s.observers.get(key) || 0;
+    for (const n of seqs.values()) {
+      if (n >= observers) atRelay += n;
+      else after += n;
+    }
+  }
+  return { atRelay, after };
+}
+
 function summarize(o, s, clients, joinedAtStart, before, after) {
   const secs = o.duration;
   const sorted = s.connectMs.sort((a, b) => a - b);
   const q = (p) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))] : null);
+  const classified = classify(s);
   const relay =
     before && after
       ? Object.fromEntries(
-          ['presence_frames_total{result="relayed"}', 'presence_frames_total{result="too_soon"}', 'presence_frames_total{result="too_big"}', "presence_joins_total", "presence_rate_limited_total"].map(
+          ['presence_frames_total{result="relayed"}', 'presence_frames_total{result="too_soon"}', 'presence_frames_total{result="shed"}', 'presence_frames_total{result="too_big"}', "presence_joins_total", "presence_rate_limited_total"].map(
             (k) => [k, (after[k] ?? 0) - (before[k] ?? 0)],
           ),
         )
@@ -230,6 +262,8 @@ function summarize(o, s, clients, joinedAtStart, before, after) {
       receivedPerS: Math.round(s.framesReceived / secs),
       missing: s.framesMissing,
       missingPct: s.framesReceived ? (100 * s.framesMissing) / (s.framesReceived + s.framesMissing) : 0,
+      missingAtRelay: classified.atRelay,
+      missingAfter: classified.after,
       latency: lat(s.latLocal),
       latencyOtherMachines: lat(s.latRemote),
     },
@@ -252,11 +286,24 @@ arugula.stream load probe: ${r.id} → ${r.url}
   connected ${r.connected}/${r.clients} (${r.joinedAtStart} in when measuring began); connect+join p50 ${ms(r.connectMs.p50)} p95 ${ms(r.connectMs.p95)} max ${ms(r.connectMs.max)}
   errors: token ${r.errors.token} (429s retried ${r.errors.token429}), socket ${r.errors.socket}, join ${r.errors.join}, closed early ${r.errors.closed}, channel ${r.errors.channel}
   frames: sent ${r.frames.sent} (${r.frames.sentPerS}/s), heard ${r.frames.received} (${r.frames.receivedPerS}/s), missing ${r.frames.missing} (${r.frames.missingPct.toFixed(3)}%)
+    missing, dropped by the relay on the way in (every receiver here missed it: too soon or shed): ${r.frames.missingAtRelay}
+    missing, lost after fan-out (only some receivers missed it): ${r.frames.missingAfter}
     fan-out, same machine:   ${l(r.frames.latency)}
     fan-out, other machines: ${l(r.frames.latencyOtherMachines)}
   say: sent ${r.say.sent}, ok ${r.say.ok}, refused ${r.say.refused}, heard ${r.say.heard}; ${l(r.say.latency)}
   react: sent ${r.react.sent}, heard ${r.react.heard}; wave: sent ${r.wave.sent}, heard ${r.wave.heard}`);
   if (r.relay) console.log(`  relay /metrics during the run: ${Object.entries(r.relay).map(([k, v]) => `${k} ${v}`).join(", ")}`);
+}
+
+// Every node's /metrics, summed.
+async function scrapeAll(urls) {
+  const out = {};
+  for (const url of urls.split(",").filter(Boolean)) {
+    const m = await scrape(url);
+    if (!m) return null;
+    for (const [k, v] of Object.entries(m)) out[k] = (out[k] ?? 0) + v;
+  }
+  return out;
 }
 
 async function scrape(url) {
@@ -301,6 +348,10 @@ function blank() {
     latLocal: new Uint32Array(BUCKETS + 1),
     latRemote: new Uint32Array(BUCKETS + 1),
     latSay: new Uint32Array(BUCKETS + 1),
+    // Per sender: receivers here who heard it, and its missing sequence
+    // numbers with how many receivers here missed each (classify/1).
+    observers: new Map(),
+    gaps: new Map(),
   };
 }
 
@@ -324,6 +375,7 @@ async function worker({ o, tag, idx, t0, rampMs, clients }) {
       measuring = false;
       stopping = true;
       for (const c of live) c.stop();
+      for (const c of live) for (const key of c.seen.keys()) s.observers.set(key, (s.observers.get(key) || 0) + 1);
       parentPort.postMessage({ type: "stats", stats: s });
     }
   });
@@ -432,7 +484,12 @@ async function worker({ o, tag, idx, t0, rampMs, clients }) {
       record(fromTag === tag ? s.latLocal : s.latRemote, now() - sent);
       const key = fromTag * 1e7 + from;
       const last = c.seen.get(key);
-      if (last !== undefined && n > last + 1) s.framesMissing += n - last - 1;
+      if (last !== undefined && n > last + 1) {
+        s.framesMissing += n - last - 1;
+        let g = s.gaps.get(key);
+        if (!g) s.gaps.set(key, (g = new Map()));
+        for (let q = last + 1; q < n; q++) g.set(q, (g.get(q) || 0) + 1);
+      }
       if (last === undefined || n > last) c.seen.set(key, n);
     };
 

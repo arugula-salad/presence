@@ -19,6 +19,9 @@ config :presence_relay,
   # give up quickly.
   livekit: %{url: "wss://livekit.test", key: "test-key", secret: "test-livekit-secret"},
   ring_ms: 300,
+  # The frame rate stretches only when a test says (PresenceRelay.Load):
+  # a busy test machine mustn't shed a test's frames.
+  load_tick_ms: :manual,
   # Usage is written when a test says (PresenceRelay.Usage.flush/0).
   usage_flush_ms: :manual,
   # Billing off unless a test turns it on (against a fake Stripe), and

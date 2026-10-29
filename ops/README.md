@@ -209,13 +209,22 @@ Postgres.
 
 `ops/load/probe.mjs` (Node 24, no packages): N rooms × M members as real
 WebSocket clients speaking the protocol. Each sends a rig-sized frame
-(32 bytes) every 83 ms (the client's 12 frames a second; `--gap 70` is
-the relay's floor), a text message about every 20 s, a reaction every
-10 s and a wave every 30 s, and measures fan-out latency (sent → heard by
-each other member: p50/p95/p99/max), frames missing (gaps in each
-sender's sequence numbers), say round trips, and errors. `--help` lists
-the options; `--metrics` reads a local relay's /metrics before and after,
-to tell frames the relay dropped as too soon from frames lost.
+(32 bytes) every 83 ms (the client's 12 frames a second; the relay allows
+one per 70 ms on average, with a burst of 3), a text message about every
+20 s, a reaction every 10 s and a wave every 30 s, and measures fan-out
+latency (sent → heard by each other member: p50/p95/p99/max), frames
+missing (gaps in each sender's sequence numbers), say round trips, and
+errors. `--help` lists the options.
+
+Frames missing come in two kinds, which it counts apart: **dropped by
+the relay on the way in** (every receiver on the probe's machine missed
+that frame: over the member's rate, or shed while the node was short of
+CPU) and **lost after fan-out** (only some receivers missed it: a socket
+that fell behind or closed). A WebSocket is TCP, so nothing is lost on
+the wire; the first kind is the relay's decision, the second is trouble.
+`--metrics URL,URL,…` (one per node) reads the relay's own counts before
+and after: the first kind should be about `too_soon` + `shed` times
+the receivers each frame has on the probe's machine.
 
 Team scale is 10 rooms × 8; 10× is 100 rooms × 8 (800 clients).
 
@@ -243,15 +252,119 @@ Every "missing" frame above matches the relay's own too-soon drops (two
 frames arriving under 70 ms apart, from jitter or queueing), so fan-out
 itself lost nothing.
 
-What that means for Fly: one vCPU carries about 400–500 clients at 12
-frames a second comfortably, and about 250–400 KB of memory a
-connection (each socket's and channel's process heap). 10× team scale
-across staging's two machines (400 each) should hold on CPU and memory,
-**but** a `shared-cpu-1x` is guaranteed only a slice of a core and
-bursts above it on credit: a sustained 40% may get throttled. Watch
-`presence_beam_scheduler_utilization` and frames too soon; if it
-throttles, `shared-cpu-2x` or `performance-1x` (and `memory = "1gb"`
-past ~1,000 connections a machine) is the fix.
+What that meant for Fly was wrong: those runs had no CPU quota and no
+network between the probe and the relay. See the next section.
+
+### Staging-like, locally (2026-10-29)
+
+Staging fell apart at light load while a local run held, because a
+local run has neither of staging's two conditions: a CPU quota and a
+real network. `ops/load/rig.sh` puts both on this machine:
+
+- relay nodes in Docker from the release image, each on one CPU (a Fly
+  machine has one vCPU, so one scheduler) with a quota on it
+  (`--cpus=0.25`, or `5000/80000`: Fly's `shared-cpu-1x` baseline, 5 ms
+  of every 80 ms) and 512 MB, clustered;
+- Toxiproxy in front of each node's WebSocket port, 25 ms ± 15 ms each
+  way (jitter is what bunches a client's frames), and in front of each
+  node's Postgres, a 2 ms or 75 ms round trip (same region, or lhr to
+  iad);
+- the probe run against every node at once, each room's members split
+  across them, reading every node's /metrics.
+
+```sh
+docker build -f relay/Dockerfile -t presence-relay .
+ops/load/rig.sh up presence-relay 0.25 2 2          # image, CPU, nodes, Postgres ms ("2,75": node 2 far)
+ops/load/rig.sh probe team 10 4                     # 10 rooms × (4 + 4) members
+ops/load/rig.sh probe tenx 100 4 60 30              # 10×: 800 clients
+ops/load/rig.sh down
+```
+
+Before (a579b6a) and after the fixes below, two nodes, the network as
+above, Postgres 2 ms unless it says; fan-out p50 / p95 / p99
+includes the injected ~50 ms (25 ± 15 each way):
+
+| run | CPU a node | joined | missing (relay drops) | fan-out p50 / p95 / p99 | say p50 / p99 | join p95 |
+|---|---|---|---|---|---|---|
+| 1× (80) before | 0.25 | 80/80 | 15.1% (all too soon) | 54 / 72 / 76 ms | 62 / 87 ms | 200 ms |
+| 1× after | 0.25 | 80/80 | **0%** | 53 / 71 / 76 ms | 63 / 85 ms | 195 ms |
+| 1× before | 0.125 | 80/80 | 15.1% (all too soon) | 54 / 72 / 76 ms | 63 / 85 ms | 198 ms |
+| 1× after | 0.125 | 80/80 | **0%** | 53 / 71 / 76 ms | 62 / 86 ms | 203 ms |
+| 1× before | 5 ms/80 ms | 80/80 | 15.4% | 55 / 74 / 95 ms | 62 / 108 ms | 207 ms |
+| 1× after | 5 ms/80 ms | 80/80 | 1.0% (shed) | 54 / 76 / 91 ms | 66 / 113 ms | 219 ms |
+| 1×, all on one node, before | 5 ms/80 ms | 80/80 | 32.7% | 315 / 614 / 774 ms | 434 / 945 ms | 6.7 s |
+| 1×, all on one node, after | 5 ms/80 ms | 80/80 | 64% (shed) | 64 / 156 / 276 ms | 69 / 512 ms | 251 ms |
+| 10× (800) before | 1 | 800/800 | 15.0% (all too soon) | 54 / 72 / 76 ms | 60 / 84 ms | 193 ms |
+| 10× after | 1 | 800/800 | **0%** | 54 / 75 / 82 ms | 67 / 106 ms | 192 ms |
+| 10× after | 0.75 | 800/800 | **0%** | 54 / 75 / 99 ms | 65 / 325 ms | 189 ms |
+| 10× before | 0.25 | 721/800 (79 joins failed) | 61% | 600 ms / 1.5 s / 5.3 s | 915 ms / >10 s | >10 s |
+| 10× after | 0.25 | 800/800 | 81% (shed) | 126 / 404 / 516 ms | 124 / 1231 ms | 817 ms |
+| 10× before | 5 ms/80 ms | 284/800 (516 failed) | 78% | 962 ms / >10 s / >10 s | >10 s | >10 s |
+| 10×, node 2's Postgres 75 ms, before | 1 | 800/800 | 15.3% | 54 / 73 / 116 ms | 207 / 232 ms | 197 ms |
+| 10×, node 2's Postgres 75 ms, after | 1 | 800/800 | **0%** | 56 / 77 / 85 ms | 312 / 411 ms | 193 ms |
+| 10×, both nodes' Postgres 75 ms, after | 1 | 800/800 | **0%** | 53 / 73 / 78 ms | 291 / 399 ms | 190 ms |
+| 10×, node 2's 75 ms, a say every 5 s, before | 1 | 800/800 | 18.4%; 978 says refused | 56 / 283 / 736 ms | 380 / 1479 ms | 194 ms |
+| 10×, node 2's 75 ms, a say every 5 s, after | 1 | 800/800 | **0%**; none refused | 53 / 72 / 77 ms | 290 / 377 ms | 194 ms |
+| 10×, node 2's 75 ms, before | 0.25 | 707/800 (93 failed) | 59% | 664 ms / 1.5 s / 5.8 s | 894 ms / >10 s | >10 s |
+| 10×, node 2's 75 ms, after | 0.25 | 800/800 | 79% (shed) | 105 / 405 / 523 ms | 400 / 1237 ms | 721 ms |
+
+No socket closed early in any "after" run; every "closed early" before was
+a failed join (the probe closes its socket). Memory stayed under 260 MB a
+node throughout (400 connections each).
+
+What was wrong, each found in those runs:
+
+1. **The 70 ms floor dropped frames the network bunched.** At full CPU
+   and no load to speak of, 15% of frames went missing, every one a
+   relay `too_soon` (missed by every receiver): a client sending every
+   83 ms has its frames delivered 53–113 ms apart through 25 ± 15 ms of
+   jitter. Now a token bucket (3 frames, one more every 70 ms): 0%.
+2. **CPU.** 10× team scale needs about 60% of a core per node (on this
+   machine's Zen 5 at 5 GHz; Fly's EPYC cores are slower). At 5 ms in
+   80 ms, even 1× on one node (staging's own 1× numbers: 43% missing,
+   p50 291 ms) queues: every socket's mailbox fills, fan-out goes to
+   seconds, and at 10× joins time out waiting on `Rooms` (5 s) and fail
+   (284 of 800 joined; staging: 248). Frames now go straight from the
+   room's topic to each socket (`PresenceRelay.Fanout`, encoded once), and
+   a node short of CPU sheds frames instead of queueing them
+   (`PresenceRelay.Load`): fewer frames a second, on time, rather than
+   every frame late.
+3. **Postgres on the channel's clock.** A joiner's history and each
+   `say` were queries in the room channel's own process, so while one
+   waited on the pool that connection's frames waited too; and one insert
+   a message held a pooled connection for a round trip or two. With
+   node 2's database 75 ms away and the room talking (a message per
+   member every 5 s), node 2 logged "connection not available and request
+   was dropped from queue" (DBConnection's default queue target is
+   50 ms), refused 978 messages, and fan-out p99 rose to 736 ms. Now
+   history and text are tasks off the channel, a node's messages go to
+   Postgres in batches (`Chat.Writer`: one connection however many), and
+   the pool's queue target is 500 ms (`POOL_QUEUE_TARGET_MS`).
+
+What it means for Fly:
+
+- **10× needs about 60–65% of a core a node** here (two nodes, 400
+  connections each, 12 frames a second): at 0.75 CPU it holds with
+  nothing missing, at 0.5 it sheds 46%. Fly's cores are slower than this
+  machine's, so count on most of a core. A `shared-cpu-1x` gets 6.25% of
+  one past its burst balance (which starts at 5 s and refills only
+  while it's under that): **it can't hold 10×**, and no change in the
+  relay makes it (receiving the frames alone, before any are sent on,
+  costs more than its share; locally even maximum shedding left joins
+  failing there). It holds 1× team scale split over two machines, just
+  (6% of its 6.25%); all 80 on one machine, it sheds most frames. The
+  `shared-cpu-2x` that staging and production run now gets twice that
+  (10 ms of every 80 ms, 12.5% of a core, shared by its two vCPUs):
+  enough for 1× on one machine, still a fifth of what 10× needs.
+- For 10× on two machines: **`performance-1x`** (a whole core
+  each, ~60–90% busy at 10×) or, for headroom, `performance-2x` (BEAM
+  uses both cores). Memory is not the limit (under 260 MB at 400
+  connections), but performance machines come with 2 GB anyway.
+- `POOL_SIZE=10` is enough now that a node's text is one connection
+  (`Chat.Writer`) and nothing on a join's path queries; the queue target
+  is 500 ms by default (`POOL_QUEUE_TARGET_MS`).
+- Watch `presence_frame_gap_stretch` (above 1: the node is shedding) and
+  `presence_frames_total{result="shed"}` beside `too_soon`.
 
 ### Staging, from two regions at once
 
@@ -282,5 +395,9 @@ past ~1,000 connections a machine) is the fix.
 4. Put the limits back: `fly secrets unset -a arugula-stream-staging RATE_LIMITS`.
 
 Done when: 10× (100 rooms × 8) holds: every client connected, no
-channel errors, frames missing ≈ the relay's too-soon drops, fan-out p99
-within a frame (83 ms), and both machines' memory under their limit.
+channel errors or sockets closed early, frames missing near 0 (the
+probe's "dropped by the relay" line is `too_soon` and `shed`; "lost after
+fan-out" should be 0), fan-out p99 within a frame (83 ms) beyond the
+network's own latency, and both machines' memory under their limit. On
+a `shared-cpu` machine expect 10× to shed most frames (see above):
+that's the machine size, not a fault.
