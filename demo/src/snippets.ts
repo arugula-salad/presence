@@ -1,15 +1,15 @@
-// The code the site shows (presence/sdk/API.md): every snippet in one
+// The code the site shows (sdk/API.md): every snippet in one
 // place, so the landing and the docs never disagree with each other.
 
 export const SDK = "https://arugula.stream/sdk/v0/presence.js";
 
-/** One line each, from arugula.stream itself (presence/sdk/host.sh). */
+/** One line each, from arugula.stream itself (sdk/host.sh). */
 export const install = {
   React: "npm install https://arugula.stream/npm/presence-react.tgz",
   Node: "npm install https://arugula.stream/npm/presence-server.tgz",
   Python: "pip install https://arugula.stream/py/arugula_presence-0.1.0.tar.gz",
   Go: "go get arugula.stream/presence",
-  Elixir: `{:arugula_presence, git: "https://github.com/arugula-salad/arugula", branch: "presence-toolkit", sparse: "presence/sdk/elixir"}`,
+  Elixir: `{:arugula_presence, git: "https://github.com/arugula-salad/presence", sparse: "sdk/elixir"}`,
   Ruby: "gem install arugula_presence --source https://arugula.stream/gems/",
 } as Record<string, string>;
 

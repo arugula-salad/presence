@@ -5,7 +5,7 @@ Python 3.9+.
 
 Install (from this repo, until it's on PyPI):
 
-    pip install ./presence/sdk/python
+    pip install ./sdk/python
 
     from arugula_presence import create_room_token
     token = create_room_token(app="acme", secret=os.environ["ARUGULA_SECRET"], room="design-team", user_id=user.id, name=user.name)

@@ -132,11 +132,11 @@ given. The header is exactly `{"alg":"HS256","typ":"JWT"}`. base64url
 without padding. So every SDK makes byte-identical tokens for the same
 inputs (sdk/vectors.json), and the relay verifies them.
 
-- Node/TS: `presence/sdk/node` (`@arugula/presence-server`): `createRoomToken({...})`
-- Python: `presence/sdk/python` (`arugula_presence`): `create_room_token(app=, secret=, room=, user_id=, name=, look=None, ttl=3600)`
-- Go: `presence/sdk/go` (`arugula.stream/presence`): `presence.CreateRoomToken(presence.TokenOptions{...})`
-- Elixir: `presence/sdk/elixir` (`:arugula_presence`): `ArugulaPresence.create_room_token(app: , secret: , room: , user_id: , name: , look: nil, ttl: 3600)`
-- Ruby: `presence/sdk/ruby` (`arugula_presence`): `ArugulaPresence.create_room_token(app:, secret:, room:, user_id:, name:, look: nil, ttl: 3600)`
+- Node/TS: `sdk/node` (`@arugula/presence-server`): `createRoomToken({...})`
+- Python: `sdk/python` (`arugula_presence`): `create_room_token(app=, secret=, room=, user_id=, name=, look=None, ttl=3600)`
+- Go: `sdk/go` (`arugula.stream/presence`): `presence.CreateRoomToken(presence.TokenOptions{...})`
+- Elixir: `sdk/elixir` (`:arugula_presence`): `ArugulaPresence.create_room_token(app: , secret: , room: , user_id: , name: , look: nil, ttl: 3600)`
+- Ruby: `sdk/ruby` (`arugula_presence`): `ArugulaPresence.create_room_token(app:, secret:, room:, user_id:, name:, look: nil, ttl: 3600)`
 
 Each has a `now`/clock parameter for tests and zero dependencies beyond
 the language's standard library (Elixir: :crypto + Jason, which Phoenix

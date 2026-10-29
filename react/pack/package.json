@@ -4,7 +4,7 @@
   "description": "arugula.stream for React: PresenceRoom, People, CameraControls, Avatar and usePresence. Live avatars of who's around, upgrading to a call.",
   "license": "MIT OR Apache-2.0",
   "homepage": "https://arugula.stream/docs#react",
-  "repository": { "type": "git", "url": "https://github.com/arugula-salad/arugula", "directory": "presence/react" },
+  "repository": { "type": "git", "url": "https://github.com/arugula-salad/presence", "directory": "react" },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./index.d.ts",

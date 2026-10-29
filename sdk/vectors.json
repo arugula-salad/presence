@@ -1,5 +1,5 @@
 {
-  "about": "arugula.stream room-token test vectors (presence/sdk/API.md): every server SDK must make exactly `token` from `input` (ttl null = the default 3600; look null = none) and refuse every `invalid` input. Secret is the relay's test app secret, so presence/relay's tests verify these too.",
+  "about": "arugula.stream room-token test vectors (sdk/API.md): every server SDK must make exactly `token` from `input` (ttl null = the default 3600; look null = none) and refuse every `invalid` input. Secret is the relay's test app secret, so relay's tests verify these too.",
   "valid": [
     {
       "name": "basic",

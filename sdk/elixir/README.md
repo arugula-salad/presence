@@ -5,7 +5,7 @@ a Phoenix app already has).
 
 Install (from this repo, until it's on Hex): in `mix.exs`,
 
-    {:arugula_presence, path: "path/to/arugula/presence/sdk/elixir"}
+    {:arugula_presence, path: "path/to/presence/sdk/elixir"}
 
 ```elixir
 ArugulaPresence.create_room_token(

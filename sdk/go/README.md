@@ -6,7 +6,7 @@ Install (from this repo, until the module path is served): in your
 `go.mod`,
 
     require arugula.stream/presence v0.1.0
-    replace arugula.stream/presence => ./path/to/arugula/presence/sdk/go
+    replace arugula.stream/presence => ./path/to/presence/sdk/go
 
 ```go
 token, err := presence.CreateRoomToken(presence.TokenOptions{

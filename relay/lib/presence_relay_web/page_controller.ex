@@ -39,7 +39,7 @@ defmodule PresenceRelayWeb.PageController do
     do: send_resp(conn, 404, "")
 
   # `go get arugula.stream/presence`: the module is served by the module
-  # proxy protocol from /go (presence/sdk/host.sh), so the import path
+  # proxy protocol from /go (sdk/host.sh), so the import path
   # names it with the "mod" kind.
   def index(conn, %{"path" => ["presence" | _], "go-get" => "1"}) do
     host = conn.host

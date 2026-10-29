@@ -5,7 +5,7 @@
 # with no database and no relay running. The token is read from stdin or
 # AUTH_TOKEN, never argv (so it stays out of shell history and `ps`).
 #
-#   cd presence/relay
+#   cd relay
 #   pbpaste | mise exec -- mix run --no-start scripts/check_provider.exs -- \
 #     --provider clerk --issuer https://your-app.clerk.accounts.dev \
 #     --origin http://localhost:3000

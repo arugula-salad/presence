@@ -5,8 +5,8 @@ from the standard library; Ruby 3.0+.
 
 Install (from this repo, until it's on RubyGems):
 
-    cd presence/sdk/ruby && gem build arugula_presence.gemspec && gem install arugula_presence-0.1.0.gem
-    # or in a Gemfile: gem "arugula_presence", path: "path/to/arugula/presence/sdk/ruby"
+    cd sdk/ruby && gem build arugula_presence.gemspec && gem install arugula_presence-0.1.0.gem
+    # or in a Gemfile: gem "arugula_presence", path: "path/to/presence/sdk/ruby"
 
 ```ruby
 ArugulaPresence.create_room_token(app: "acme", secret: ENV.fetch("ARUGULA_SECRET"), room: "design-team", user_id: user.id.to_s, name: user.name)

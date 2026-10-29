@@ -11,7 +11,7 @@ defmodule PresenceRelay.Watchdog do
   every node is well again. A node that doesn't answer counts as failing.
 
   It can't tell anyone the whole app is down (nothing's left to send the
-  mail): Fly's machine checks restart a dead machine, and presence/ops/
+  mail): Fly's machine checks restart a dead machine, and ops/
   README.md has the Grafana alert for "no machine is up".
 
   No mailer (no `RESEND_API_KEY`), and the alert goes to the log only.

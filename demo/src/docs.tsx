@@ -1,5 +1,5 @@
 // arugula.stream/docs: everything a developer needs on one page, from a
-// demo room in five lines to tokens in production (presence/sdk/API.md).
+// demo room in five lines to tokens in production (sdk/API.md).
 
 import { Code, Tabs } from "./code";
 import { Nav, SOURCE } from "./landing";
@@ -60,7 +60,7 @@ export function Docs() {
           <Tabs tabs={server} label="Sign a token" install={install} />
           <p class="note">
             Make an app in <a href="/dashboard">the dashboard</a> for its id, secret and publishable keys. You can also run the relay yourself (
-            <a href={`${SOURCE}/relay`}>presence/relay</a>, Phoenix) with your own <code>PRESENCE_APPS</code>.
+            <a href={`${SOURCE}/relay`}>relay</a>, Phoenix) with your own <code>PRESENCE_APPS</code>.
           </p>
 
           <h2 id="sign-in">Your sign-in, no server</h2>
@@ -135,7 +135,7 @@ export function Docs() {
           </table>
           <p class="note">
             Each installs from arugula.stream in one line (Elixir from the repo), shown above each example. The source is in{" "}
-            <a href={`${SOURCE}/sdk`}>presence/sdk</a>; each SDK is one file under a hundred lines, so copying it in works too.
+            <a href={`${SOURCE}/sdk`}>sdk</a>; each SDK is one file under a hundred lines, so copying it in works too.
           </p>
 
           <h2 id="limits">Limits and privacy</h2>

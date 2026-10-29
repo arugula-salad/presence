@@ -1,4 +1,4 @@
-# presence/relay: arugula.video's relay
+# relay: arugula.stream's relay
 
 The relay for embeddable presence (Arugula #315): rooms, who's in them,
 and each member's newest frame passed to the rest. It implements
@@ -228,27 +228,27 @@ step as above (Managed Payments on).
 ## Deploying
 
 `relay/Dockerfile` builds the demo, the SDK and the hosted installs, then
-the release; it's built from `presence/`. Two Fly apps, both personal org:
+the release; it's built from the repo root. Two Fly apps, both personal org:
 
-- **staging**, `arugula-stream-staging` (`presence/fly.staging.toml`, iad,
-  one machine): `cd presence && fly deploy -c fly.staging.toml --ha=false`.
+- **staging**, `arugula-stream-staging` (`fly.staging.toml`, iad,
+  one machine): `fly deploy -c fly.staging.toml --ha=false`.
   Postgres: the Managed Postgres cluster `arugula-stream-db`
   (`nlkxjo5pdkd0y93v`, iad), database and user `presence_staging`,
   attached as `DATABASE_URL`; the `release_command` migrates before each
   release. https://arugula-stream-staging.fly.dev
-- **production**, `arugula-stream` (`presence/fly.toml`): arugula.stream.
+- **production**, `arugula-stream` (`fly.toml`): arugula.stream.
 
 ### Production: attach Postgres and move to iad (when Jake says)
 
 Production has no database yet and runs in ewr; the cluster is in iad
-(Managed Postgres isn't offered in ewr). From `presence/`:
+(Managed Postgres isn't offered in ewr). From the repo root:
 
 1. A database and user of its own on the cluster:
    `fly mpg databases create nlkxjo5pdkd0y93v --name presence_prod` and
    `fly mpg users create nlkxjo5pdkd0y93v --username presence_prod --role schema_admin`.
 2. Attach it: `fly mpg attach nlkxjo5pdkd0y93v -a arugula-stream --database presence_prod --username presence_prod`
    (stages `DATABASE_URL`; nothing restarts yet).
-3. In `presence/fly.toml`: `primary_region = "iad"`, `ECTO_IPV6 = "true"`
+3. In `fly.toml`: `primary_region = "iad"`, `ECTO_IPV6 = "true"`
    under `[env]`, and the staging file's `[deploy]` block
    (`release_command = "/app/bin/presence_relay eval PresenceRelay.Release.migrate()"`).
 4. Deploy: `fly deploy --ha=false --remote-only`. Fly starts the new
@@ -264,7 +264,7 @@ the relay runs without the Repo again.
 
 ## The demo (arugula.video)
 
-`presence/demo` builds into `priv/static` (git ignores it): `cd ../demo &&
+`demo` builds into `priv/static` (git ignores it): `cd ../demo &&
 pnpm install && pnpm assets && pnpm build`, then `DEMO=1 mix phx.server`.
 `BIND=<address>` listens somewhere other than loopback in dev (a tailnet
 address, for a browser on another machine; that browser needs a secure

@@ -1,5 +1,5 @@
 # arugula.stream: the presence relay serving the demo (#315). `fly deploy`
-# from presence/ (the image builds presence/demo into the relay). Secrets:
+# from the repo root (the image builds demo/ into the relay). Secrets:
 # SECRET_KEY_BASE, DEMO_SECRET, and PRESENCE_APPS once a host app uses it.
 # One machine: rooms live in one node's memory until the relay clusters.
 app = "arugula-stream"
@@ -35,7 +35,7 @@ primary_region = "ewr"
 
 # /metrics (#318's P12) on the internal port 9091, which no service
 # exposes: Fly scrapes it into its managed Grafana (fly-metrics.net), with
-# the app, instance and region as labels. presence/ops/README.md has the
+# the app, instance and region as labels. ops/README.md has the
 # dashboard and the alerts.
 [metrics]
   port = 9091

@@ -2,7 +2,7 @@
 
 How the hosted relay is kept safe and watched (#318's P12): its abuse
 limits, its metrics and alerts, its backups, and how much load it holds.
-Everything here is relative to `presence/`; commands run from there.
+Everything here is relative to the repo root; commands run from there.
 
 ## Abuse limits
 

@@ -7,7 +7,7 @@ fetches it from your endpoint.
 
 Install (from this repo, until it's on npm):
 
-    npm install ./presence/sdk/node
+    npm install ./sdk/node
 
     import { createRoomToken } from "@arugula/presence-server";
     const token = createRoomToken({ app: "acme", secret: process.env.ARUGULA_SECRET, room: "design-team", user: { id: user.id, name: user.name } });

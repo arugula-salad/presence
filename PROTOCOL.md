@@ -9,9 +9,9 @@ and S44 (rigged avatars) spikes; tracker Arugula #315.
 
 - **Host app server**: signs a **room token** for each of its users with
   the app's secret. It alone decides who may be in which room.
-- **Client** (`@arugula/presence`, `presence/client`): joins a room with a
+- **Client** (`@arugula/presence`, `client`): joins a room with a
   token, publishes the user's frames and state, receives everyone else's.
-- **Relay** (`presence/relay`, Phoenix): rooms, membership, fan-out. It
+- **Relay** (`relay`, Phoenix): rooms, membership, fan-out. It
   keeps each member's newest frame in memory for a joiner, and nothing
   else.
 

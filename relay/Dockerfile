@@ -1,6 +1,6 @@
-# arugula.stream (presence/relay with presence/demo, meet.arugula.stream
-# (presence/meet), the dashboard (presence/dashboard), the script-tag SDK
-# and the hosted SDK installs in priv/static). Built from presence/
+# arugula.stream: relay/ with demo/, meet.arugula.stream (meet/), the
+# dashboard (dashboard/), the script-tag SDK and the hosted SDK installs
+# in priv/static. Built from the repo root
 # (fly.toml there): the demo, with its models and Wasm fetched, meet into
 # priv/static/meet, the dashboard into priv/static/dashboard, the SDK, the
 # React package and the server SDKs' npm/pip/Go files (sdk/host.sh), the

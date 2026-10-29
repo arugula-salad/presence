@@ -1,0 +1,147 @@
+name: ci
+
+# arugula.stream's checks on GitHub's runners: the relay (with Postgres and
+# stripe-mock), the TypeScript packages and sites, and the server SDKs, on
+# pushes to main and on pull requests.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# The relay's toolchain (relay/mise.toml) and the packages' (Node
+# 24, pnpm 12, as web/ uses).
+env:
+  OTP_VERSION: "28.3"
+  ELIXIR_VERSION: "1.19.2"
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      # Stripe's API as its OpenAPI spec has it, for billing's request
+      # shapes (stripe_mock_test.exs, #318's P11).
+      stripe-mock:
+        image: stripe/stripe-mock:v0.206.0
+        ports: ["12111:12111"]
+    env:
+      MIX_ENV: test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/presence_test
+      STRIPE_MOCK_URL: http://localhost:12111
+    defaults:
+      run:
+        working-directory: relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: |
+            relay/deps
+            relay/_build
+          key: relay-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('relay/mix.lock') }}
+          restore-keys: relay-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors
+      - run: mix format --check-formatted
+      - run: mix test
+
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: */pnpm-lock.yaml
+      # Each package has its own lockfile (no workspace); they link each
+      # other (link:../core), so core and client install first.
+      - name: Install
+        run: for p in core client elements react demo meet dashboard; do (cd "$p" && pnpm install --frozen-lockfile); done
+      - name: core
+        working-directory: core
+        run: pnpm exec tsc --noEmit && pnpm test
+      - name: client
+        working-directory: client
+        run: pnpm exec tsc --noEmit && pnpm test
+      - name: elements
+        working-directory: elements
+        run: pnpm exec tsc --noEmit && pnpm test && pnpm exec vite build
+      - name: react
+        working-directory: react
+        run: pnpm exec tsc --noEmit && pnpm exec vite build --config vite.pack.config.ts
+      - name: demo
+        working-directory: demo
+        run: pnpm exec tsc --noEmit && pnpm exec vite build
+      - name: meet
+        working-directory: meet
+        run: pnpm exec tsc --noEmit && pnpm exec vite build
+      - name: dashboard
+        working-directory: dashboard
+        run: pnpm exec tsc --noEmit && pnpm exec vite build
+
+  # The server SDKs: byte-identical tokens against sdk/vectors.json.
+  sdks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: sdk/go/go.mod
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+      - name: node
+        working-directory: sdk/node
+        run: npm test
+      - name: python
+        working-directory: sdk/python
+        run: python -m unittest discover -s tests
+      - name: go
+        working-directory: sdk/go
+        run: go vet ./... && go test ./...
+      - name: ruby
+        working-directory: sdk/ruby
+        run: ruby -Ilib test/test_token.rb
+
+  sdk-elixir:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/elixir
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+      - run: mix deps.get
+      - run: mix test

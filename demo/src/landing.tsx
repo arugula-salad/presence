@@ -10,7 +10,7 @@ import { cleanRoom, newRoom } from "./room";
 import { FakeRoom } from "./hero";
 import { browser, guests, install, providers, prototype, server } from "./snippets";
 
-export const SOURCE = "https://github.com/arugula-salad/arugula/tree/presence-toolkit/presence";
+export const SOURCE = "https://github.com/arugula-salad/presence/tree/main";
 
 export function Nav() {
   return (

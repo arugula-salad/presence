@@ -2,7 +2,7 @@ defmodule PresenceRelay.Metrics do
   @moduledoc """
   The relay's metrics (#318's P12), in Prometheus' text format at
   `/metrics` on an internal port (`PresenceRelayWeb.MetricsPlug`), which
-  Fly scrapes (the `[metrics]` section of presence/fly.toml) into its
+  Fly scrapes (the `[metrics]` section of fly.toml) into its
   managed Grafana.
 
   A small exporter of our own rather than telemetry_metrics and a

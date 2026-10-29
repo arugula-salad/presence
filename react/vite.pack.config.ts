@@ -1,6 +1,6 @@
 // `npm install https://arugula.stream/npm/presence-react.tgz`: this package
 // bundled into one ES module (plus the trackers' lazy chunks), React left
-// to the app (a peer). presence/sdk/host.sh packs pack/ with dist/ in it.
+// to the app (a peer). sdk/host.sh packs pack/ with dist/ in it.
 // Not library mode, which would inline ONNX Runtime's Wasm (see
 // ../elements/vite.config.ts); its unused copy is dropped here too.
 import { defineConfig, type Plugin } from "vite";
