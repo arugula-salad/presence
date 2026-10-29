@@ -2,13 +2,15 @@
 // <PresenceRoom> joins a room with connect() and shares it through
 // context; <People>, <CameraControls> and <Avatar> draw into elements of
 // their own with the same code the custom elements use; <CallControls>
-// is the call bar and <VoiceBar /> the room's voice channel; usePresence()
-// gives the room's members, calls, voice and actions to your components.
+// is the call bar, <VoiceBar /> the room's voice channel and <Spotlight />
+// speaker view; usePresence() gives the room's members, calls, voice, the
+// current speaker and actions to your components.
 
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { connect, styled, type ConnectOptions, type Room } from "@arugula/presence-elements/room";
 import { mountCall, mountCamera, mountVoice, type CameraOptions } from "@arugula/presence-elements/controls";
 import type { AvatarOptions, PeopleOptions } from "@arugula/presence-elements/view";
+import type { SpotlightOptions } from "@arugula/presence-elements/spotlight";
 import type { Call, Member, Message, Voice } from "@arugula/presence";
 import type { ChatOptions } from "@arugula/presence-elements/chat";
 import type { Look } from "@arugula/presence-core/avatar/rig";
@@ -120,6 +122,12 @@ export function usePresence() {
       setMuted: (muted: boolean) => room?.voice.setMuted(muted),
       setVideo: (on: boolean) => room?.voice.setVideo(on),
     },
+    /** Speaker view: the current speaker in your call or voice (held
+     * steady), who you pinned big (this page alone), and pin (null follows
+     * the speaker again). */
+    activeSpeaker: room?.activeSpeaker ?? null,
+    pinned: room?.pinned ?? null,
+    pin: (sub: string | null) => room?.pin(sub),
     setLook: (look: Look) => room?.setLook(look),
     camera: {
       on: room?.camera.on ?? false,
@@ -168,6 +176,14 @@ export function CallControls({ className }: { className?: string }) {
  * has no voice). */
 export function VoiceBar({ className }: { className?: string }) {
   const ref = useDrawn((room, el) => styled(el, (root) => mountVoice(room, root)), []);
+  return <div ref={ref} className={className} />;
+}
+
+/** Speaker view: whoever's talking big (their video, or their character
+ * drawn big), everyone else in the call or voice in a strip; click
+ * someone to pin them, again to unpin. Nothing outside a call or voice. */
+export function Spotlight({ self, pin, className }: SpotlightOptions & { className?: string }) {
+  const ref = useDrawn((room, el) => room.spotlight(el, { self, pin }), [self, pin]);
   return <div ref={ref} className={className} />;
 }
 

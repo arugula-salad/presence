@@ -51,8 +51,9 @@ function what(room: Room, m: Member): { kind: Kind; frame: Frame | null; source:
   return { kind, frame, source };
 }
 
-/** One person's canvas (or initial) inside `view`, redrawn as they change. */
-class Face {
+/** One person's canvas (or initial) inside `view`, redrawn as they change
+ * (./spotlight draws its big tile and strip with it too). */
+export class Face {
   private kind: Kind | null = null;
   private stopAnim: (() => void) | null = null;
   private stopVideo: (() => void) | null = null;
@@ -132,7 +133,7 @@ interface Tile {
 }
 
 /** Float `sub`'s new reactions up over their tile (each removes itself). */
-function float(room: Room, sub: string, into: HTMLElement, shown: Set<number>) {
+export function float(room: Room, sub: string, into: HTMLElement, shown: Set<number>) {
   for (const r of room.client.reactionsOf(sub)) {
     if (shown.has(r.at)) continue;
     shown.add(r.at);

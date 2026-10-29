@@ -5,7 +5,11 @@
 // call on LiveKit, with mute, video and leave in the room's bar, and a
 // person's video on their tile while they have it on. Every room also has
 // a voice channel (Arugula #331): a strip under the bar of who's in it,
-// Join voice (you join muted), Unmute, video and Leave voice.
+// Join voice (you join muted), Unmute, video and Leave voice. In a call or
+// voice, Speaker view (Arugula #332) shows whoever's talking big, the rest
+// of the call or voice in a strip, and the rest of the room in a row of
+// small tiles; click someone to pin them big. This browser remembers the
+// choice.
 //
 // Into the socket: signed in, with a room token meet's server signs for
 // you (api.roomToken, which also puts the room in your list); a guest,
@@ -13,7 +17,7 @@
 // and its join reply says it).
 
 import { useEffect, useRef, useState } from "preact/hooks";
-import { PresenceClient, phoenixTransport, NOTICE_MS, REACTIONS, type Member, type Transport } from "@arugula/presence";
+import { PresenceClient, phoenixTransport, NOTICE_MS, REACTIONS, type CallPerson, type Member, type Transport } from "@arugula/presence";
 import { CHARACTERS, characterOf } from "@arugula/presence-core/avatar/characters/index";
 import { animate, COLOURS, type Source } from "@arugula/presence-core/avatar/stage";
 import { waving, type Look, type Rig } from "@arugula/presence-core/avatar/rig";
@@ -129,7 +133,11 @@ function VideoView({ client, sub, mirror }: { client: PresenceClient; sub: strin
   return <video ref={ref} class={mirror ? "mirror" : undefined} autoPlay playsInline muted />;
 }
 
-function Tile({ client, m, me, onError }: { client: PresenceClient; m: Member; me: boolean; onError: (e: string) => void }) {
+/** Where a tile is: the grid (default), or Speaker view's big one, its
+ * strip of the call or voice, or its row of the rest of the room. */
+type Spot = "big" | "strip" | "row";
+
+function Tile({ client, m, me, onError, spot, onPin }: { client: PresenceClient; m: Member; me: boolean; onError: (e: string) => void; spot?: Spot; onPin?: () => void }) {
   const seen = client.of(m.sub);
   const frame = (me ? client.mine?.frame : null) ?? seen?.frame ?? null;
   const look = me ? client.look : (seen?.look ?? client.lookOf(m.sub) ?? m.look);
@@ -159,8 +167,33 @@ function Tile({ client, m, me, onError }: { client: PresenceClient; m: Member; m
     const l = s?.look ?? client.lookOf(m.sub) ?? m.look;
     return l ? { rig: hand(s?.rig ?? null), look: l, away: m.away } : null;
   };
+  // Speaker view's big tile and strip: a click pins (or unpins) them.
+  const pinnable = (spot === "big" || spot === "strip") && !!onPin;
+  const pinned = client.pinned === m.sub;
+  const talking = person ?? client.inVoice?.people.find((p) => p.sub === m.sub);
   return (
-    <figure class={["tile", live && "live", m.call && "in-call", m.voice && "in-voice", video && "video", (person?.speaking || client.speakingInVoice(m.sub)) && "speaking"].filter(Boolean).join(" ")} data-sub={m.sub} data-name={m.name}>
+    <figure
+      class={["tile", spot && `spot-${spot}`, live && "live", m.call && "in-call", m.voice && "in-voice", video && "video", (person?.speaking || client.speakingInVoice(m.sub)) && "speaking", pinnable && pinned && "pinned"].filter(Boolean).join(" ")}
+      data-sub={m.sub}
+      data-name={m.name}
+      data-spot={spot}
+      data-why={spot === "big" ? (pinned ? "pinned" : client.activeSpeaker === m.sub ? "speaker" : "first") : undefined}
+      role={pinnable ? "button" : undefined}
+      tabIndex={pinnable ? 0 : undefined}
+      aria-pressed={pinnable ? pinned : undefined}
+      title={pinnable ? (pinned ? `Unpin ${m.name}: back to whoever's talking` : `Pin ${m.name} big`) : undefined}
+      onClick={pinnable ? onPin : undefined}
+      onKeyDown={
+        pinnable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onPin!();
+              }
+            }
+          : undefined
+      }
+    >
       <div class="view">
         <div class="reacts" aria-live="polite">
           {client.reactionsOf(m.sub).map((r) => (
@@ -181,13 +214,23 @@ function Tile({ client, m, me, onError }: { client: PresenceClient; m: Member; m
       </div>
       <figcaption>
         <span class="who">{me ? `${m.name} (you)` : m.name}</span>
-        {person?.muted ? <span class="tag call">muted</span> : m.call ? <span class="tag call">in a call</span> : m.voice ? <span class="tag voice">{m.muted ? "in voice, muted" : "in voice"}</span> : live && <span class="tag">live</span>}
+        {pinnable ? (
+          <span class="tag call">{[pinned && "pinned", talking?.muted ? "muted" : talking?.speaking && "speaking"].filter(Boolean).join(" · ")}</span>
+        ) : person?.muted ? (
+          <span class="tag call">muted</span>
+        ) : m.call ? (
+          <span class="tag call">in a call</span>
+        ) : m.voice ? (
+          <span class="tag voice">{m.muted ? "in voice, muted" : "in voice"}</span>
+        ) : (
+          live && <span class="tag">live</span>
+        )}
         {!live && !m.call && !m.voice && m.away && (
           <span class="tag" style={{ color: "var(--dim)" }}>
             away
           </span>
         )}
-        {!me && !inMine && (
+        {!me && !inMine && !pinnable && (
           <button class="btn wave" onClick={waveAt} disabled={ringing} title={client.callsOn ? `Wave at ${m.name} to talk` : `Wave at ${m.name}`}>
             {ringing ? "Calling…" : adding ? "Add to call" : waved && !client.callsOn ? (waved.yes ? "waved back" : "not now") : waved && !waved.yes ? "not now" : "Wave"}
           </button>
@@ -459,6 +502,55 @@ function sayError(reason: string): string {
   );
 }
 
+/** Grid or Speaker view, while you're in a call or voice. */
+type Layout = "grid" | "speaker";
+
+function LayoutToggle({ layout, onLayout }: { layout: Layout; onLayout: (l: Layout) => void }) {
+  return (
+    <span class="seg layout" role="radiogroup" aria-label="Layout">
+      {(["grid", "speaker"] as const).map((l) => (
+        <button role="radio" aria-checked={layout === l} class={layout === l ? "btn on" : "btn"} onClick={() => onLayout(l)}>
+          {l === "grid" ? "Grid" : "Speaker"}
+        </button>
+      ))}
+    </span>
+  );
+}
+
+/** Speaker view (Arugula #332): whoever's talking big (or whoever you
+ * pinned), everyone else in the call or voice in a strip, and the rest of
+ * the room in a row of small tiles under them. The big tile's video is big,
+ * so LiveKit sends that person's 720p layer; the strip's get 180p. */
+function SpeakerView({ client, mine, onError }: { client: PresenceClient; mine: Member; onError: (e: string) => void }) {
+  const roster = client.roster;
+  const featured = client.featured(mine.sub);
+  const memberOf = (p: CallPerson): Member => (p.sub === mine.sub ? mine : (client.members.find((m) => m.sub === p.sub) ?? { sub: p.sub, name: p.name, look: null, mode: "none", away: false, watching: true, call: null, voice: false, muted: p.muted }));
+  const pin = (sub: string) => client.pin(client.pinned === sub ? null : sub);
+  const top = roster.find((p) => p.sub === featured);
+  const strip = roster.filter((p) => p.sub !== featured);
+  const inIt = new Set(roster.map((p) => p.sub));
+  const rest = [mine, ...client.members.filter((m) => m.sub !== mine.sub)].filter((m) => !inIt.has(m.sub));
+  return (
+    <div class="speaker-view">
+      {top && <Tile key={`big:${top.sub}`} client={client} m={memberOf(top)} me={top.sub === mine.sub} onError={onError} spot="big" onPin={() => pin(top.sub)} />}
+      {strip.length > 0 && (
+        <div class="speaker-strip" role="list" aria-label="Everyone else in it">
+          {strip.map((p) => (
+            <Tile key={p.sub} client={client} m={memberOf(p)} me={p.sub === mine.sub} onError={onError} spot="strip" onPin={() => pin(p.sub)} />
+          ))}
+        </div>
+      )}
+      {rest.length > 0 && (
+        <div class="speaker-rest" aria-label="The rest of the room">
+          {rest.map((m) => (
+            <Tile key={m.sub} client={client} m={m} me={m.sub === mine.sub} onError={onError} spot="row" />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Room({ info, me, name }: { info: RoomInfo; me: Session; name: string }) {
   const [state] = useState(() => {
     const you = { sub: "" };
@@ -496,6 +588,14 @@ function Room({ info, me, name }: { info: RoomInfo; me: Session; name: string })
   const wave = client.waves[client.waves.length - 1];
   const ring = client.rings[client.rings.length - 1];
   const [callErr, setCallErr] = useState("");
+  // Grid or Speaker view, kept in this browser; Speaker only means
+  // something in a call or voice you've joined.
+  const [layout, setLayout] = useState<Layout>(() => (kept(`${STORAGE}layout`) === "speaker" ? "speaker" : "grid"));
+  const chooseLayout = (l: Layout) => {
+    setLayout(l);
+    keep(`${STORAGE}layout`, l);
+  };
+  const talking = client.roster.length > 0;
   const link = `${location.origin}${path(`/r/${info.slug}`)}`;
   const share = () => {
     void navigator.clipboard?.writeText(link).then(() => {
@@ -527,12 +627,22 @@ function Room({ info, me, name }: { info: RoomInfo; me: Session; name: string })
       <Controls client={client} me={mine.sub} />
       <div class="room-body">
         <div>
-          <div class="grid">
-            <Tile client={client} m={mine} me onError={setCallErr} />
-            {others.map((m) => (
-              <Tile key={m.sub} client={client} m={m} me={false} onError={setCallErr} />
-            ))}
-          </div>
+          {talking && (
+            <div class="layout-bar">
+              <LayoutToggle layout={layout} onLayout={chooseLayout} />
+              {layout === "speaker" && <span class="stats">Click someone to pin them big; again to follow whoever's talking.</span>}
+            </div>
+          )}
+          {talking && layout === "speaker" ? (
+            <SpeakerView client={client} mine={mine} onError={setCallErr} />
+          ) : (
+            <div class="grid">
+              <Tile client={client} m={mine} me onError={setCallErr} />
+              {others.map((m) => (
+                <Tile key={m.sub} client={client} m={m} me={false} onError={setCallErr} />
+              ))}
+            </div>
+          )}
           {!others.length && <p class="empty">Nobody else here yet. Copy the link and send it to someone.</p>}
         </div>
         <ChatPanel client={client} me={mine.sub} />

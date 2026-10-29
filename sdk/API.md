@@ -13,6 +13,7 @@ this; the site's docs show exactly this. PROTOCOL.md is underneath.
       <arugula-chat></arugula-chat>       <!-- the room's text: messages and an input -->
       <arugula-call></arugula-call>       <!-- the call bar: a ring to answer, mute, video, leave -->
       <arugula-voice></arugula-voice>     <!-- the room's voice channel: who's in it, join (muted), unmute, video, leave -->
+      <arugula-spotlight></arugula-spotlight> <!-- speaker view, in a call or voice: whoever's talking big, the rest in a strip -->
     </arugula-room>
 
     <!-- anywhere inside a room: one person's live face, e.g. beside their name -->
@@ -27,9 +28,9 @@ this; the site's docs show exactly this. PROTOCOL.md is underneath.
 - `relay`: default `wss://arugula.stream/socket`.
 - `mode` (`avatar`|`outline`, default `avatar`), `character`, `colour`: starting choices (the person can change them; kept in their browser).
 
-`<arugula-people>`: attributes `size` (`bust`, default; `head` for a compact strip), `self` (`first`|`hide`), `calls` (`off` hides the Call button on tiles; it shows only where the relay has calls). `<arugula-camera>`: attribute `controls` (`full`, default; `button` for just the toggle). `<arugula-avatar>`: `user`, `size` (`head`|`bust`). Theming: CSS custom properties on any ancestor: `--arugula-accent`, `--arugula-bg`, `--arugula-fg`, `--arugula-dim`, `--arugula-radius`.
+`<arugula-people>`: attributes `size` (`bust`, default; `head` for a compact strip), `self` (`first`|`hide`), `calls` (`off` hides the Call button on tiles; it shows only where the relay has calls). `<arugula-camera>`: attribute `controls` (`full`, default; `button` for just the toggle). `<arugula-spotlight>`: `self` (`hide` leaves you out of the strip), `pin` (`off`: clicking doesn't pin). `<arugula-avatar>`: `user`, `size` (`head`|`bust`). Theming: CSS custom properties on any ancestor: `--arugula-accent`, `--arugula-bg`, `--arugula-fg`, `--arugula-dim`, `--arugula-radius`.
 
-Events (bubbling, on the room element): `arugula:members` (`detail.members`), `arugula:wave` (`detail.from`), `arugula:answer` (`detail.from, detail.yes`), `arugula:react` (`detail.from, detail.emoji`), `arugula:message` (`detail.message`), `arugula:ring` (`detail.from, detail.id`), `arugula:call` (`detail.call`, null when it's over), `arugula:voice` (`detail.members` in voice, `detail.joined`: you in it, or null), `arugula:live` (`detail.state`). `<arugula-camera>` also has a row of reactions.
+Events (bubbling, on the room element): `arugula:members` (`detail.members`), `arugula:wave` (`detail.from`), `arugula:answer` (`detail.from, detail.yes`), `arugula:react` (`detail.from, detail.emoji`), `arugula:message` (`detail.message`), `arugula:ring` (`detail.from, detail.id`), `arugula:call` (`detail.call`, null when it's over), `arugula:voice` (`detail.members` in voice, `detail.joined`: you in it, or null), `arugula:speaker` (`detail.active`: the current speaker in your call or voice, `detail.pinned`: who you pinned, or null), `arugula:live` (`detail.state`). `<arugula-camera>` also has a row of reactions.
 
 ## Browser: JS API (same bundle, or npm `@arugula/presence`)
 
@@ -42,7 +43,7 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
       // relay: "wss://arugula.stream/socket",
     });
     room.members;                       // [{ sub, name, look, mode, away, watching, call, voice, muted }]
-    room.on("members", (members) => {}); // also "wave", "answer", "react", "message", "ring", "call", "voice", "live"
+    room.on("members", (members) => {}); // also "wave", "answer", "react", "message", "ring", "call", "voice", "speaker", "live"
     await room.camera.start({ mode: "avatar" });   // or "outline"
     room.camera.stop();
     room.setLook({ character: 2, colour: 0 });
@@ -68,6 +69,11 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
     room.voice.speaking(sub);                      // whether they're speaking (known while you're in voice)
     room.on("voice", (members, joined) => {});
     room.voiceBar(element);                        // draw the voice bar into an element
+    room.activeSpeaker;                            // the current speaker in your call or voice (held steady), or null
+    room.pin(sub); room.pin(null);                 // show someone big on this page alone; null follows the speaker
+    room.pinned; room.featured;                    // who you pinned; who a spotlight shows big now
+    room.on("speaker", (active, pinned) => {});
+    room.spotlight(element, { self: "show", pin: true }); // draw speaker view into an element
     room.mount(element, { size: "bust" });          // draw everyone into an element
     room.avatar(element, sub, { size: "head" });    // draw one person
     room.leave();
@@ -80,8 +86,9 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
       <Avatar user={id} size="head" />
       <CallControls />
       <VoiceBar />
+      <Spotlight />                                        {/* self="hide", pin={false} */}
     </PresenceRoom>
-    const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo, voice } = usePresence();
+    const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo, voice, activeSpeaker, pinned, pin } = usePresence();
     // voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }
 
 **Video in a call is real video.** Presence sends a rig or an outline,
@@ -98,6 +105,20 @@ unmute to talk, and everyone in the room sees who's in it. A page is in
 voice or in a call, never both: joining voice leaves the call, and taking
 a call leaves voice, with a short notice. At most 25 people in a room's
 voice; voice minutes count as call minutes.
+
+**Speaker view.** In a call or voice, `<arugula-spotlight>` (`room.spotlight`,
+`<Spotlight />`) shows whoever's talking big (their video if it's on,
+otherwise their live character or outline, drawn big), with their name and
+whether they're muted or speaking, and everyone else in it in a strip.
+Clicking someone pins them big on that page (no one else sees it);
+clicking them again goes back to following whoever's talking. The current
+speaker (`activeSpeaker`) is held steady: a newcomer takes over after
+talking for 0.7 s, a cough doesn't take it, the last speaker keeps
+it while nobody talks, and you're never big on your own screen unless
+you're alone. A call's video goes up in layers (up to 1280×720 where the
+camera gives that much, 640×360, 320×180), and a publisher sends the
+720p layer only while some page shows them big. It's all the page's
+own doing: nothing new on the wire.
 
 ## Publishable keys (hosted, no server of yours)
 
