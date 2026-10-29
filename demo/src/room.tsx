@@ -4,10 +4,12 @@
 // where the relay has calls, a wave they say yes to is a voice call
 // (LiveKit), and presence carries on under it. In a call, anyone can start
 // video: real video, on their tile for the others in the call, in place
-// of their character until they stop it.
+// of their character until they stop it. Every room also has a voice
+// channel (Arugula #331): drop in muted, unmute to talk, leave when you
+// like; a wave's call stays a private 1:1 beside it.
 
 import { useEffect, useRef, useState } from "preact/hooks";
-import { PresenceClient, phoenixTransport, REACTIONS, type Member } from "@arugula/presence";
+import { PresenceClient, phoenixTransport, NOTICE_MS, REACTIONS, type Member } from "@arugula/presence";
 import { CHARACTERS, characterOf } from "@arugula/presence-core/avatar/characters/index";
 import { animate, COLOURS, type Source } from "@arugula/presence-core/avatar/stage";
 import { waving, type Rig } from "@arugula/presence-core/avatar/rig";
@@ -119,7 +121,7 @@ function Tile({ client, m, me, onError }: { client: PresenceClient; m: Member; m
     return l ? { rig: hand(s?.rig ?? null), look: l, away: m.away } : null;
   };
   return (
-    <figure class={["tile", live && "live", m.call && "in-call", video && "video", person?.speaking && "speaking"].filter(Boolean).join(" ")} data-sub={m.sub}>
+    <figure class={["tile", live && "live", m.call && "in-call", m.voice && "in-voice", video && "video", (person?.speaking || client.speakingInVoice(m.sub)) && "speaking"].filter(Boolean).join(" ")} data-sub={m.sub}>
       <div class="view">
         <div class="reacts" aria-live="polite">
           {client.reactionsOf(m.sub).map((r) => (
@@ -140,8 +142,8 @@ function Tile({ client, m, me, onError }: { client: PresenceClient; m: Member; m
       </div>
       <figcaption>
         <span class="who">{me ? `${m.name} (you)` : m.name}</span>
-        {person?.muted ? <span class="tag call">muted</span> : m.call ? <span class="tag call">in a call</span> : live && <span class="tag">live</span>}
-        {!live && !m.call && m.away && <span class="tag" style={{ color: "var(--dim)" }}>away</span>}
+        {person?.muted ? <span class="tag call">muted</span> : m.call ? <span class="tag call">in a call</span> : m.voice ? <span class="tag voice">{m.muted ? "in voice, muted" : "in voice"}</span> : live && <span class="tag">live</span>}
+        {!live && !m.call && !m.voice && m.away && <span class="tag" style={{ color: "var(--dim)" }}>away</span>}
         {!me && !inMine && (
           <button class="btn wave" onClick={waveAt} disabled={ringing} title={client.callsOn ? `Wave at ${m.name} to talk` : `Wave at ${m.name}`}>
             {ringing ? "Calling…" : client.callsOn && client.inCall && client.inCall.state !== "ringing" ? "Add to call" : waved && !client.callsOn ? (waved.yes ? "waved back" : "not now") : waved && !waved.yes ? "not now" : "Wave"}
@@ -257,6 +259,86 @@ function CallBar({ client, me, names, error }: { client: PresenceClient; me: str
   );
 }
 
+/** The room's voice channel (every room has one): who's in it, in their
+ * colour with a ring while they speak; Join voice (you join muted),
+ * Unmute, video and Leave voice. Joining leaves a call, and taking a call
+ * leaves voice; the strip says so for a moment. */
+function VoiceStrip({ client, me }: { client: PresenceClient; me: string }) {
+  const [err, setErr] = useState("");
+  if (!client.voiceOn) return null;
+  const v = client.inVoice;
+  const people = client.voiceMembers;
+  const join = () => {
+    setErr("");
+    client.joinVoice().catch((e: Error) => setErr(voiceError(e.message)));
+  };
+  const notice = client.notice && Date.now() - client.notice.at < NOTICE_MS ? client.notice.text : "";
+  return (
+    <div class={v ? "voicebar in" : "voicebar"} role="region" aria-label="Voice">
+      <span class="label">Voice</span>
+      <ul class="voice-strip" aria-label="In voice">
+        {people.map((m) => {
+          const speaking = client.speakingInVoice(m.sub);
+          const name = m.sub === me ? "You" : m.name;
+          return (
+            <li key={m.sub} class={["voice-person", speaking && "speaking", m.muted && "muted"].filter(Boolean).join(" ")} data-sub={m.sub} title={`${name}${m.muted ? ", muted" : speaking ? ", speaking" : ""}`}>
+              <span class="dot" style={m.look ? { "--c": `var(${COLOURS[m.look.colour] ?? "--dim"})` } : undefined}>
+                {m.name.slice(0, 1).toUpperCase()}
+              </span>
+              <span class="who">{name}</span>
+              {m.muted && <span class="mic">muted</span>}
+            </li>
+          );
+        })}
+        {!people.length && <li class="nobody">Nobody's in voice. Drop in; you join muted.</li>}
+      </ul>
+      {v ? (
+        <>
+          {v.state === "joining" ? <span class="stats">joining…</span> : v.state === "reconnecting" ? <span class="stats">reconnecting…</span> : v.muted && <span class="stats">you're muted</span>}
+          {v.state !== "joining" && (
+            <>
+              <button class={v.muted ? "btn primary" : "btn"} onClick={() => void client.setVoiceMuted(!v.muted)} aria-pressed={v.muted}>
+                {v.muted ? "Unmute" : "Mute"}
+              </button>
+              <button class={v.video ? "btn on" : "btn"} onClick={() => void client.setVoiceVideo(!v.video)} aria-pressed={v.video} title="Video is your camera's real picture, for the people in voice">
+                {v.video ? "Stop video" : "Start video"}
+              </button>
+            </>
+          )}
+          {v.blocked && (
+            <button class="btn primary" onClick={() => void client.startAudio()}>
+              Play voice
+            </button>
+          )}
+          <button class="btn danger" onClick={() => client.leaveVoice()}>
+            Leave voice
+          </button>
+        </>
+      ) : (
+        <button class="btn primary" onClick={join} title={client.inCall ? "Joining voice leaves your call. You join muted." : "Drop into the room's voice channel. You join muted."}>
+          Join voice
+        </button>
+      )}
+      {(v?.error || err) && <span class="error">{v?.error || err}</span>}
+      {notice && (
+        <span class="notice" role="status">
+          {notice}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** The relay's reasons for not letting you into voice, in words. */
+function voiceError(reason: string): string {
+  return (
+    {
+      "voice is full": "Voice is full right now. Try again when someone leaves.",
+      "not in the room yet": "Still getting you in; try again in a moment.",
+    }[reason] ?? reason
+  );
+}
+
 /** The room's text: messages, earlier ones a click away, and an input
  * (Enter sends, Shift+Enter is a new line). */
 function ChatPanel({ client, me }: { client: PresenceClient; me: string }) {
@@ -355,7 +437,7 @@ export function Room({ room, name }: { room: string; name: string }) {
   }, []);
   const [copied, setCopied] = useState(false);
   const me = state.me();
-  const mine: Member = client.members.find((m) => m.sub === me) ?? { sub: me || "me", name, look: client.look, mode: "none", away: false, watching: true, call: null };
+  const mine: Member = client.members.find((m) => m.sub === me) ?? { sub: me || "me", name, look: client.look, mode: "none", away: false, watching: true, call: null, voice: false, muted: false };
   const others = client.members.filter((m) => m.sub !== me);
   // Names of everyone seen here, so a wave from someone who's since left
   // still says who.
@@ -383,6 +465,7 @@ export function Room({ room, name }: { room: string; name: string }) {
         </button>
       </div>
       <Controls client={client} me={mine.sub} />
+      <VoiceStrip client={client} me={mine.sub} />
       <CallBar client={client} me={mine.sub} names={names} error={callError} />
       <div class="room-body">
         <div>
@@ -409,7 +492,7 @@ export function Room({ room, name }: { room: string; name: string }) {
               Not now
             </button>
           </div>
-          <span class="stats">A voice call: your microphone. Video only if you start it, and then it's your real camera picture.</span>
+          <span class="stats">{client.inVoice ? "A private call: Talk takes you out of the room's voice. " : "A voice call: your microphone. "}Video only if you start it, and then it's your real camera picture.</span>
         </div>
       )}
       {!ring && wave && (

@@ -7,12 +7,13 @@ defmodule PresenceRelayWeb.RoomChannel do
   text (`say`) is kept (`PresenceRelay.Chat`) and goes to everyone, with
   the last page as `history` on join. Calls (`PresenceRelay.Calls`) ring
   one member, and on a yes hand both connections a LiveKit token; see
-  "Calls" below.
+  "Calls" below. The room's voice channel (`PresenceRelay.Voice`) is
+  joined and left at will; see "Voice" below.
   """
   use Phoenix.Channel
   require Logger
 
-  alias PresenceRelay.{Calls, Chat, Presence, Rooms, Usage}
+  alias PresenceRelay.{Calls, Chat, Presence, Rooms, Usage, Voice}
   alias Phoenix.PubSub
 
   @modes ~w(avatar outline none)
@@ -51,7 +52,7 @@ defmodule PresenceRelayWeb.RoomChannel do
       # (id => callee), the rings it may answer (id => caller), and the
       # call it's in ({id, joined at}).
       socket = assign(socket, ringing: %{}, rung: %{}, in_call: nil, called_at: [])
-      {:ok, %{you: a.sub, calls: Calls.on?()}, socket}
+      {:ok, %{you: a.sub, calls: Calls.on?(), voice: Voice.on?()}, socket}
     else
       {:error, reason} ->
         refused(reason)
@@ -172,6 +173,10 @@ defmodule PresenceRelayWeb.RoomChannel do
         {:noreply, assign(socket, :ringing, ringing)}
     end
   end
+
+  # Voice: this person joined voice from another page; this one leaves it.
+  def handle_info(:relay_voice_elsewhere, socket),
+    do: {:noreply, Voice.leave_socket(socket, "elsewhere")}
 
   # Presence's diffs, on the room's internal presence topic.
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
@@ -360,6 +365,31 @@ defmodule PresenceRelayWeb.RoomChannel do
     end
   end
 
+  # Voice (PROTOCOL.md, "Voice"): the room's own channel. Joining leaves
+  # this connection's call first (one audio session a connection).
+  def handle_in("voice_join", _payload, socket) do
+    case Voice.join_socket(socket, &leave_any_call/1) do
+      {:ok, info, socket} -> {:reply, {:ok, info}, socket}
+      {:error, why} -> {:reply, {:error, %{reason: why}}, socket}
+    end
+  end
+
+  def handle_in("voice_leave", _payload, socket),
+    do: {:reply, :ok, Voice.leave_socket(socket)}
+
+  def handle_in("voice_token", _payload, %{assigns: a} = socket) do
+    if Voice.in?(socket),
+      do: {:reply, {:ok, Voice.join_info(a.app, a.room, a.sub, a.name)}, socket},
+      else: {:reply, {:error, %{reason: "not in voice"}}, socket}
+  end
+
+  def handle_in("voice_mute", %{"muted" => muted}, socket) when is_boolean(muted) do
+    case Voice.mute_socket(socket, muted) do
+      :ok -> {:reply, :ok, socket}
+      {:error, why} -> {:reply, {:error, %{reason: why}}, socket}
+    end
+  end
+
   def handle_in(_event, _payload, socket), do: {:noreply, socket}
 
   # A connection that goes leaves its call and gives up its rings.
@@ -367,6 +397,7 @@ defmodule PresenceRelayWeb.RoomChannel do
   def terminate(_reason, %{assigns: %{ringing: ringing, in_call: in_call}} = socket) do
     socket = Enum.reduce(Map.keys(ringing), socket, &cancel_ring(&2, &1))
     with {id, _} <- in_call, do: leave_call(socket, id, false)
+    Voice.leave_socket(socket, nil, false)
     :ok
   end
 
@@ -398,7 +429,10 @@ defmodule PresenceRelayWeb.RoomChannel do
 
   # Join call `id` (leaving any other first): presence says so, and the
   # page gets its LiveKit token.
-  defp join_call(%{assigns: a} = socket, id) do
+  defp join_call(socket, id) do
+    # Out of the room's voice first: one audio session a connection.
+    %{assigns: a} = socket = Voice.leave_socket(socket, "call")
+
     socket =
       case a.in_call do
         {^id, _} -> socket
@@ -428,6 +462,9 @@ defmodule PresenceRelayWeb.RoomChannel do
         socket
     end
   end
+
+  defp leave_any_call(%{assigns: %{in_call: {id, _}}} = socket), do: leave_call(socket, id)
+  defp leave_any_call(socket), do: socket
 
   # Give up a ring this connection made: the callee's pages stop ringing.
   defp cancel_ring(%{assigns: a} = socket, id) do

@@ -3,13 +3,14 @@
 // signed-in member's own token from the app's auth provider), the
 // room's channel, binary frames both ways
 // (the relay puts the sender's sub in front of each: `len:u8 sub frame`),
-// Phoenix.Presence for who's there, waves and calls. The channel is
+// Phoenix.Presence for who's there, waves, calls and the room's voice
+// channel. The channel is
 // joined while this page listens or publishes, and left when it does
 // neither.
 
 import { Presence, Socket, type Channel } from "phoenix";
 import type { Look } from "@arugula/presence-core/avatar/rig";
-import type { CallJoin, Member, Mode, State, Transport, TransportEvents, Message } from "./transport.ts";
+import type { CallJoin, Member, Mode, State, Transport, TransportEvents, Message, VoiceJoin } from "./transport.ts";
 
 /** Into the room with a room token: your server decided who's in it. */
 export interface TokenAuth {
@@ -121,10 +122,14 @@ interface Meta {
   away?: boolean;
   watching?: boolean;
   call?: string | null;
+  voice?: boolean;
+  muted?: boolean;
 }
 
 /** A member from their connections' metas: on camera if any page is, away
- * only if every page is, watching if any is. */
+ * only if every page is, watching if any is, in voice if a page is (one
+ * page at most: the relay keeps a person to one seat), muted as that page
+ * says. */
 export function memberOf(sub: string, metas: Meta[]): Member {
   const first = metas[0] ?? {};
   const mode = metas.find((m) => m.mode && m.mode !== "none")?.mode ?? "none";
@@ -136,6 +141,8 @@ export function memberOf(sub: string, metas: Meta[]): Member {
     away: metas.length > 0 && metas.every((m) => m.away),
     watching: metas.some((m) => m.watching),
     call: metas.find((m) => m.call)?.call ?? null,
+    voice: metas.some((m) => m.voice),
+    muted: !!metas.find((m) => m.voice)?.muted,
   };
 }
 
@@ -198,12 +205,14 @@ export function phoenixTransport(o: PhoenixTransportOptions): Transport {
     ch.on("call_cancel", ({ id }: { id: string }) => on?.callCancel?.(id));
     ch.on("call_answer", (a: { id: string; from: string; yes: boolean; reason?: string }) => on?.callAnswer?.(a.id, a.from, a.yes, a.reason));
     ch.on("call_join", (j: CallJoin) => on?.callJoin?.(j));
+    ch.on("voice_left", ({ reason }: { reason: string }) => on?.voiceLeft?.(reason));
     const presence = new Presence(ch);
     presence.onSync(() => on?.members?.(presence.list((sub, { metas }: { metas: Meta[] }) => memberOf(sub, metas))));
     ch.join()
-      .receive("ok", (reply: { you?: string; calls?: boolean } | undefined) => {
+      .receive("ok", (reply: { you?: string; calls?: boolean; voice?: boolean } | undefined) => {
         if (reply?.you) o.onJoin?.(reply.you);
         on?.calls?.(!!reply?.calls);
+        on?.voice?.(!!reply?.voice);
         on?.live("on");
         ch.push("state", { ...state, watching: listening });
       })
@@ -282,6 +291,18 @@ export function phoenixTransport(o: PhoenixTransportOptions): Transport {
     },
     callToken(id) {
       return ask<CallJoin>("call_token", { id });
+    },
+    voiceJoin() {
+      return ask<VoiceJoin>("voice_join", {});
+    },
+    voiceLeave() {
+      channel?.push("voice_leave", {});
+    },
+    voiceMute(muted) {
+      channel?.push("voice_mute", { muted });
+    },
+    voiceToken() {
+      return ask<VoiceJoin>("voice_token", {});
     },
   };
 

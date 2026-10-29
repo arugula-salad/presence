@@ -21,6 +21,7 @@ export const browser = {
   <arugula-people></arugula-people>
   <arugula-chat></arugula-chat>
   <arugula-call></arugula-call>
+  <arugula-voice></arugula-voice>
 </arugula-room>`,
   JavaScript: `import { connect } from "${SDK}";
 
@@ -196,8 +197,8 @@ export const roomRule = `// Members of org "acme" into acme:… rooms only:
 
 export const jsApi = `const room = await connect({ room, token, relay? });
 
-room.members                  // [{ sub, name, look, mode, away, watching, call }]
-room.on("members", (members) => {})   // also "wave", "answer", "react", "message", "ring", "call", "live"
+room.members                  // [{ sub, name, look, mode, away, watching, call, voice, muted }]
+room.on("members", (members) => {})   // also "wave", "answer", "react", "message", "ring", "call", "voice", "live"
 await room.camera.start({ mode: "avatar" | "outline" })
 room.camera.stop()
 room.setLook({ character, colour })
@@ -214,6 +215,11 @@ room.inCall                          // { id, state, people: [{ sub, muted, spea
 room.setMuted(true)  ·  room.leaveCall()
 await room.setVideo(true)            // real camera video, to the people in the call
 room.callBar(el)                     // a ring to answer, mute, video and leave, drawn into el
+await room.voice.join()              // the room's voice channel, muted; out of your call first
+room.voice.setMuted(false)  ·  room.voice.leave()  ·  await room.voice.setVideo(true)
+room.voice.members                   // who's in voice (everyone sees); room.voice.joined: you in it
+room.on("voice", (members, joined) => {})
+room.voiceBar(el)                    // who's in voice, join, unmute, video and leave, drawn into el
 room.mount(el, { size: "bust" })      // everyone, drawn into el
 room.avatar(el, sub, { size: "head" })  // one person
 room.leave()`;
@@ -226,4 +232,5 @@ export const theming = `arugula-room {
   --arugula-radius: 12px;
 }`;
 
-export const reactHook = `const { members, messages, say, wave, react, camera, calls, call, inCall, leaveCall, setVideo } = usePresence();`;
+export const reactHook = `const { members, messages, say, wave, react, camera, calls, call, inCall, leaveCall, setVideo, voice } = usePresence();
+// voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }`;

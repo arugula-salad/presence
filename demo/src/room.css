@@ -291,6 +291,111 @@
   min-width: 0;
 }
 
+/* The room's voice channel (every room has one): a slim strip of who's in
+   it, their colour, a ring while they speak; join, unmute, video, leave.
+   Voice is info blue; a private call keeps the call bar's green. */
+.voicebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.voicebar.in {
+  border-color: color-mix(in srgb, var(--info) 55%, var(--line));
+}
+
+.voicebar .label {
+  font: 600 11px var(--f-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+
+.voicebar.in .label {
+  color: var(--info);
+}
+
+.voice-strip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.voice-person .dot {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c, var(--dim)) 30%, var(--void));
+  color: var(--c, var(--fg));
+  font: 800 12px var(--f-display);
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow 0.12s;
+}
+
+.voice-person.speaking {
+  border-color: color-mix(in srgb, var(--ok) 60%, var(--line));
+}
+
+.voice-person.speaking .dot {
+  box-shadow: 0 0 0 2px var(--ok);
+}
+
+.voice-person .mic {
+  font: 9px var(--f-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+.voice-strip .nobody {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.voicebar .notice {
+  flex-basis: 100%;
+  color: var(--info);
+  font-size: 12px;
+}
+
+.voicebar .btn {
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+.tile .tag.voice {
+  color: var(--info);
+}
+
+.tile.in-voice:not(.speaking):not(.video) {
+  border-color: color-mix(in srgb, var(--info) 40%, var(--line));
+}
+
 .btn.danger {
   border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
   color: var(--danger);

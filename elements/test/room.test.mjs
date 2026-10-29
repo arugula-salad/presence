@@ -107,3 +107,40 @@ test("a room's calls: whether the relay has them, rings and the call as events, 
   assert.deepEqual(seen, [["ring", "b", "c7"], ["call", "ringing"], ["call", null]]);
   room.leave();
 });
+
+test("a room's voice: available as the relay says, join and leave, and voice events for who's in it", async () => {
+  const t = fake();
+  const sent = [];
+  t.voiceJoin = async () => (sent.push("join"), { url: "ws://lk", room: "demo:r:voice", token: "v" });
+  t.voiceLeave = () => sent.push("leave");
+  t.voiceMute = (m) => sent.push(`mute ${m}`);
+  const room = new Room({ room: "r", token: token({ sub: "me" }), transport: t });
+  // A LiveKit that's there at once (the real one loads livekit-client).
+  room.client.joinCall = async () => ({ setMuted: async () => {}, setVideo: async () => {}, startAudio: async () => {}, leave: async () => {} });
+  const seen = [];
+  room.on("voice", (members, joined) => seen.push([members.map((m) => `${m.sub}${m.muted ? " muted" : ""}`), joined ? joined.muted : null]));
+  t.on.live("on");
+  assert.equal(room.voice.available, false);
+  t.on.voice(true);
+  assert.equal(room.voice.available, true);
+  const m = (sub, voice, muted) => ({ sub, name: sub, look: null, mode: "none", away: false, watching: true, call: null, voice, muted });
+  t.on.members([m("me", false, false), m("b", true, true)]);
+  assert.deepEqual(room.voice.members.map((x) => x.sub), ["b"]);
+  await room.voice.join();
+  assert.equal(room.voice.joined.muted, true, "you join muted");
+  t.on.members([m("me", true, true), m("b", true, true)]);
+  await room.voice.setMuted(false);
+  t.on.members([m("me", true, false), m("b", true, true)]);
+  room.voice.leave();
+  assert.equal(room.voice.joined, null);
+  assert.deepEqual(sent, ["join", "mute false", "leave"]);
+  assert.deepEqual(seen, [
+    [["b muted"], null],
+    [["b muted"], true],
+    [["me muted", "b muted"], true],
+    [["me muted", "b muted"], false],
+    [["me", "b muted"], false],
+    [["me", "b muted"], null],
+  ]);
+  room.leave();
+});

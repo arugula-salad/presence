@@ -2,14 +2,14 @@
 // <PresenceRoom> joins a room with connect() and shares it through
 // context; <People>, <CameraControls> and <Avatar> draw into elements of
 // their own with the same code the custom elements use; <CallControls>
-// is the call bar; usePresence() gives the room's members, calls and
-// actions to your components.
+// is the call bar and <VoiceBar /> the room's voice channel; usePresence()
+// gives the room's members, calls, voice and actions to your components.
 
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { connect, styled, type ConnectOptions, type Room } from "@arugula/presence-elements/room";
-import { mountCall, mountCamera, type CameraOptions } from "@arugula/presence-elements/controls";
+import { mountCall, mountCamera, mountVoice, type CameraOptions } from "@arugula/presence-elements/controls";
 import type { AvatarOptions, PeopleOptions } from "@arugula/presence-elements/view";
-import type { Call, Member, Message } from "@arugula/presence";
+import type { Call, Member, Message, Voice } from "@arugula/presence";
 import type { ChatOptions } from "@arugula/presence-elements/chat";
 import type { Look } from "@arugula/presence-core/avatar/rig";
 
@@ -107,6 +107,19 @@ export function usePresence() {
     /** Your video in the call: your camera's real picture, for the people
      * in it (presence never sends one). */
     setVideo: (on: boolean) => room?.setVideo(on),
+    /** The room's voice channel: whether the relay has it, who's in it
+     * (everyone sees), you in it (null when out), and join (muted), leave,
+     * mute and video. */
+    voice: {
+      available: room?.voice.available ?? false,
+      members: room?.voice.members ?? ([] as Member[]),
+      joined: room?.voice.joined ?? (null as Voice | null),
+      speaking: (sub: string) => room?.voice.speaking(sub) ?? false,
+      join: () => (room ? room.voice.join() : Promise.reject(new Error("not in the room yet"))),
+      leave: () => room?.voice.leave(),
+      setMuted: (muted: boolean) => room?.voice.setMuted(muted),
+      setVideo: (on: boolean) => room?.voice.setVideo(on),
+    },
     setLook: (look: Look) => room?.setLook(look),
     camera: {
       on: room?.camera.on ?? false,
@@ -150,10 +163,18 @@ export function CallControls({ className }: { className?: string }) {
   return <div ref={ref} className={className} />;
 }
 
+/** The room's voice channel: who's in it with speaking rings, Join voice
+ * (you join muted), Unmute, video and Leave voice (nothing where the relay
+ * has no voice). */
+export function VoiceBar({ className }: { className?: string }) {
+  const ref = useDrawn((room, el) => styled(el, (root) => mountVoice(room, root)), []);
+  return <div ref={ref} className={className} />;
+}
+
 /** The room's text: messages, earlier ones a click away, and an input. */
 export function Chat({ placeholder, className, style }: ChatOptions & { className?: string; style?: CSSProperties }) {
   const ref = useDrawn((room, el) => room.chat(el, { placeholder }), [placeholder]);
   return <div ref={ref} className={className} style={{ height: 360, ...style }} />;
 }
 
-export type { Member, Message, Look, Room, Call };
+export type { Member, Message, Look, Room, Call, Voice };

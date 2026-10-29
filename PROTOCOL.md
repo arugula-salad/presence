@@ -129,7 +129,8 @@ by its name, and `sub` is random.
 
 Topic `room:<room>` (the app comes from the token or the key; a socket
 for another room is refused). Join payload: `{}`. The reply is `{you:
-<sub>, calls: bool}` (`calls`: whether this relay has calls; below).
+<sub>, calls: bool, voice: bool}` (`calls`: whether this relay has calls;
+`voice`: whether every room has a voice channel; both below).
 
 ### Presence
 
@@ -139,13 +140,16 @@ Phoenix sends them, keyed by `sub`, one meta per connection:
 ```json
 { "name": "Jake", "look": {"character": 2, "colour": 0},
   "mode": "avatar" | "outline" | "none", "away": false, "watching": true,
-  "call": null | "<call id>" }
+  "call": null | "<call id>", "voice": bool, "muted": bool }
 ```
 
 `mode` is what the member's camera sends (`none`: camera off). `watching`
 is whether any of their pages is showing others (so a sender with nobody
 watching can drop to a frame every few seconds). `call` is the call this
-connection is in (the relay sets it; a client can't), for tiles.
+connection is in (the relay sets it; a client can't), for tiles. `voice`
+is whether this connection is in the room's voice channel (the relay sets
+it; absent until the first time it joins), and `muted`, there only while
+it's in voice, whether it's muted (the page says, with `voice_mute`).
 
 ### Client → relay
 
@@ -159,6 +163,7 @@ connection is in (the relay sets it; a client can't), for tiles.
 | `history` | `{before: <id>}` | the 50 messages before that one; replies `ok` `{messages: [...]}`, oldest first |
 | `react` | `{emoji}` | an emoji for the room (a 👍, a 🎉): one grapheme, no ASCII, ≤ 32 bytes, at most one per 250 ms per connection, else dropped |
 | `call`, `call_answer`, `call_leave`, `call_token` | | see "Calls" |
+| `voice_join`, `voice_leave`, `voice_mute`, `voice_token` | | see "Voice" |
 
 ### Relay → client
 
@@ -172,6 +177,7 @@ connection is in (the relay sets it; a client can't), for tiles.
 | `history` | `{messages: [...]}` | on join: the room's last 50 messages, oldest first |
 | `react` | `{from: <sub>, emoji}` | someone's reaction, to everyone else in the room (not stored: a joiner doesn't get old ones) |
 | `call`, `call_cancel`, `call_answer`, `call_join` | | see "Calls" |
+| `voice_left` | | see "Voice" |
 
 Limits: 32 KiB a frame, 70 ms between a member's frames, 64 members a room,
 8 connections a member, 2,000 connections at once an app (a hosted
@@ -285,8 +291,90 @@ LiveKit carries it. What the client (`@arugula/presence`) does:
 
 The relay tells each call's life as telemetry events (`[:presence_relay,
 :call, :start | :join | :leave | :stop]`, `:leave` with `duration_ms`),
-all from `PresenceRelay.Calls`; usage counts call minutes from the
-`:leave`s ("Usage and caps").
+from `PresenceRelay.Calls`, and a room's voice channel's the same way
+(from `PresenceRelay.Voice`, with `call: "voice"` and `kind: :voice`);
+usage counts call minutes from the `:leave`s ("Usage and caps"), so time
+in voice is call minutes too.
+
+## Voice
+
+Every room also has one **voice channel** (Arugula #331), like a Discord
+voice channel: anyone in the room drops in and out as they like, and
+everyone in the room, in voice or not, sees who's in it. It's on the same
+LiveKit as calls, and wherever a relay has calls it has voice (the join
+reply's `voice`); without LiveKit's keys, `voice: false` and `voice_join`
+is refused with "voice isn't set up here".
+
+A wave that turns into a call stays a **private 1:1 call** ("Calls"),
+apart from voice: the people in voice don't hear it.
+
+### The flow
+
+1. A joins: `voice_join {}`. The relay replies `ok {url, room, token}`:
+   LiveKit's URL, the voice room's name and a token for this connection,
+   and A's presence meta says `voice: true, muted: true` to the room.
+2. **People join muted.** The page opens the microphone as it joins (so
+   its permission is asked then, not mid-conversation) and publishes it
+   muted: nobody hears anything until A unmutes, and unmuting is instant.
+3. A unmutes (or mutes again): the page unmutes its microphone in LiveKit
+   and says `voice_mute {muted: false}`; the meta's `muted` follows, so
+   everyone in the room sees it.
+4. A leaves with `voice_leave {}`, or by closing the page: the meta goes
+   back to `voice: false`. Nobody else leaves with A: the channel is the
+   room's, there whether anyone's in it or not.
+
+**One audio session a connection.** A connection in a call that joins
+voice leaves the call first (as `call_leave` would). A connection in voice
+that joins a call (it answers yes, or someone it rang says yes) leaves
+voice first, and the relay pushes it `voice_left {reason: "call"}`. A page
+asks before neither: it does it and says so ("You left voice to take the
+call").
+
+**One voice seat a person.** LiveKit knows a person by their `sub`, so
+when someone in voice joins it from another page, the first page leaves
+it: `voice_left {reason: "elsewhere"}`.
+
+**Cap.** At most 25 connections in one room's voice (the operator's
+`VOICE_CAP`); past that, `voice_join` is refused with "voice is full".
+Each node counts the whole cluster's, softly (as a room's members).
+
+**After a drop.** A page LiveKit dropped asks `voice_token` for a fresh
+token and joins again. A page whose socket dropped (and rejoined the
+room) is a new connection, out of voice: it sends `voice_join` again to
+take its seat back (and `voice_mute` with how it was).
+
+### Client → relay
+
+| event | payload | |
+|---|---|---|
+| `voice_join` | `{}` | into the room's voice, muted. Replies `ok` `{url, room, token}`, or `error` `{reason: "voice isn't set up here" \| "voice is full"}`. Already in: a fresh `{url, room, token}`, nothing else changes |
+| `voice_leave` | `{}` | out of voice (in or not). Replies `ok` |
+| `voice_mute` | `{muted: bool}` | whether you're muted, for presence. Replies `ok`, or `error` `{reason: "not in voice"}` |
+| `voice_token` | `{}` | a fresh `{url, room, token}` (after LiveKit dropped the page), or `error` `{reason: "not in voice"}` |
+
+### Relay → client
+
+| event | payload | |
+|---|---|---|
+| `voice_left` | `{reason: "call" \| "elsewhere"}` | the relay took this connection out of voice: it joined a call, or the same person joined voice from another page. Leave the LiveKit room |
+
+### The LiveKit room and token
+
+The voice room is named `<app>:<room>:voice`, so two apps (or two rooms)
+never share one, and it never names a call's (a call's id is 16 url-safe
+characters, never `voice`). The token is a call's ("Calls", "The LiveKit
+room and token"), for the voice room: `sub` and `name` the member's, ten
+minutes, `canPublishSources: ["microphone", "camera"]` (video in voice is
+as in a call: real video, only while its owner has it on), subscribe, no
+data, this room only.
+
+### Metering
+
+Voice minutes are call minutes. Each person's time in voice is told as
+the calls' telemetry (`:join`, and `:leave` with `duration_ms`; `:start`
+when a room's voice gets its first person and `:stop` when it loses its
+last), and usage sums it into the app's call minutes like a call's, which
+billing then bills ("Usage and caps").
 
 ## Usage and caps
 
@@ -298,10 +386,10 @@ and the demo aren't metered or capped), by calendar month and day, UTC:
   is their `gid` when the socket sent one, else their per-socket `sub`
   (so a guest without a `gid` counts again on each connection).
 - **A day's active users**: the same, for the day.
-- **Call minutes**: each person's time in each call rounded up to a
-  whole second, summed per app and day (on the day they left the call),
-  then rounded up to whole minutes per day. A month's minutes are the sum
-  of its days'.
+- **Call minutes**: each person's time in each call, and in each stay in
+  a room's voice channel, rounded up to a whole second, summed per app
+  and day (on the day they left), then rounded up to whole minutes per
+  day. A month's minutes are the sum of its days'.
 
 Counts are written in batches every few seconds from each node, exactly
 once per person per month and per day however many nodes saw them; a

@@ -1,13 +1,15 @@
 // Your camera's controls (<arugula-camera>, and the React CameraControls):
 // on/off, then avatar or outline, your character and your colour. And the
 // call bar (<arugula-call>, the React CallControls): a ring to answer, who
-// you're calling, mute, video and leave. Redrawn from the room's state whenever
-// it changes; nothing kept here.
+// you're calling, mute, video and leave. And the room's voice channel
+// (<arugula-voice>, the React VoiceBar): who's in it with speaking rings,
+// join, unmute, video and leave. Redrawn from the room's state whenever it
+// changes; nothing kept here.
 
 import { CHARACTERS } from "@arugula/presence-core/avatar/characters/index";
 import { COLOURS } from "@arugula/presence-core/avatar/stage";
 import type { Room } from "./room.ts";
-import { REACTIONS } from "@arugula/presence/client";
+import { NOTICE_MS, REACTIONS } from "@arugula/presence/client";
 
 export interface CameraOptions {
   /** Everything (default), or the on/off button alone. */
@@ -155,6 +157,117 @@ export function mountCall(room: Room, el: Element | ShadowRoot): () => void {
     bar.hidden = !rows.length;
     bar.replaceChildren(...rows);
   };
+  const unsub = room.client.subscribe(render);
+  render();
+  return () => {
+    unsub();
+    bar.remove();
+  };
+}
+
+/** The relay's reasons for not letting you into voice, in words. */
+export function voiceError(reason: string): string {
+  return (
+    {
+      "voice is full": "Voice is full right now. Try again when someone leaves.",
+      "not in the room yet": "Still getting you in; try again in a moment.",
+    }[reason] ?? reason
+  );
+}
+
+export function mountVoice(room: Room, el: Element | ShadowRoot): () => void {
+  const bar = document.createElement("div");
+  bar.className = "arugula-voice";
+  bar.setAttribute("part", "voice");
+  bar.setAttribute("role", "region");
+  bar.setAttribute("aria-label", "Voice");
+  el.append(bar);
+  let error = "";
+  const button = (label: string, run: () => void, cls = "") => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    if (cls) b.className = cls;
+    b.addEventListener("click", run);
+    return b;
+  };
+  const join = () => {
+    error = "";
+    room.voice.join().then(render, (e: Error) => {
+      error = voiceError(e.message);
+      render();
+    });
+  };
+  // Who's in voice, a chip each: their initial, a ring while they speak,
+  // and whether they're muted.
+  const strip = (): HTMLElement => {
+    const list = document.createElement("ul");
+    list.className = "voice-strip";
+    list.setAttribute("aria-label", "In voice");
+    for (const m of room.voice.members) {
+      const li = document.createElement("li");
+      const speaking = room.voice.speaking(m.sub);
+      li.className = ["voice-person", speaking && "speaking", m.muted && "muted"].filter(Boolean).join(" ");
+      li.dataset.sub = m.sub;
+      const me = m.sub === room.me;
+      const name = me ? `${m.name} (you)` : m.name;
+      li.title = `${name}${m.muted ? ", muted" : speaking ? ", speaking" : ""}`;
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.textContent = (m.name || "?").slice(0, 1).toUpperCase();
+      const who = document.createElement("span");
+      who.className = "who";
+      who.textContent = name;
+      li.append(dot, who);
+      if (m.muted) {
+        const mic = document.createElement("span");
+        mic.className = "mic";
+        mic.textContent = "muted";
+        li.append(mic);
+      }
+      list.append(li);
+    }
+    return list;
+  };
+  function render() {
+    const c = room.client;
+    const v = c.inVoice;
+    const rows: HTMLElement[] = [];
+    if (c.voiceOn) {
+      const row = document.createElement("div");
+      row.className = v ? "row in-voice" : "row";
+      const what = document.createElement("span");
+      what.className = "what";
+      const n = room.voice.members.length;
+      what.textContent = v ? (v.state === "joining" ? "Joining voice…" : v.state === "reconnecting" ? "Reconnecting…" : v.muted ? "Voice · you're muted" : "Voice · you're on") : n ? `Voice · ${n} in it` : "Voice · nobody yet";
+      row.append(what, strip());
+      if (!v) {
+        const b = button("Join voice", join, "primary");
+        b.title = "Drop into the room's voice channel. You join muted.";
+        row.append(b);
+      } else {
+        if (v.state !== "joining") {
+          const mute = button(v.muted ? "Unmute" : "Mute", () => void room.voice.setMuted(!v.muted), v.muted ? "primary" : "");
+          mute.setAttribute("aria-pressed", String(v.muted));
+          const video = button(v.video ? "Stop video" : "Start video", () => void room.voice.setVideo(!v.video), v.video ? "on" : "");
+          video.title = "Video is your camera's real picture, for the people in voice";
+          row.append(mute, video);
+        }
+        if (v.blocked) row.append(button("Play voice", () => void c.startAudio(), "primary"));
+        row.append(button("Leave voice", () => room.voice.leave(), "danger"));
+      }
+      rows.push(row);
+      for (const text of [v?.error || error, c.notice && Date.now() - c.notice.at < NOTICE_MS ? c.notice.text : ""]) {
+        if (!text) continue;
+        const note = document.createElement("span");
+        note.className = text === c.notice?.text ? "notice" : "error";
+        note.textContent = text;
+        rows.push(note);
+      }
+    }
+    bar.hidden = !rows.length;
+    bar.replaceChildren(...rows);
+  }
   const unsub = room.client.subscribe(render);
   render();
   return () => {

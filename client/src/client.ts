@@ -18,12 +18,17 @@
 // comes from the same camera as your character or outline (one device,
 // opened once; ./call publishes a clone of the camera's track), so
 // presence carries on for everyone in the room while it's on.
+//
+// Every room also has a voice channel (PROTOCOL.md "Voice"): join it and
+// leave it as you like, muted on joining (unmute to talk), with video as
+// in a call. A page has one audio session: joining voice leaves your call,
+// and taking a call leaves voice, each saying so in `notice`.
 
 import { startCamera, type Camera, type FrameStats } from "@arugula/presence-core/outline/camera";
 import { decodeFrame, type Frame } from "@arugula/presence-core/outline/frame";
 import { RIG, WAVE_MS, unpackRig, type Look, type Rig } from "@arugula/presence-core/avatar/rig";
 import type { AvatarCamera } from "@arugula/presence-core/avatar/cam";
-import type { CallJoin, Member, Message, Mode, Transport, TransportEvents } from "./transport.ts";
+import type { CallJoin, Member, Message, Mode, Transport, TransportEvents, VoiceJoin } from "./transport.ts";
 import { joinLiveKit, type CallPerson, type JoinCall, type LiveCall } from "./call.ts";
 
 /** The most messages a page keeps (older ones are a loadEarlier() away). */
@@ -62,6 +67,24 @@ export interface Call {
   blocked: boolean;
   error: string;
 }
+
+/** You in the room's voice channel (PROTOCOL.md "Voice"). */
+export interface Voice {
+  /** Joining (the relay, then LiveKit), in it, or LiveKit reconnecting. */
+  state: "joining" | "on" | "reconnecting";
+  /** Who's in it, you included, as LiveKit says (once joined): who's
+   * speaking, muted, on video. Everyone in the room sees who's in voice
+   * from presence (`voiceMembers`). */
+  people: CallPerson[];
+  /** You join muted. */
+  muted: boolean;
+  video: boolean;
+  blocked: boolean;
+  error: string;
+}
+
+/** How long a notice ("You left voice to take the call") shows. */
+export const NOTICE_MS = 5_000;
 
 /** In a call that's on, alone this long (everyone else left, or nobody
  * came), and it ends. */
@@ -178,6 +201,16 @@ export class PresenceClient {
   private videoFrom: MediaStreamTrack | null = null;
   /** setVideo turned the camera on: off again with the video. */
   private cameraForVideo = false;
+  /** Whether the relay has a voice channel in every room. */
+  voiceOn = false;
+  /** You in the room's voice, or null. */
+  inVoice: Voice | null = null;
+  private voiceLive: LiveCall | null = null;
+  private voiceVideoFrom: MediaStreamTrack | null = null;
+  private voiceRejoined = false;
+  /** Something the page should say for a moment (NOTICE_MS): you left
+   * voice for a call, or a call for voice. */
+  notice: { text: string; at: number } | null = null;
 
   constructor(o: PresenceClientOptions) {
     this.transport = o.transport;
@@ -311,6 +344,11 @@ export class PresenceClient {
   async answerCall(id: string, yes: boolean): Promise<void> {
     this.rings = this.rings.filter((r) => r.id !== id);
     if (yes) this.wavedAt = Date.now();
+    // One audio session: out of voice for the call.
+    if (yes && this.inVoice) {
+      this.leaveVoice();
+      this.tell("You left voice to take the call.");
+    }
     this.emit();
     await this.transport.callAnswer?.(id, yes);
   }
@@ -339,13 +377,19 @@ export class PresenceClient {
     if (!c || c.state === "ringing" || c.video === on) return;
     this.inCall = { ...c, video: on, error: "" };
     this.emit();
+    await this.turnVideo(on, (change) => this.patchCall(c.id, change));
+  }
+
+  /** The camera for a call's or voice's video, once its `video` is set: on
+   * for it if it was off (and off again with it), or published now. */
+  private async turnVideo(on: boolean, patch: (change: { video: boolean; error: string }) => void) {
     if (on && !this.cameraOn) {
       this.cameraForVideo = true;
       // Once it's on, startCamera publishes it (syncVideo).
       await this.startCamera();
       if (!this.cameraOn) {
         this.cameraForVideo = false;
-        this.patchCall(c.id, { video: false, error: this.mine?.error ?? "" });
+        patch({ video: false, error: this.mine?.error ?? "" });
       }
       return;
     }
@@ -356,33 +400,49 @@ export class PresenceClient {
     await this.syncVideo();
   }
 
-  /** Whether `sub`'s tile shows their call video now: they're in your call
-   * with their camera on (you too, while yours is). */
+  /** Whether `sub`'s tile shows their video now: they're in your call or
+   * your voice channel with their camera on (you too, while yours is). */
   videoOf(sub: string): boolean {
-    return !!this.inCall?.people.find((p) => p.sub === sub)?.video;
+    return !!this.inCall?.people.find((p) => p.sub === sub)?.video || !!this.inVoice?.people.find((p) => p.sub === sub)?.video;
   }
 
-  /** Show `sub`'s call video in `el` (a muted, playsinline <video>): only
-   * while it's visible does LiveKit send it, at the size it's shown.
-   * Returns a function to stop. */
+  /** Show `sub`'s call (or voice) video in `el` (a muted, playsinline
+   * <video>): only while it's visible does LiveKit send it, at the size
+   * it's shown. Returns a function to stop. */
   attachVideo(sub: string, el: HTMLVideoElement): () => void {
-    return this.live_?.attach(sub, el) ?? (() => {});
+    const live = this.inVoice?.people.some((p) => p.sub === sub) ? this.voiceLive : this.live_;
+    return live?.attach(sub, el) ?? (() => {});
   }
 
-  /** Your call's video, from the camera's stream now: published, swapped
-   * for a restarted camera's, or taken down. */
+  /** Your call's and voice's video, from the camera's stream now:
+   * published, swapped for a restarted camera's, or taken down. */
   private async syncVideo() {
     const c = this.inCall;
     const live = this.live_;
-    if (!c || !live) return;
-    const track = c.video ? this.cameraTrack() : null;
-    if (track === this.videoFrom) return;
-    this.videoFrom = track;
-    try {
-      await live.setVideo(track);
-    } catch (e) {
-      this.videoFrom = null;
-      this.patchCall(c.id, { video: false, error: `Your video didn't start: ${(e as Error).message}` });
+    if (c && live) {
+      const track = c.video ? this.cameraTrack() : null;
+      if (track !== this.videoFrom) {
+        this.videoFrom = track;
+        try {
+          await live.setVideo(track);
+        } catch (e) {
+          this.videoFrom = null;
+          this.patchCall(c.id, { video: false, error: `Your video didn't start: ${(e as Error).message}` });
+        }
+      }
+    }
+    const v = this.inVoice;
+    const vlive = this.voiceLive;
+    if (v && vlive) {
+      const track = v.video ? this.cameraTrack() : null;
+      if (track === this.voiceVideoFrom) return;
+      this.voiceVideoFrom = track;
+      try {
+        await vlive.setVideo(track);
+      } catch (e) {
+        this.voiceVideoFrom = null;
+        this.patchVoice({ video: false, error: `Your video didn't start: ${(e as Error).message}` });
+      }
     }
   }
 
@@ -391,10 +451,13 @@ export class PresenceClient {
     return s?.getVideoTracks().find((t) => t.readyState === "live") ?? null;
   }
 
-  /** From a click: play a call the browser wouldn't play by itself. */
+  /** From a click: play a call (or voice) the browser wouldn't play by
+   * itself. */
   async startAudio() {
     await this.live_?.startAudio();
+    await this.voiceLive?.startAudio();
     if (this.inCall) this.inCall = { ...this.inCall, blocked: false };
+    if (this.inVoice) this.inVoice = { ...this.inVoice, blocked: false };
     this.emit();
   }
 
@@ -482,6 +545,142 @@ export class PresenceClient {
       await this.joined(await this.transport.callToken(id));
     } catch {
       this.leaveCall();
+    }
+  }
+
+  /** Into the room's voice channel, muted (unmute to talk): out of your
+   * call first, if you're in one. Rejects with the relay's reason ("voice
+   * is full", "voice isn't set up here"). */
+  async joinVoice(): Promise<void> {
+    if (!this.transport.voiceJoin) throw new Error("voice isn't set up here");
+    if (this.inVoice) return;
+    if (this.inCall) {
+      this.leaveCall();
+      this.tell("You left the call to join voice.");
+    }
+    this.inVoice = { state: "joining", people: [], muted: true, video: false, blocked: false, error: "" };
+    this.voiceRejoined = false;
+    this.emit();
+    let j: VoiceJoin;
+    try {
+      j = await this.transport.voiceJoin();
+    } catch (e) {
+      this.inVoice = null;
+      this.emit();
+      throw e;
+    }
+    await this.voiceJoined(j);
+  }
+
+  /** Out of the room's voice channel. */
+  leaveVoice() {
+    if (!this.inVoice) return;
+    this.transport.voiceLeave?.();
+    this.endVoice();
+  }
+
+  /** Mute or unmute yourself in voice (everyone in the room sees it). */
+  async setVoiceMuted(muted: boolean) {
+    if (!this.inVoice) return;
+    this.patchVoice({ muted });
+    this.transport.voiceMute?.(muted);
+    await this.voiceLive?.setMuted(muted);
+  }
+
+  /** Your video in voice, as in a call: your camera's real picture, for
+   * the people in voice alone. */
+  async setVoiceVideo(on: boolean) {
+    const v = this.inVoice;
+    if (!v || v.video === on) return;
+    this.patchVoice({ video: on, error: "" });
+    await this.turnVideo(on, (change) => this.patchVoice(change));
+  }
+
+  /** Who's in the room's voice (presence says, so everyone sees). */
+  get voiceMembers(): Member[] {
+    return this.members.filter((m) => m.voice);
+  }
+
+  /** Whether `sub` is speaking in voice now (LiveKit says, so only a page
+   * in voice knows). */
+  speakingInVoice(sub: string): boolean {
+    return !!this.inVoice?.people.find((p) => p.sub === sub)?.speaking;
+  }
+
+  /** Forget the notice (it's been seen). */
+  dismissNotice() {
+    this.notice = null;
+    this.emit();
+  }
+
+  private tell(text: string) {
+    const at = Date.now();
+    this.notice = { text, at };
+    this.emit();
+    setTimeout(() => {
+      if (this.notice?.at === at) this.dismissNotice();
+    }, NOTICE_MS);
+  }
+
+  private patchVoice(change: Partial<Voice>) {
+    if (!this.inVoice) return;
+    this.inVoice = { ...this.inVoice, ...change };
+    this.emit();
+  }
+
+  private endVoice() {
+    const live = this.voiceLive;
+    this.voiceLive = null;
+    this.voiceVideoFrom = null;
+    this.inVoice = null;
+    void live?.leave();
+    if (this.cameraForVideo && !this.inCall?.video) {
+      this.cameraForVideo = false;
+      this.stopCamera();
+    }
+    this.emit();
+  }
+
+  /** Into the voice channel's LiveKit room, muted. */
+  private async voiceJoined(j: VoiceJoin) {
+    const was = this.voiceLive;
+    this.voiceLive = null;
+    void was?.leave();
+    this.voiceVideoFrom = null;
+    try {
+      const live = await this.joinCall(
+        { id: "voice", ...j },
+        {
+          people: (people) => this.patchVoice({ people }),
+          state: (state, byUs) => {
+            if (state !== "ended") return this.patchVoice({ state });
+            if (byUs || !this.inVoice) return;
+            void this.voiceRejoin();
+          },
+          blocked: (blocked) => this.patchVoice({ blocked }),
+        },
+        { muted: true },
+      );
+      if (!this.inVoice) return void live.leave();
+      this.voiceLive = live;
+      // Unmuted while it was joining.
+      if (!this.inVoice.muted) await live.setMuted(false);
+      await this.syncVideo();
+    } catch (e) {
+      this.patchVoice({ error: `Voice didn't connect: ${(e as Error).message}` });
+    }
+  }
+
+  /** LiveKit dropped this page from voice: once, back in with a fresh token. */
+  private async voiceRejoin() {
+    this.voiceLive = null;
+    if (this.voiceRejoined || !this.transport.voiceToken) return this.leaveVoice();
+    this.voiceRejoined = true;
+    try {
+      await this.voiceJoined(await this.transport.voiceToken());
+      if (this.inVoice) this.transport.voiceMute?.(this.inVoice.muted);
+    } catch {
+      this.leaveVoice();
     }
   }
 
@@ -602,9 +801,11 @@ export class PresenceClient {
     this.emit();
   }
 
-  /** No camera (off, or it didn't start), no video: a call's goes down. */
+  /** No camera (off, or it didn't start), no video: a call's (and
+   * voice's) goes down. */
   private videoGone() {
     if (this.inCall?.video) this.inCall = { ...this.inCall, video: false };
+    if (this.inVoice?.video) this.inVoice = { ...this.inVoice, video: false };
     void this.syncVideo();
   }
 
@@ -719,7 +920,29 @@ export class PresenceClient {
       }
       this.emit();
     },
-    callJoin: (j) => void this.joined(j),
+    callJoin: (j) => {
+      // The relay took this page out of voice for the call (voice_left).
+      if (this.inVoice) this.endVoice();
+      void this.joined(j);
+    },
+    voice: (on) => {
+      this.voiceOn = on;
+      this.emit();
+      // Back on the relay after a drop, still in LiveKit's voice room: take
+      // your seat (and say muted or not) again.
+      const v = this.inVoice;
+      if (on && v && v.state !== "joining" && this.transport.voiceJoin) {
+        this.transport.voiceJoin().then(
+          () => this.inVoice && this.transport.voiceMute?.(this.inVoice.muted),
+          () => this.leaveVoice(),
+        );
+      }
+    },
+    voiceLeft: (reason) => {
+      if (!this.inVoice) return;
+      this.endVoice();
+      this.tell(reason === "call" ? "You left voice for the call." : "You're in voice on another page now.");
+    },
   };
 
   private open() {
@@ -731,6 +954,7 @@ export class PresenceClient {
 
   private close() {
     this.leaveCall();
+    this.leaveVoice();
     this.transport.unlisten();
     clearInterval(this.sweep);
     this.seen.clear();

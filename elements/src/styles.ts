@@ -82,4 +82,17 @@ figcaption button.call[hidden] { display: none; }
 .arugula-call .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 .arugula-call .row.in-call { border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); }
 .arugula-call .what { flex: 1; min-width: 0; }
+.tile.in-voice .tag { color: var(--info); }
+.arugula-voice { display: grid; gap: 6px; font-size: 13px; }
+.arugula-voice[hidden] { display: none; }
+.arugula-voice .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.arugula-voice .row.in-voice { border-color: color-mix(in srgb, var(--info) 50%, var(--line)); }
+.arugula-voice .what { font: 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); }
+.arugula-voice .in-voice .what { color: var(--info); }
+.voice-strip { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.voice-person { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; }
+.voice-person .dot { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--void); color: var(--fg); font-weight: 700; font-size: 11px; box-shadow: 0 0 0 2px transparent; transition: box-shadow 0.12s; }
+.voice-person.speaking .dot { box-shadow: 0 0 0 2px var(--ok); }
+.voice-person .mic { font: 9px ui-monospace, monospace; text-transform: uppercase; color: var(--dim); }
+.arugula-voice .notice { color: var(--info); font-size: 12px; }
 `;

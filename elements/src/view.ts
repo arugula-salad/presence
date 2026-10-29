@@ -2,8 +2,8 @@
 // and the elements): a tile each, their outline while their camera sends
 // one, their character (live, or idling in their look) otherwise, their
 // initial when they have neither, and their video while it's on in your
-// call; who's in a call, and a button to call someone where the relay has
-// calls. Plain DOM, canvases and video elements, no framework.
+// call or voice; who's in a call or the room's voice, and a button to call
+// someone where the relay has calls. Plain DOM, canvases and video elements, no framework.
 
 import type { Member } from "@arugula/presence";
 import { characterOf } from "@arugula/presence-core/avatar/characters/index";
@@ -159,7 +159,7 @@ export function mountPeople(room: Room, el: Element | ShadowRoot, o: PeopleOptio
     const c = room.client;
     let people = c.members;
     if (room.me && !people.some((m) => m.sub === room.me) && c.live === "on") {
-      people = [{ sub: room.me, name: "You", look: c.look, mode: "none", away: false, watching: true, call: null }, ...people];
+      people = [{ sub: room.me, name: "You", look: c.look, mode: "none", away: false, watching: true, call: null, voice: false, muted: false }, ...people];
     }
     people = [...people].sort((a, b) => (a.sub === room.me ? -1 : b.sub === room.me ? 1 : 0));
     if (o.self === "hide") people = people.filter((m) => m.sub !== room.me);
@@ -207,12 +207,14 @@ export function mountPeople(room: Room, el: Element | ShadowRoot, o: PeopleOptio
       t.fig.classList.toggle("live", live);
       t.fig.classList.toggle("away", m.away && !live);
       // In a call: theirs (presence says), and in yours, muted or speaking
-      // (LiveKit says).
+      // (LiveKit says). In voice: presence says, and speaking where you're
+      // in it too.
       const inCall = !!m.call;
       const person = room.client.inCall?.people.find((p) => p.sub === m.sub);
       t.fig.classList.toggle("in-call", inCall);
-      t.fig.classList.toggle("speaking", !!person?.speaking);
-      t.tag.textContent = person?.muted ? "muted" : inCall ? "in a call" : live ? "live" : m.away ? "away" : "";
+      t.fig.classList.toggle("in-voice", m.voice);
+      t.fig.classList.toggle("speaking", !!person?.speaking || c.speakingInVoice(m.sub));
+      t.tag.textContent = person?.muted ? "muted" : inCall ? "in a call" : m.voice ? (m.muted ? "in voice, muted" : "in voice") : live ? "live" : m.away ? "away" : "";
       const ringing = !!room.client.inCall?.ringing.includes(m.sub);
       t.callButton.hidden = me || !c.callsOn || o.calls === false || c.inMyCall(m.sub);
       t.callButton.disabled = ringing;
@@ -239,7 +241,7 @@ export function mountAvatar(room: Room, el: Element | ShadowRoot, sub: string, o
   el.append(view);
   const face = new Face(view, o.size === "bust" ? "bust" : "head");
   const render = () => {
-    const m = room.client.members.find((x) => x.sub === sub) ?? { sub, name: sub, look: null, mode: "none" as const, away: false, watching: false, call: null };
+    const m = room.client.members.find((x) => x.sub === sub) ?? { sub, name: sub, look: null, mode: "none" as const, away: false, watching: false, call: null, voice: false, muted: false };
     face.update(room, m);
   };
   const unsub = room.client.subscribe(render);

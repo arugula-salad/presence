@@ -307,6 +307,15 @@ a.btn {
   margin: 0;
 }
 
+/* The room's voice channel: a row of its own under the call's. */
+.voice-slot {
+  flex-basis: 100%;
+}
+
+.voice-slot .voicebar {
+  margin: 0;
+}
+
 @media (max-width: 860px) {
   .hero {
     grid-template-columns: 1fr;
