@@ -35,6 +35,7 @@ config :presence_relay,
     email_address: {1_000_000, 60},
     meet_room: {1_000_000, 60},
     api_write: {1_000_000, 60},
+    mcp: {1_000_000, 60},
     demo_token: {1_000_000, 60}
   },
   watchdog_ms: :manual

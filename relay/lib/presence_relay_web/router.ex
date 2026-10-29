@@ -1,7 +1,8 @@
 defmodule PresenceRelayWeb.Router do
   use Phoenix.Router
 
-  import PresenceRelayWeb.Auth, only: [fetch_account: 2, require_account: 2, json_writes: 2]
+  import PresenceRelayWeb.Auth,
+    only: [fetch_account: 2, require_account: 2, require_session: 2, json_writes: 2]
 
   pipeline :api do
     plug :accepts, ["json"]
@@ -30,6 +31,17 @@ defmodule PresenceRelayWeb.Router do
     plug :require_account
   end
 
+  # Only a person at the dashboard (its session), not an API token.
+  pipeline :by_session do
+    plug :require_session
+  end
+
+  # MCP for agents (PresenceRelayWeb.MCPController): API tokens only, every
+  # request limited per client IP.
+  pipeline :mcp do
+    plug PresenceRelayWeb.RateLimit, :mcp
+  end
+
   get "/healthz", PresenceRelayWeb.PageController, :healthz
 
   scope "/api", PresenceRelayWeb do
@@ -43,6 +55,13 @@ defmodule PresenceRelayWeb.Router do
     post "/email/:token", AuthController, :email_callback
     get "/google", AuthController, :google
     get "/google/callback", AuthController, :google_callback
+  end
+
+  scope "/mcp", PresenceRelayWeb do
+    pipe_through :mcp
+    post "/", MCPController, :post
+    get "/", MCPController, :other
+    delete "/", MCPController, :other
   end
 
   scope "/api/v1", PresenceRelayWeb do
@@ -77,6 +96,13 @@ defmodule PresenceRelayWeb.Router do
     post "/apps/:id/billing/portal", BillingController, :portal
     get "/meet/rooms", MeetController, :rooms
     post "/meet/rooms/:slug/token", MeetController, :token
+  end
+
+  scope "/api/v1", PresenceRelayWeb do
+    pipe_through [:api_v1, :signed_in, :by_session]
+    get "/tokens", TokensController, :index
+    post "/tokens", TokensController, :create
+    delete "/tokens/:id", TokensController, :delete
   end
 
   # Anything else is a single-page app's: meet's on a meet. host or under

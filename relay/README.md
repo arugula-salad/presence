@@ -125,6 +125,30 @@ let in within about one flush. The load test runs two nodes over three
 apps and three days and checks every number:
 `mix test test/presence_relay/usage_load_test.exs`.
 
+## Agents (MCP) and API tokens
+
+An account makes API tokens on the dashboard's Agents page
+(`/dashboard/agents`; `/api/v1/tokens`, by its session only, so a token
+can't make another). A token (`ak_…`, kept as its SHA-256, shown once)
+acts as the account on `/api/v1`, as `Authorization: Bearer`, and is the
+only way into the MCP server at `/mcp` (`PresenceRelayWeb.MCPController`):
+
+```sh
+claude mcp add --transport http arugula https://arugula.stream/mcp \
+  --header "Authorization: Bearer ak_…"
+```
+
+It's MCP's Streamable HTTP transport, stateless: every POST is answered as
+JSON, with no session and no stream (GET and DELETE are 405s). A cookie
+isn't accepted there, nor a request carrying another site's `Origin`. The
+tools (`PresenceRelay.MCP`) are what the dashboard does: `list_apps`,
+`get_app` (what's left to set up and a snippet with the app's key),
+`create_app`, `update_app`, `add_origin`, `remove_origin`, `create_key`,
+`revoke_key`, `set_sign_in`, `remove_sign_in`, `set_room_rule`,
+`remove_room_rule`, `get_usage`, `set_cap`, `get_billing` and
+`rotate_secret`. Paying stays in the dashboard. Each client IP gets 300
+requests a minute (`mcp` in `RATE_LIMITS`).
+
 ## Billing (Stripe, test mode)
 
 #318's P11 (`PresenceRelay.Billing`; the numbers in

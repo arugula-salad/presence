@@ -1,29 +1,57 @@
-// One app: its keys (live and test), a snippet to paste with its own key,
-// the origins its keys work from, how its people sign in (and the room
-// rule), whether guests may come, its usage, its plan, and the server secret, which
-// most apps never need.
+// One app, in tabs (each its own path, /apps/<id>/<tab>): an overview with
+// what's left to set up and a snippet to paste with its own key; its keys
+// (live and test) and the origins they work from; how its people sign in
+// (and the room rule) and whether guests may come; its usage; its plan;
+// and its settings: its name, and the server secret, which most apps
+// never need.
 
+import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import * as api from "./api";
-import { go, path, type App, type Issuer, type Key } from "./api";
+import { go, path, type App, type Issuer, type Key, type Usage } from "./api";
 import { fresh } from "./apps";
-import { ProviderSection, RoomRuleSection } from "./provider";
+import { PRESETS, ProviderSection, RoomRuleSection } from "./provider";
 import { Quickstart } from "./quickstart";
 import { UsageSection } from "./usage";
 import { BillingSection } from "./billing";
-import { Confirm, CopyButton, Section, value } from "./ui";
+import { Confirm, CopyButton, Field, Section, value } from "./ui";
 
-const SECTIONS = [
-  ["keys", "Keys"],
-  ["quickstart", "Quickstart"],
-  ["origins", "Origins"],
+/** The app's tabs: the path after /apps/<id>/ ("" is the overview), and the name. */
+export const TABS = [
+  ["", "Overview"],
+  ["keys", "Keys & origins"],
   ["sign-in", "Sign-in"],
-  ["room-rule", "Room rule"],
-  ["guests", "Guests"],
   ["usage", "Usage"],
-  ["billing", "Plan"],
-  ["secret", "Server secret"],
+  ["billing", "Billing"],
+  ["settings", "Settings"],
 ] as const;
+
+export type Tab = (typeof TABS)[number][0];
+
+/** The tab each section is on, for links to a section (`#origins`). */
+const ON: Record<string, Tab> = {
+  quickstart: "",
+  setup: "",
+  keys: "keys",
+  origins: "keys",
+  "sign-in": "sign-in",
+  "room-rule": "sign-in",
+  guests: "sign-in",
+  usage: "usage",
+  billing: "billing",
+  name: "settings",
+  secret: "settings",
+};
+
+/** The tab a path's segment names, or (for the overview's path) the one
+ * holding the section in the hash. */
+export function tabOf(segment: string, hash: string): Tab {
+  const t = TABS.find(([p]) => p === segment);
+  if (t && segment) return t[0];
+  return ON[hash] ?? "";
+}
+
+const tabPath = (id: string, t: Tab) => path(`/apps/${id}${t ? `/${t}` : ""}`);
 
 /** A secret on screen the one time it can be, until they say they've kept it. */
 function Secret({ secret, onDone, made }: { secret: string; onDone: () => void; made: "new" | "rotated" }) {
@@ -232,7 +260,113 @@ function SecretSection({ app }: { app: App }) {
   );
 }
 
-export function AppPage({ id }: { id: string }) {
+/** One step of setting up: done or not, and the tab to do it on. */
+function Step({ done, title, to, children }: { done: boolean | null; title: string; to: string; children: ComponentChildren }) {
+  return (
+    <li class={done ? "step done" : done === false ? "step todo" : "step"}>
+      <span class="mark-dot" aria-hidden="true">
+        {done ? "✓" : ""}
+      </span>
+      <div>
+        <a href={to} onClick={(e) => (e.preventDefault(), go(to))}>
+          <b>{title}</b>
+        </a>
+        {done && <span class="visually-hidden"> (done)</span>}
+        <p class="hint">{children}</p>
+      </div>
+    </li>
+  );
+}
+
+/** What's done and what's left, in order, each a link to its tab. */
+function Setup({ app, issuer }: { app: App; issuer: Issuer | null }) {
+  // undefined: loading; null: this relay doesn't meter.
+  const [usage, setUsage] = useState<Usage | null | undefined>(undefined);
+  useEffect(() => {
+    api.usage(app.id, 1).then(setUsage, () => setUsage(null));
+  }, [app.id]);
+  const live = app.keys.some((k) => k.mode === "live");
+  const test = app.keys.some((k) => k.mode === "test");
+  const joined = usage ? usage.this_month.active_users > 0 || usage.days.some((d) => d.active_users > 0) : null;
+  const left = [!!app.keys.length, app.origins.length > 0, !!issuer || app.guests].filter((done) => !done).length;
+  return (
+    <Section
+      id="setup"
+      title={left ? "Setting up" : "Set up"}
+      kind="--k-test"
+      sub={left ? `${left} ${left === 1 ? "thing" : "things"} left to set up.` : "Everything's in place. Paste the snippet below into your page."}
+    >
+      <ol class="checklist">
+        <Step done={!!app.keys.length} title="A key" to={tabPath(app.id, "keys")}>
+          {app.keys.length
+            ? `${live ? "A live key" : "No live key"}${test ? " and a test key" : ""}.${!test ? " A test key also works from your own computer." : ""}`
+            : "Make one to connect: a test key for building, a live key for your site."}
+        </Step>
+        <Step done={app.origins.length > 0} title="Where your pages live" to={tabPath(app.id, "keys")}>
+          {app.origins.length
+            ? app.origins.join(", ")
+            : "Live keys only connect from the sites you list. Test keys work from localhost meanwhile."}
+        </Step>
+        <Step done={!!issuer || app.guests} title="How people sign in" to={tabPath(app.id, "sign-in")}>
+          {issuer
+            ? `With ${PRESETS[issuer.provider].label}${issuer.room_rule ? ", with a room rule" : ""}${app.guests ? "; guests welcome too" : ""}.`
+            : app.guests
+              ? "As guests, by name. Connect your sign-in so people come in as themselves."
+              : "Connect your sign-in provider, or let guests in by name."}
+        </Step>
+        <Step done={joined} title="People in your rooms" to={tabPath(app.id, "usage")}>
+          {joined ? `${usage!.this_month.active_users.toLocaleString()} this month.` : "Paste the snippet below; the first person to join shows up here."}
+        </Step>
+      </ol>
+    </Section>
+  );
+}
+
+function NameSection({ app, onChange }: { app: App; onChange: (a: App) => void }) {
+  const [draft, setDraft] = useState(app.name);
+  const [err, setErr] = useState("");
+  const [saved, setSaved] = useState(false);
+  const save = async () => {
+    try {
+      onChange(await api.updateApp(app.id, { name: draft.trim() }));
+      setErr("");
+      setSaved(true);
+    } catch (e) {
+      setErr((e as Error).message);
+      setSaved(false);
+    }
+  };
+  return (
+    <Section id="name" title="Name" kind="--k-editor" sub="Only you see it: here, and in the apps an agent lists.">
+      <form
+        class="fields"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save();
+        }}
+      >
+        <Field label="The app's name" error={err || undefined}>
+          <input type="text" maxLength={80} value={draft} onInput={(e) => (setDraft(value(e)), setSaved(false))} />
+        </Field>
+        <div class="row">
+          <button class="btn" type="submit" disabled={!draft.trim() || draft.trim() === app.name}>
+            Rename
+          </button>
+          {saved && (
+            <span class="ok" role="status">
+              Saved.
+            </span>
+          )}
+        </div>
+      </form>
+      <p class="hint">
+        Its id, which room tokens and API calls name: <code>{app.id}</code>
+      </p>
+    </Section>
+  );
+}
+
+export function AppPage({ id, tab }: { id: string; tab: Tab }) {
   const [app, setApp] = useState<App | null>(null);
   const [issuer, setIssuer] = useState<Issuer | null>(null);
   const [err, setErr] = useState("");
@@ -245,6 +379,15 @@ export function AppPage({ id }: { id: string }) {
       (e: Error) => setErr(e.message),
     );
   }, [id]);
+  // At phone width the tabs scroll sideways: keep this one in sight.
+  useEffect(() => {
+    document.querySelector(".app-tabs [aria-current]")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [app, tab]);
+  // A link to a section (#origins) scrolls to it once it's there.
+  useEffect(() => {
+    const at = location.hash.slice(1);
+    if (app && at) document.getElementById(at)?.scrollIntoView();
+  }, [app, tab]);
   if (err)
     return (
       <main class="app-page">
@@ -255,6 +398,7 @@ export function AppPage({ id }: { id: string }) {
       </main>
     );
   if (!app) return <main class="app-page" aria-busy="true" />;
+  const name = TABS.find(([t]) => t === tab)![1];
   return (
     <main class="app-page">
       <a class="back" href={path("/")} onClick={(e) => (e.preventDefault(), go(path("/")))}>
@@ -267,21 +411,41 @@ export function AppPage({ id }: { id: string }) {
         </span>
       </header>
       {secret && <Secret secret={secret} made="new" onDone={() => setSecret("")} />}
-      <nav class="jump" aria-label="On this page">
-        {SECTIONS.map(([s, t]) => (
-          <a href={`#${s}`}>{t}</a>
+      <nav class="app-tabs" aria-label={`${app.name}'s pages`}>
+        {TABS.map(([t, title]) => (
+          <a href={tabPath(id, t)} aria-current={t === tab ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(tabPath(id, t)))}>
+            {title}
+          </a>
         ))}
       </nav>
-      <div class="sections">
-        <KeysSection app={app} onChange={setApp} />
-        <Quickstart app={app} issuer={issuer} />
-        <OriginsSection app={app} onChange={setApp} />
-        <ProviderSection app={app} issuer={issuer} onChange={setIssuer} />
-        <RoomRuleSection app={app} issuer={issuer} onChange={setIssuer} />
-        <GuestsSection app={app} onChange={setApp} />
-        <UsageSection app={app} />
-        <BillingSection app={app} />
-        <SecretSection app={app} />
+      <div class="sections" aria-label={name} role="region">
+        {tab === "" && (
+          <>
+            <Setup app={app} issuer={issuer} />
+            <Quickstart app={app} issuer={issuer} />
+          </>
+        )}
+        {tab === "keys" && (
+          <>
+            <KeysSection app={app} onChange={setApp} />
+            <OriginsSection app={app} onChange={setApp} />
+          </>
+        )}
+        {tab === "sign-in" && (
+          <>
+            <ProviderSection app={app} issuer={issuer} onChange={setIssuer} />
+            <RoomRuleSection app={app} issuer={issuer} onChange={setIssuer} />
+            <GuestsSection app={app} onChange={setApp} />
+          </>
+        )}
+        {tab === "usage" && <UsageSection app={app} />}
+        {tab === "billing" && <BillingSection app={app} />}
+        {tab === "settings" && (
+          <>
+            <NameSection app={app} onChange={setApp} />
+            <SecretSection app={app} />
+          </>
+        )}
       </div>
     </main>
   );

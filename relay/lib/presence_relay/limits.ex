@@ -14,6 +14,7 @@ defmodule PresenceRelay.Limits do
   | `email_address` | address | 5 an hour |
   | `meet_room` | IP | 20 an hour |
   | `api_write` | IP | 120 a minute |
+  | `mcp` | IP | 300 a minute |
   | `demo_token` | IP | 120 an hour |
 
   `RATE_LIMITS` (config/runtime.exs) changes any of them, as

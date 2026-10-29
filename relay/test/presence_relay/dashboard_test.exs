@@ -18,7 +18,8 @@ defmodule PresenceRelay.DashboardTest do
 
   describe "routing" do
     test "under /dashboard, the dashboard's page for every route" do
-      for path <- ~w(/dashboard /dashboard/ /dashboard/apps/app_0123456789abcdef) do
+      for path <-
+            ~w(/dashboard /dashboard/ /dashboard/agents /dashboard/apps/app_0123456789abcdef /dashboard/apps/app_0123456789abcdef/usage) do
         assert response(get(build_conn(), path), 200) =~ "dashboard test index", path
       end
     end

@@ -233,7 +233,7 @@ defmodule PresenceRelay.BillingTest do
     anchor = String.to_integer(p["subscription_data"]["billing_cycle_anchor"])
     assert anchor == Billing.next_month(DateTime.utc_now()) |> DateTime.to_unix()
     assert {:ok, %DateTime{day: 1, hour: 0, minute: 0}} = DateTime.from_unix(anchor)
-    assert p["success_url"] =~ "/dashboard/apps/#{app.id}?billing=done#billing"
+    assert p["success_url"] =~ "/dashboard/apps/#{app.id}/billing?billing=done"
 
     # The portal for its customer; someone else's app, nothing.
     assert %{"url" => "https://billing.stripe.test/p/cus_fake1"} =

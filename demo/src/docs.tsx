@@ -13,6 +13,7 @@ const SECTIONS = [
   ["js", "JS API"],
   ["react", "React"],
   ["server", "Server SDKs"],
+  ["agents", "Agents (MCP)"],
   ["limits", "Limits and privacy"],
   ["protocol", "Protocol"],
 ] as const;
@@ -136,6 +137,17 @@ export function Docs() {
           <p class="note">
             Each installs from arugula.stream in one line (Elixir from the repo), shown above each example. The source is in{" "}
             <a href={`${SOURCE}/sdk`}>sdk</a>; each SDK is one file under a hundred lines, so copying it in works too.
+          </p>
+
+          <h2 id="agents">Agents (MCP)</h2>
+          <p>
+            An agent can set up and run your apps for you: make them, add keys and origins, connect your sign-in, set a room rule, read usage. Make an
+            API token on the dashboard's <a href="/dashboard/agents">Agents</a> page, then add our MCP server to your agent with it:
+          </p>
+          <Code code={`claude mcp add --transport http arugula https://arugula.stream/mcp \\\n  --header "Authorization: Bearer ak_…"`} label="Claude Code" />
+          <p class="note">
+            The Agents page has the setup for Cursor, VS Code and others with your token filled in. A token acts as you until you revoke it, and also
+            works on the dashboard's own API (<code>/api/v1</code>) as <code>Authorization: Bearer</code>. Making tokens and paying stay in the dashboard.
           </p>
 
           <h2 id="limits">Limits and privacy</h2>

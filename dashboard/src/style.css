@@ -338,20 +338,161 @@ a.btn {
   gap: 8px;
 }
 
-.jump {
+/* An app's tabs: each its own path. At phone width they scroll sideways
+   inside their own strip, never the page. */
+
+.app-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  font-size: 13px;
-  margin: 0 0 16px;
+  gap: 4px;
+  margin: 0 0 20px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.jump a {
+.app-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.app-tabs a {
+  flex: none;
+  padding: 10px 12px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
   color: var(--dim);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.app-tabs a:hover {
+  color: var(--fg);
+}
+
+.app-tabs a[aria-current="page"] {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+
+.app-tabs a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 6px 6px 0 0;
+}
+
+/* The overview's checklist */
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.step:first-child {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+.step a {
+  color: var(--fg);
   text-decoration: none;
 }
 
-.jump a:hover {
+.step a:hover b {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
+.step b {
+  font-weight: 600;
+}
+
+.step .hint {
+  overflow-wrap: anywhere;
+}
+
+.mark-dot {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.step.todo .mark-dot {
+  border-color: var(--warn);
+}
+
+.step.done .mark-dot {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+  color: var(--ok);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Agents and their tokens */
+
+.lede.small {
+  font-size: 15px;
+  max-width: 64ch;
+  margin: -8px 0 20px;
+}
+
+.tokens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.token-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.token-row b {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.token-row .actions {
+  margin-left: auto;
+}
+
+.top .who a[aria-current="page"] {
   color: var(--fg);
 }
 
@@ -707,6 +848,21 @@ a.btn {
   .top .where,
   .top .who .stats {
     display: none;
+  }
+
+  /* The pages and Sign out get a row of their own under the name. */
+  .top {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .top .who {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .top .who .btn {
+    margin-left: auto;
   }
 
   .tiles {

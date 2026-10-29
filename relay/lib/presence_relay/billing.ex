@@ -336,7 +336,7 @@ defmodule PresenceRelay.Billing do
     with {:ok, c} <- ready(),
          :ok <- can_upgrade(app),
          {:ok, customer} <- customer(c, app) do
-      back = "#{base_url}/dashboard/apps/#{app.id}"
+      back = "#{base_url}/dashboard/apps/#{app.id}/billing"
 
       params = %{
         mode: "subscription",
@@ -347,8 +347,8 @@ defmodule PresenceRelay.Billing do
           %{price: c.prices.mau},
           %{price: c.prices.minutes}
         ],
-        success_url: back <> "?billing=done#billing",
-        cancel_url: back <> "?billing=cancelled#billing",
+        success_url: back <> "?billing=done",
+        cancel_url: back <> "?billing=cancelled",
         metadata: %{app_id: app.id},
         subscription_data: %{
           metadata: %{app_id: app.id},
@@ -380,7 +380,7 @@ defmodule PresenceRelay.Billing do
     with {:ok, c} <- ready() do
       case get(app.id) do
         %AppBilling{customer_id: cus} when is_binary(cus) ->
-          params = %{customer: cus, return_url: "#{base_url}/dashboard/apps/#{app.id}#billing"}
+          params = %{customer: cus, return_url: "#{base_url}/dashboard/apps/#{app.id}/billing"}
 
           case Stripe.request(c, :post, "/v1/billing_portal/sessions", params) do
             {:ok, %{"url" => url}} when is_binary(url) -> {:ok, url}
