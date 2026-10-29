@@ -7,7 +7,7 @@
 // demo tokens); or, with no server, the app's publishable key with the
 // person's own sign-in token (`auth`) or a guest's name.
 
-import { PresenceClient, phoenixTransport, type Call, type Member, type Transport, type Message, type PhoenixTransportOptions, type Voice } from "@arugula/presence";
+import { PresenceClient, phoenixTransport, type Call, type Member, type Noise, type NoiseFilter, type Transport, type Message, type PhoenixTransportOptions, type Voice } from "@arugula/presence";
 import { setAssetBase } from "@arugula/presence-core/assets";
 import type { Look } from "@arugula/presence-core/avatar/rig";
 import { mountAvatar, mountPeople, type AvatarOptions, type PeopleOptions } from "./view.ts";
@@ -67,6 +67,9 @@ export interface RoomEvents {
   /** The current speaker in your call or voice changed, or your pin did
    * (`active`: held steady; `pinned`: this page's, or null). */
   speaker: (active: string | null, pinned: string | null) => void;
+  /** Your microphone's noise filter changed: what you picked, what's on
+   * your microphone now, or why Krisp isn't. */
+  noise: (noise: Noise) => void;
   live: (state: "connecting" | "on" | "refused" | "off") => void;
 }
 
@@ -93,10 +96,10 @@ export class Room {
   readonly room: string;
   /** Your own sub, once a token has been read. */
   me = "";
-  private handlers: { [K in keyof RoomEvents]: Set<RoomEvents[K]> } = { members: new Set(), wave: new Set(), answer: new Set(), react: new Set(), message: new Set(), ring: new Set(), call: new Set(), voice: new Set(), speaker: new Set(), live: new Set() };
+  private handlers: { [K in keyof RoomEvents]: Set<RoomEvents[K]> } = { members: new Set(), wave: new Set(), answer: new Set(), react: new Set(), message: new Set(), ring: new Set(), call: new Set(), voice: new Set(), speaker: new Set(), noise: new Set(), live: new Set() };
   private stop: () => void;
   private unsub: () => void;
-  private seen = { members: [] as Member[], waves: 0, answers: 0, live: "off" as string, reactedAt: 0, messageId: 0, rings: new Set<string>(), call: null as Call | null, voice: "", joined: null as Voice | null, speaker: "" };
+  private seen = { members: [] as Member[], waves: 0, answers: 0, live: "off" as string, reactedAt: 0, messageId: 0, rings: new Set<string>(), call: null as Call | null, voice: "", joined: null as Voice | null, speaker: "", noise: null as Noise | null };
 
   constructor(o: ConnectOptions) {
     this.room = o.room;
@@ -274,6 +277,22 @@ export class Room {
     readonly joined: Voice | null;
   };
 
+  /** Your microphone's noise filter in calls and voice: `mode` (what you
+   * picked: "krisp", "standard" or "off"; Krisp by default where it runs),
+   * `active` (what's on your microphone now, null outside a call or voice),
+   * `krisp` (whether this browser runs it, once known) and `fallback` (why
+   * Krisp isn't running, when it's your mode and isn't). */
+  get noise(): Noise {
+    return this.client.noise;
+  }
+
+  /** Krisp (LiveKit Cloud's noise cancellation), Standard (the browser's)
+   * or Off: kept in this browser, for calls and voice, and switched in
+   * place in one, muted or not. */
+  setNoiseFilter(mode: NoiseFilter): Promise<void> {
+    return this.client.setNoiseFilter(mode);
+  }
+
   /** The current speaker in your call or voice, held steady: a newcomer
    * takes over after 0.7 s of talking, a cough doesn't, and nobody
    * talking keeps the last. Never you unless you're alone. */
@@ -373,6 +392,10 @@ export class Room {
     if (speaker !== this.seen.speaker) {
       this.seen.speaker = speaker;
       this.emit("speaker", c.activeSpeaker, c.pinned);
+    }
+    if (c.noise !== this.seen.noise) {
+      this.seen.noise = c.noise;
+      this.emit("noise", c.noise);
     }
     for (const m of c.messages) if (m.id > this.seen.messageId) this.emit("message", m);
     this.seen.messageId = Math.max(this.seen.messageId, ...c.messages.map((m) => m.id));

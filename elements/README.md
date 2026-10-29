@@ -48,6 +48,15 @@ room.avatar(element, sub, { size: "head" });    // draw one person
 room.leave();
 ```
 
+In a call or voice, the call and voice bars carry the microphone's noise
+filter (Krisp, Standard or Off; `room.setNoiseFilter(mode)`, `room.noise`,
+the `noise` event). Krisp's code is a lazy chunk beside `presence.js`
+(`krisp-*.js`, about 6 MB, 2 MB compressed) that loads only when a call or
+voice wants Krisp; it's LiveKit's (`@livekit/krisp-noise-filter`, under
+LiveKit's terms, not this repo's licence) and fetches its models from
+integrations.livekit.io. Where it can't load or start, the microphone uses
+Standard and `room.noise.fallback` says why.
+
 `mount` and `avatar` draw into a shadow root of their own (the elements'
 styles); each returns a function that stops it. The trackers' models load
 from the relay's origin unless `connect({ assets })` says otherwise.

@@ -100,14 +100,14 @@ export function Docs() {
               <Attr name="<arugula-people>">a tile per person; size="head" for a compact strip, self="hide" to leave yourself out</Attr>
               <Attr name="<arugula-chat>">the room's text: messages (kept, with history) and an input; Enter sends, Shift+Enter is a new line</Attr>
               <Attr name="<arugula-avatar>">one person's live face: user="…" size="head|bust", e.g. beside their name in your UI</Attr>
-              <Attr name="<arugula-call>">the call bar: a ring to answer, who you're calling, mute, video and leave; empty without a call. People's tiles get a Call button where the relay has calls (calls="off" on {"<arugula-people>"} hides it)</Attr>
-              <Attr name="<arugula-voice>">the room's voice channel: who's in it with a ring while they speak, Join voice (people join muted), Unmute, video and Leave voice; hidden where the relay has no voice</Attr>
+              <Attr name="<arugula-call>">the call bar: a ring to answer, who you're calling, mute, video, the noise filter and leave; empty without a call. People's tiles get a Call button where the relay has calls (calls="off" on {"<arugula-people>"} hides it)</Attr>
+              <Attr name="<arugula-voice>">the room's voice channel: who's in it with a ring while they speak, Join voice (people join muted), Unmute, video, the noise filter and Leave voice; hidden where the relay has no voice</Attr>
               <Attr name="<arugula-spotlight>">speaker view, in a call or voice: whoever's talking big, everyone else in it in a strip; click someone to pin them. self="hide" leaves you out of the strip, pin="off" turns pinning off; empty outside a call or voice</Attr>
             </tbody>
           </table>
           <p>
             Events bubble from the room element: <code>arugula:members</code>, <code>arugula:wave</code>, <code>arugula:answer</code>, <code>arugula:react</code>, <code>arugula:message</code>,{" "}
-            <code>arugula:ring</code>, <code>arugula:call</code>, <code>arugula:voice</code>, <code>arugula:speaker</code>, <code>arugula:live</code>. Theme with custom properties on any ancestor:
+            <code>arugula:ring</code>, <code>arugula:call</code>, <code>arugula:voice</code>, <code>arugula:speaker</code>, <code>arugula:noise</code>, <code>arugula:live</code>. Theme with custom properties on any ancestor:
           </p>
           <Code code={theming} label="Theming" />
 
@@ -177,6 +177,12 @@ export function Docs() {
             <li>
               Voice: every room has one voice channel, at most 25 people in it. People join muted and unmute to talk; everyone in the room sees who's
               in it. A page is in voice or a private call, never both: joining one leaves the other. Voice minutes count as call minutes.
+            </li>
+            <li>
+              Noise filter, in calls and voice: Krisp (LiveKit Cloud's noise cancellation, run in the browser), Standard (the browser's own) or Off,
+              kept in each browser and switched without leaving. Krisp is the default where the browser runs it (not Safari before 17.4); where it
+              can't start, the microphone uses Standard and the call bar says so. Echo cancellation stays on in all three. Krisp's code (about 2 MB
+              compressed) loads only when a call or voice wants it, and its models come from LiveKit; it's LiveKit's, under LiveKit's terms.
             </li>
             <li>Calls: a wave they say yes to is a voice call (LiveKit). The relay rings, at most 3 rings per 30 seconds each, and hands each person a 10-minute token for that call's room alone; audio and video never pass through it.</li>
             <li>

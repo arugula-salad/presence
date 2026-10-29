@@ -164,3 +164,30 @@ test("speaker view: the current speaker and this page's pin, as an event and as 
   assert.equal(room.activeSpeaker, "bea");
   room.leave();
 });
+
+test("the noise filter: the room's noise and setNoiseFilter, switched in voice, and a noise event when it changes", async () => {
+  const t = fake();
+  t.voiceJoin = async () => ({ url: "ws://lk", room: "demo:r:voice", token: "v" });
+  t.voiceLeave = () => {};
+  t.voiceMute = () => {};
+  const room = new Room({ room: "r", token: token({ sub: "me" }), transport: t, storage: "tnoise." });
+  const lk = { o: null, on: null, set: [] };
+  room.client.joinCall = async (j, on, o) => {
+    Object.assign(lk, { on, o });
+    return { setMuted: async () => {}, setVideo: async () => {}, setNoise: async (m) => void lk.set.push(m), startAudio: async () => {}, leave: async () => {} };
+  };
+  const seen = [];
+  room.on("noise", (n) => seen.push(`${n.mode}/${n.active ?? "-"}${n.fallback ? ` (${n.fallback})` : ""}`));
+  t.on.live("on");
+  t.on.voice(true);
+  assert.equal(room.noise.mode, "krisp", "Krisp by default");
+  await room.voice.join();
+  assert.equal(lk.o.noise, "krisp");
+  lk.on.noise({ active: "standard", krisp: true, error: "LiveKit refused it: 403" });
+  await room.setNoiseFilter("off");
+  lk.on.noise({ active: "off", krisp: true, error: "" });
+  assert.deepEqual(lk.set, ["off"]);
+  room.voice.leave();
+  assert.deepEqual(seen, ["krisp/standard (LiveKit refused it: 403)", "off/standard", "off/off", "off/-"]);
+  room.leave();
+});
