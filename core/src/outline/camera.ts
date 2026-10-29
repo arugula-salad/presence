@@ -144,7 +144,12 @@ export async function startCamera(o: CameraOptions): Promise<Camera> {
         if (depther) lastDepth = z;
         depthMs = performance.now() - d0;
       })
-      .catch((e: Error) => o.onError(e))
+      // An estimate that fails will fail again: depth goes off, and says
+      // why once, rather than every half second.
+      .catch((e: Error) => {
+        setDepth(false);
+        o.onDepthState("off", `Depth stopped: ${e.message}`);
+      })
       .finally(() => {
         depthBusy = false;
         depthAt = performance.now();
