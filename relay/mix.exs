@@ -15,7 +15,12 @@ defmodule PresenceRelay.MixProject do
   end
 
   def application do
-    [mod: {PresenceRelay.Application, []}, extra_applications: [:logger, :crypto]]
+    # :inets and :ssl for :httpc (Google sign-in's token exchange): a
+    # release only carries the OTP applications listed here.
+    [
+      mod: {PresenceRelay.Application, []},
+      extra_applications: [:logger, :crypto, :inets, :ssl, :public_key]
+    ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
