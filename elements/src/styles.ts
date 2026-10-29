@@ -95,4 +95,18 @@ figcaption button.call[hidden] { display: none; }
 .voice-person.speaking .dot { box-shadow: 0 0 0 2px var(--ok); }
 .voice-person .mic { font: 9px ui-monospace, monospace; text-transform: uppercase; color: var(--dim); }
 .arugula-voice .notice { color: var(--info); font-size: 12px; }
+.arugula-spotlight { display: grid; gap: 8px; }
+.arugula-spotlight[hidden], .spot-strip[hidden] { display: none; }
+.spot-big .view { aspect-ratio: 16 / 9; max-height: 70vh; }
+.spot-big figcaption { font-size: 14px; }
+.spot-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x proximity; }
+.spot-small { flex: 0 0 136px; scroll-snap-align: start; }
+.spot-small .view { aspect-ratio: 16 / 9; }
+.spot-small figcaption { padding: 4px 8px; font-size: 12px; }
+.arugula-spotlight .tile[role="button"] { cursor: pointer; }
+.arugula-spotlight .tile[role="button"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.arugula-spotlight .tile.pinned { border-color: var(--accent); }
+.arugula-spotlight .tile.speaking .tag { color: var(--ok); }
+.arugula-spotlight .tile.muted .tag { color: var(--dim); }
+@media (max-width: 560px) { .spot-small { flex-basis: 112px; } .spot-big .view { max-height: 50vh; } }
 `;

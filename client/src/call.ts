@@ -16,9 +16,22 @@
 // the original). Others' video goes only to the <video> elements a view
 // attaches, and adaptive stream sends each one just the layer its size
 // needs, and nothing while it's out of sight.
+//
+// Speaker view (Arugula #332): video goes up in three layers, 1280×720 at
+// the top where the camera gives that much (it's asked for 720p while
+// video is on, and back to its own size after), 640×360 and 320×180
+// below. With dynacast a publisher encodes a layer only while someone's
+// subscribed to it, and with adaptive stream a page subscribes to the
+// layer its biggest <video> of that person needs: so the 720p layer goes
+// out only while some page shows that person big. And one current speaker
+// (./speaker's SpeakerPicker), from what this page hears: each remote
+// microphone's level, measured every SAMPLE_MS from its receiver's audio
+// energy, because LiveKit's own active speakers come on a 400 ms tick with
+// a tail that makes a cough look like a turn.
 
 import type { LocalVideoTrack, RemoteVideoTrack } from "livekit-client";
 import type { CallJoin } from "./transport.ts";
+import { SpeakerPicker } from "./speaker.ts";
 
 /** Someone in the call, you included. */
 export interface CallPerson {
@@ -35,6 +48,8 @@ export interface CallPerson {
 
 export interface LiveCallEvents {
   people(people: CallPerson[]): void;
+  /** The current speaker changed (./speaker): who a spotlight shows big. */
+  speaker?(sub: string | null): void;
   /** Connected, reconnecting by itself, or gone (`byUs`: we left). */
   state(state: "on" | "reconnecting" | "ended", byUs?: boolean): void;
   /** The browser blocked playing the call (no click yet): `startAudio`
@@ -63,22 +78,54 @@ export interface JoinOptions {
 /** Joins a call's LiveKit room (a test passes a fake). */
 export type JoinCall = (j: CallJoin, on: LiveCallEvents, o?: JoinOptions) => Promise<LiveCall>;
 
-/** A call's video at the top: 640×360 at 24 fps, half a megabit. With
- * simulcast, a 320×180 layer goes up beside it for small tiles. */
-export const VIDEO = { width: 640, height: 360, fps: 24, maxBitrate: 500_000 };
+/** A call's video at the top: 1280×720 at 24 fps, a megabit and a half,
+ * for a speaker shown big. With simulcast, the layers below go up beside
+ * it for everything smaller. */
+export const VIDEO = { width: 1280, height: 720, fps: 24, maxBitrate: 1_500_000 };
+
+/** The layers under the top, smallest first: 320×180 at 15 fps for a strip
+ * or a grid's small tiles, 640×360 at 24 for a big grid tile. */
+export const LAYERS = [
+  { width: 320, height: 180, fps: 15, maxBitrate: 150_000 },
+  { width: 640, height: 360, fps: 24, maxBitrate: 500_000 },
+] as const;
+
+/** The size to publish a `w`×`h` camera at: the biggest of the layers
+ * (720p, 360p, 180p, 16:9 the camera's way up) that fits inside it, so a
+ * 640×480 camera goes up at 640×360 and is never scaled up to 720p. */
+export function videoSize(w: number, h: number): { width: number; height: number; maxBitrate: number } {
+  const portrait = h > w;
+  for (const l of [VIDEO, LAYERS[1], LAYERS[0]]) {
+    const [lw, lh] = portrait ? [l.height, l.width] : [l.width, l.height];
+    if (lw <= w && lh <= h) return { width: lw, height: lh, maxBitrate: l.maxBitrate };
+  }
+  return { width: w, height: h, maxBitrate: LAYERS[0].maxBitrate };
+}
+
+/** How often this page measures who it hears (./speaker). */
+export const SAMPLE_MS = 100;
+
+/** Speaking, for the spotlight: a level over the last sample above -30
+ * dBov. LiveKit's own active level is -35 (`active_level: 35`), on each
+ * packet; this is a 100 ms average, and a sound's last word fades out of
+ * a receiver at about 10 dB a 100 ms (measured), so 5 dB higher cuts that
+ * tail by half a sample. Speech, with the browser's gain control, sits
+ * well above it; a room's hum, with its noise suppression, well below. */
+export const VOICE_LEVEL = 10 ** (-30 / 20);
 
 export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
-  const { Room, RoomEvent, Track, DisconnectReason, VideoPresets, createLocalAudioTrack } = await import("livekit-client");
+  const { Room, RoomEvent, Track, DisconnectReason, VideoPreset, createLocalAudioTrack } = await import("livekit-client");
+  const layers = LAYERS.map((l) => new VideoPreset(l.width, l.height, l.maxBitrate, l.fps));
   const room = new Room({
     // Each video element gets the layer its size needs, and none while
     // it's hidden or off screen; a publisher stops encoding a layer
-    // nobody's watching.
+    // nobody's watching (so 720p goes out only while someone shows it big).
     adaptiveStream: true,
     dynacast: true,
     publishDefaults: {
       simulcast: true,
       videoEncoding: { maxBitrate: VIDEO.maxBitrate, maxFramerate: VIDEO.fps },
-      videoSimulcastLayers: [VideoPresets.h180],
+      videoSimulcastLayers: layers,
     },
   });
   // Everyone else's audio plays from elements of its own, out of sight, by
@@ -115,6 +162,69 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
   };
   // The clone this page publishes, stopped when it's taken down.
   let mine: MediaStreamTrack | null = null;
+  // The camera raised to 720p for it, and what it asked for before.
+  let raised: { track: MediaStreamTrack; was: MediaTrackConstraints } | null = null;
+  // The current speaker (made once connected, when this page has its
+  // identity): each remote microphone's audio energy at the last sample,
+  // to measure the level over the next.
+  let picker: SpeakerPicker | null = null;
+  const energy = new Map<string, { e: number; d: number; got: number; made: number }>();
+  let sampling = false;
+  const sample = async () => {
+    if (sampling || !picker || room.state !== "connected") return;
+    sampling = true;
+    try {
+      const voiced: [string, number][] = [];
+      let measured = false;
+      for (const p of room.remoteParticipants.values()) {
+        // Muted ones too (they send nothing), so unmuting is heard at the
+        // next sample, not after LiveKit says so.
+        const rx = p.getTrackPublication(Track.Source.Microphone)?.track?.receiver;
+        if (!rx) {
+          energy.delete(p.identity);
+          continue;
+        }
+        const now = { e: 0, d: 0, got: 0, made: 0 };
+        (await rx.getStats()).forEach((s) => {
+          if (s.type === "inbound-rtp") {
+            now.e = s.totalAudioEnergy ?? 0;
+            now.d = s.totalSamplesDuration ?? 0;
+            now.got = s.totalSamplesReceived ?? 0;
+            now.made = s.concealedSamples ?? 0;
+          }
+        });
+        const was = energy.get(p.identity);
+        energy.set(p.identity, now);
+        // Nothing played since (audio blocked, or just subscribed).
+        if (!was || now.d <= was.d) continue;
+        measured = true;
+        // Mostly made up (the receiver filling in for packets that stopped,
+        // as they do when someone mutes): that tail of the last word isn't
+        // talking.
+        const got = now.got - was.got;
+        if (got > 0 && (now.made - was.made) / got > 0.5) continue;
+        const level = Math.sqrt(Math.max(0, now.e - was.e) / (now.d - was.d));
+        if (level >= VOICE_LEVEL) voiced.push([p.identity, level]);
+      }
+      // Loudest first; LiveKit's own list where nothing's measurable here.
+      const speakers = measured ? voiced.sort((a, b) => b[1] - a[1]).map(([s]) => s) : room.activeSpeakers.map((p) => p.identity);
+      const people = [me.identity, ...[...room.remoteParticipants.values()].map((p) => p.identity)];
+      const was = picker.current;
+      const now = picker.update(performance.now(), { speakers, people, coarse: !measured });
+      if (now !== was) on.speaker?.(now);
+    } catch {
+      // A receiver that went mid-sample: the next one sees.
+    } finally {
+      sampling = false;
+    }
+  };
+  let sampler: ReturnType<typeof setInterval> | undefined;
+  // The camera back to what presence asked of it, once video's down.
+  const lower = () => {
+    const r = raised;
+    raised = null;
+    if (r && r.track.readyState === "live") void r.track.applyConstraints(r.was).catch(() => {});
+  };
   const tell = () => {
     for (const sub of views.keys()) show(sub);
     const speaking = new Set(room.activeSpeakers.map((p) => p.identity));
@@ -174,6 +284,8 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
     .on(RoomEvent.Reconnecting, () => on.state("reconnecting"))
     .on(RoomEvent.Reconnected, () => on.state("on"))
     .on(RoomEvent.Disconnected, (why) => {
+      clearInterval(sampler);
+      picker = null;
       for (const el of players.values()) el.remove();
       players.clear();
       for (const els of views.values())
@@ -184,9 +296,12 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
         }
       mine?.stop();
       mine = null;
+      lower();
       on.state("ended", why === DisconnectReason.CLIENT_INITIATED);
     });
   await room.connect(j.url, j.token);
+  picker = new SpeakerPicker(me.identity);
+  sampler = setInterval(() => void sample(), SAMPLE_MS);
   on.state("on");
   try {
     if (o.muted) {
@@ -205,6 +320,7 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
     if (pub?.track) await me.unpublishTrack(pub.track, true);
     mine?.stop();
     mine = null;
+    lower();
   };
   return {
     setMuted: async (muted) => {
@@ -216,17 +332,26 @@ export const joinLiveKit: JoinCall = async (j, on, o = {}) => {
       if (camera) {
         // The same device, not a second getUserMedia: a clone shares the
         // camera's capture, and the browser crops and scales it to its own
-        // size and rate. The outline camera asks for 15 fps; raised for a
-        // call (it still traces at its own few a second).
-        if ((camera.getSettings().frameRate ?? VIDEO.fps) < VIDEO.fps) await camera.applyConstraints({ ...camera.getConstraints(), frameRate: { ideal: VIDEO.fps } }).catch(() => {});
+        // size and rate. The presence camera asks for 640×480 (the outline
+        // one at 15 fps): raised to 720p at 24 for a call, where the camera
+        // has it, and back with the video (the trackers scale whatever
+        // comes down to their own few hundred pixels).
+        raised = { track: camera, was: camera.getConstraints() };
+        const fps = Math.max(VIDEO.fps, camera.getSettings().frameRate ?? 0);
+        await camera.applyConstraints({ ...raised.was, width: { ideal: VIDEO.width }, height: { ideal: VIDEO.height }, frameRate: { ideal: fps } }).catch(() => {});
+        const got = camera.getSettings();
+        const size = videoSize(got.width ?? 640, got.height ?? 480);
         const copy = camera.clone();
-        await copy.applyConstraints({ width: { ideal: VIDEO.width }, height: { ideal: VIDEO.height }, frameRate: { ideal: VIDEO.fps } }).catch(() => {});
+        await copy.applyConstraints({ width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: VIDEO.fps } }).catch(() => {});
         mine = copy;
         try {
-          await me.publishTrack(copy, { source: Track.Source.Camera, name: "camera" });
+          // The top layer at the size it went up at; LiveKit adds the
+          // layers under it that are smaller.
+          await me.publishTrack(copy, { source: Track.Source.Camera, name: "camera", videoEncoding: { maxBitrate: size.maxBitrate, maxFramerate: VIDEO.fps } });
         } catch (e) {
           copy.stop();
           mine = null;
+          lower();
           throw e;
         }
       }

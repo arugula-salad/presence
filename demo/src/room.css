@@ -322,8 +322,10 @@
   color: var(--info);
 }
 
+/* A row of its own when the bar's too narrow for it beside the buttons
+   (a phone), rather than squeezed under them. */
 .voice-strip {
-  flex: 1;
+  flex: 1 1 180px;
   min-width: 0;
   display: flex;
   flex-wrap: wrap;
@@ -438,8 +440,108 @@
   margin-top: 12px;
 }
 
+/* Speaker view (Arugula #332), in a call or voice: whoever's talking big,
+   the rest of the call or voice in a strip that scrolls sideways, and the
+   rest of the room in a row of small tiles under them. */
+
+.layout-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.speaker-view {
+  display: grid;
+  gap: 12px;
+}
+
+.tile.spot-big .view {
+  aspect-ratio: 16 / 9;
+  max-height: 68vh;
+  width: 100%;
+}
+
+.tile.spot-big figcaption {
+  font-size: 15px;
+}
+
+.tile[role="button"] {
+  cursor: pointer;
+}
+
+.tile[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tile.pinned {
+  border-color: var(--accent);
+}
+
+.speaker-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+}
+
+.tile.spot-strip {
+  flex: 0 0 168px;
+  scroll-snap-align: start;
+}
+
+.tile.spot-strip .view {
+  aspect-ratio: 16 / 9;
+}
+
+.tile.spot-strip figcaption,
+.tile.spot-row figcaption {
+  gap: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.tile.spot-strip .still,
+.tile.spot-row .still {
+  font-size: 24px;
+}
+
+.speaker-rest {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.tile.spot-row .view {
+  aspect-ratio: 1;
+}
+
+.tile.spot-row .tag {
+  display: none;
+}
+
+.tile.spot-row .wave {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
 @media (max-width: 520px) {
   .grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .tile.spot-big .view {
+    max-height: 48vh;
+  }
+
+  .tile.spot-strip {
+    flex-basis: 128px;
+  }
+
+  .speaker-rest {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   }
 }

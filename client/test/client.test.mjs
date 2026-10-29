@@ -443,3 +443,42 @@ test("voice: one audio session a page; taking a call leaves voice, joining voice
   assert.ok(left >= 2);
   stop();
 });
+
+test("speaker view: the current speaker from LiveKit's side, a pin on this page, and who's featured", async () => {
+  const t = fake();
+  t.transport.voiceJoin = async () => ({ url: "ws://lk", room: "acme:r:voice", token: "vtok" });
+  t.transport.voiceLeave = () => {};
+  t.transport.voiceMute = () => {};
+  const lk = {};
+  const joinCall = async (j, on) => {
+    lk.on = on;
+    return { setMuted: async () => {}, setVideo: async () => {}, startAudio: async () => {}, leave: async () => {} };
+  };
+  const c = new PresenceClient({ transport: t.transport, storage: "tsp.", joinCall });
+  const stop = c.watch();
+  t.on.voice(true);
+  assert.equal(c.featured(), null, "outside voice, nobody");
+  await c.joinVoice();
+  const p = (sub) => ({ sub, name: sub, muted: false, speaking: false, audio: true, video: false });
+  lk.on.people([p("me"), p("ada"), p("bea")]);
+  assert.equal(c.inVoice.activeSpeaker, null);
+  assert.equal(c.featured("me"), "ada", "nobody's spoken: the first other person");
+  lk.on.speaker("bea");
+  assert.equal(c.activeSpeaker, "bea");
+  assert.equal(c.featured("me"), "bea");
+  c.pin("ada");
+  assert.equal(c.pinned, "ada");
+  assert.equal(c.featured("me"), "ada", "pinned beats the speaker");
+  c.pin("nobody-here");
+  assert.equal(c.pinned, null, "only someone in it can be pinned");
+  c.pin("ada");
+  lk.on.people([p("me"), p("bea")]);
+  assert.equal(c.pinned, null, "Ada left: her pin goes");
+  assert.equal(c.featured("me"), "bea");
+  lk.on.people([p("me")]);
+  lk.on.speaker("me");
+  assert.equal(c.featured("me"), "me", "alone: you");
+  c.leaveVoice();
+  assert.equal(c.featured(), null);
+  stop();
+});

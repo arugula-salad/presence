@@ -23,6 +23,11 @@
 // leave it as you like, muted on joining (unmute to talk), with video as
 // in a call. A page has one audio session: joining voice leaves your call,
 // and taking a call leaves voice, each saying so in `notice`.
+//
+// Speaker view (Arugula #332): whichever you're in, a call or voice has one
+// current speaker (`activeSpeaker`, held steady by ./speaker), and a page
+// can pin someone in its place (`pin`, this page alone). `featured` is who
+// a spotlight shows big, and `roster` who's in it with you.
 
 import { startCamera, type Camera, type FrameStats } from "@arugula/presence-core/outline/camera";
 import { decodeFrame, type Frame } from "@arugula/presence-core/outline/frame";
@@ -65,6 +70,10 @@ export interface Call {
   video: boolean;
   /** The browser blocked the call's audio until a click (`startAudio`). */
   blocked: boolean;
+  /** Who's talking, held steady (./speaker): a newcomer takes over after
+   * 0.7 s of talking, a cough doesn't, and nobody talking keeps
+   * the last. Never you unless you're alone; null until someone speaks. */
+  activeSpeaker: string | null;
   error: string;
 }
 
@@ -80,6 +89,8 @@ export interface Voice {
   muted: boolean;
   video: boolean;
   blocked: boolean;
+  /** Who's talking, held steady, as in a call. */
+  activeSpeaker: string | null;
   error: string;
 }
 
@@ -335,7 +346,7 @@ export class PresenceClient {
     this.emit();
     const { id } = await this.transport.call(to);
     const c = this.inCall;
-    this.inCall = c && c.id === id ? { ...c, ringing: [...c.ringing.filter((s) => s !== to), to] } : { id, state: "ringing", ringing: [to], people: [], muted: false, video: false, blocked: false, error: "" };
+    this.inCall = c && c.id === id ? { ...c, ringing: [...c.ringing.filter((s) => s !== to), to] } : { id, state: "ringing", ringing: [to], people: [], muted: false, video: false, blocked: false, activeSpeaker: null, error: "" };
     this.emit();
     return id;
   }
@@ -476,6 +487,7 @@ export class PresenceClient {
     this.live_ = null;
     this.videoFrom = null;
     this.inCall = null;
+    this.pinned = null;
     clearTimeout(this.alone);
     void live?.leave();
     // A camera turned on for the call's video goes off with the call.
@@ -500,7 +512,7 @@ export class PresenceClient {
     }
     this.videoFrom = null;
     const was = this.inCall?.id === j.id ? this.inCall : null;
-    this.inCall = { id: j.id, state: "joining", ringing: was?.ringing ?? [], people: [], muted: was?.muted ?? false, video: was?.video ?? false, blocked: false, error: "" };
+    this.inCall = { id: j.id, state: "joining", ringing: was?.ringing ?? [], people: [], muted: was?.muted ?? false, video: was?.video ?? false, blocked: false, activeSpeaker: null, error: "" };
     this.emit();
     // Nobody else turns up: it ends.
     const lonely = (people: CallPerson[]) => {
@@ -515,8 +527,10 @@ export class PresenceClient {
           if (had > 1 && people.length <= 1) return this.inCall?.id === j.id && this.leaveCall();
           had = Math.max(had, people.length);
           lonely(people);
+          this.unpinGone(people);
           this.patchCall(j.id, { people });
         },
+        speaker: (activeSpeaker) => this.patchCall(j.id, { activeSpeaker }),
         state: (state, byUs) => {
           if (state !== "ended") return this.patchCall(j.id, { state });
           if (byUs || this.inCall?.id !== j.id) return;
@@ -558,7 +572,7 @@ export class PresenceClient {
       this.leaveCall();
       this.tell("You left the call to join voice.");
     }
-    this.inVoice = { state: "joining", people: [], muted: true, video: false, blocked: false, error: "" };
+    this.inVoice = { state: "joining", people: [], muted: true, video: false, blocked: false, activeSpeaker: null, error: "" };
     this.voiceRejoined = false;
     this.emit();
     let j: VoiceJoin;
@@ -607,6 +621,46 @@ export class PresenceClient {
     return !!this.inVoice?.people.find((p) => p.sub === sub)?.speaking;
   }
 
+  /** Who's in the call or voice you're in, you included (LiveKit says). */
+  get roster(): CallPerson[] {
+    return this.inCall?.people ?? this.inVoice?.people ?? [];
+  }
+
+  /** The current speaker in your call or voice (held steady), or null. */
+  get activeSpeaker(): string | null {
+    return this.inCall?.activeSpeaker ?? this.inVoice?.activeSpeaker ?? null;
+  }
+
+  /** Who you pinned big in your call or voice (this page alone), or null. */
+  pinned: string | null = null;
+
+  /** Pin `sub` big in place of the current speaker, or null to go back to
+   * following whoever's talking. Only this page sees it. */
+  pin(sub: string | null) {
+    const next = sub && this.roster.some((p) => p.sub === sub) ? sub : null;
+    if (next === this.pinned) return;
+    this.pinned = next;
+    this.emit();
+  }
+
+  /** Who a spotlight shows big: whoever you pinned, else the current
+   * speaker, else the first other person in it (you, if you're alone);
+   * null outside a call or voice. `me` is your sub, where the client
+   * hasn't seen it (LiveKit lists you first). */
+  featured(me = this.roster[0]?.sub ?? ""): string | null {
+    const people = this.roster;
+    if (!people.length) return null;
+    const here = (s: string | null) => !!s && people.some((p) => p.sub === s);
+    if (here(this.pinned)) return this.pinned;
+    if (here(this.activeSpeaker)) return this.activeSpeaker;
+    return people.find((p) => p.sub !== me)?.sub ?? people[0].sub;
+  }
+
+  /** A pin on someone who's left goes. */
+  private unpinGone(people: CallPerson[]) {
+    if (this.pinned && !people.some((p) => p.sub === this.pinned)) this.pinned = null;
+  }
+
   /** Forget the notice (it's been seen). */
   dismissNotice() {
     this.notice = null;
@@ -633,6 +687,7 @@ export class PresenceClient {
     this.voiceLive = null;
     this.voiceVideoFrom = null;
     this.inVoice = null;
+    this.pinned = null;
     void live?.leave();
     if (this.cameraForVideo && !this.inCall?.video) {
       this.cameraForVideo = false;
@@ -651,7 +706,11 @@ export class PresenceClient {
       const live = await this.joinCall(
         { id: "voice", ...j },
         {
-          people: (people) => this.patchVoice({ people }),
+          people: (people) => {
+            this.unpinGone(people);
+            this.patchVoice({ people });
+          },
+          speaker: (activeSpeaker) => this.patchVoice({ activeSpeaker }),
           state: (state, byUs) => {
             if (state !== "ended") return this.patchVoice({ state });
             if (byUs || !this.inVoice) return;

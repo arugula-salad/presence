@@ -144,3 +144,23 @@ test("a room's voice: available as the relay says, join and leave, and voice eve
   ]);
   room.leave();
 });
+
+test("speaker view: the current speaker and this page's pin, as an event and as who's featured", () => {
+  const t = fake();
+  const room = new Room({ room: "r", token: token({ sub: "me" }), transport: t });
+  const seen = [];
+  room.on("speaker", (active, pinned) => seen.push([active, pinned]));
+  t.on.live("on");
+  assert.equal(room.featured, null, "outside a call or voice: nobody");
+  const p = (sub) => ({ sub, name: sub, muted: false, speaking: false, audio: true, video: false });
+  // As the client has it once LiveKit's said: Bea's talking.
+  room.client.inVoice = { state: "on", people: [p("me"), p("bea"), p("cy")], muted: true, video: false, blocked: false, activeSpeaker: "bea", error: "" };
+  room.pin("cy");
+  assert.deepEqual(seen, [["bea", "cy"]]);
+  assert.equal(room.featured, "cy");
+  room.pin(null);
+  assert.deepEqual(seen.at(-1), ["bea", null]);
+  assert.equal(room.featured, "bea");
+  assert.equal(room.activeSpeaker, "bea");
+  room.leave();
+});

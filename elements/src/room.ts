@@ -14,6 +14,7 @@ import { mountAvatar, mountPeople, type AvatarOptions, type PeopleOptions } from
 import { CSS } from "./styles.ts";
 import { mountChat, type ChatOptions } from "./chat.ts";
 import { mountCall, mountVoice } from "./controls.ts";
+import { mountSpotlight, type SpotlightOptions } from "./spotlight.ts";
 
 export const RELAY = "wss://arugula.stream/socket";
 
@@ -63,6 +64,9 @@ export interface RoomEvents {
   /** Who's in the room's voice channel changed (joined, left, muted), or
    * you in it did (`joined`: joining, on, speaking, muted; null when out). */
   voice: (members: Member[], joined: Voice | null) => void;
+  /** The current speaker in your call or voice changed, or your pin did
+   * (`active`: held steady; `pinned`: this page's, or null). */
+  speaker: (active: string | null, pinned: string | null) => void;
   live: (state: "connecting" | "on" | "refused" | "off") => void;
 }
 
@@ -89,10 +93,10 @@ export class Room {
   readonly room: string;
   /** Your own sub, once a token has been read. */
   me = "";
-  private handlers: { [K in keyof RoomEvents]: Set<RoomEvents[K]> } = { members: new Set(), wave: new Set(), answer: new Set(), react: new Set(), message: new Set(), ring: new Set(), call: new Set(), voice: new Set(), live: new Set() };
+  private handlers: { [K in keyof RoomEvents]: Set<RoomEvents[K]> } = { members: new Set(), wave: new Set(), answer: new Set(), react: new Set(), message: new Set(), ring: new Set(), call: new Set(), voice: new Set(), speaker: new Set(), live: new Set() };
   private stop: () => void;
   private unsub: () => void;
-  private seen = { members: [] as Member[], waves: 0, answers: 0, live: "off" as string, reactedAt: 0, messageId: 0, rings: new Set<string>(), call: null as Call | null, voice: "", joined: null as Voice | null };
+  private seen = { members: [] as Member[], waves: 0, answers: 0, live: "off" as string, reactedAt: 0, messageId: 0, rings: new Set<string>(), call: null as Call | null, voice: "", joined: null as Voice | null, speaker: "" };
 
   constructor(o: ConnectOptions) {
     this.room = o.room;
@@ -270,6 +274,37 @@ export class Room {
     readonly joined: Voice | null;
   };
 
+  /** The current speaker in your call or voice, held steady: a newcomer
+   * takes over after 0.7 s of talking, a cough doesn't, and nobody
+   * talking keeps the last. Never you unless you're alone. */
+  get activeSpeaker(): string | null {
+    return this.client.activeSpeaker;
+  }
+
+  /** Who you pinned big (this page alone), or null. */
+  get pinned(): string | null {
+    return this.client.pinned;
+  }
+
+  /** Pin `sub` big in your call or voice in place of whoever's talking, or
+   * null to follow the speaker again. */
+  pin(sub: string | null) {
+    this.client.pin(sub);
+  }
+
+  /** Who a spotlight shows big now: pinned, else the speaker, else the
+   * first other person in it; null outside a call or voice. */
+  get featured(): string | null {
+    return this.client.featured(this.me);
+  }
+
+  /** Speaker view into `el`, likewise: whoever's talking big (or whoever
+   * you pinned), everyone else in the call or voice in a strip. Empty
+   * outside a call or voice. */
+  spotlight(el: Element, o: SpotlightOptions = {}): () => void {
+    return styled(el, (root) => mountSpotlight(this, root, o));
+  }
+
   /** The voice bar (who's in voice, with speaking rings; join, mute,
    * video, leave) into `el`, likewise. Empty where the relay has no voice. */
   voiceBar(el: Element): () => void {
@@ -333,6 +368,11 @@ export class Room {
       this.seen.voice = voice;
       this.seen.joined = c.inVoice;
       this.emit("voice", c.voiceMembers, c.inVoice);
+    }
+    const speaker = `${c.activeSpeaker ?? ""} ${c.pinned ?? ""}`;
+    if (speaker !== this.seen.speaker) {
+      this.seen.speaker = speaker;
+      this.emit("speaker", c.activeSpeaker, c.pinned);
     }
     for (const m of c.messages) if (m.id > this.seen.messageId) this.emit("message", m);
     this.seen.messageId = Math.max(this.seen.messageId, ...c.messages.map((m) => m.id));

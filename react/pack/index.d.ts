@@ -39,6 +39,8 @@ export interface Call {
   muted: boolean;
   video: boolean;
   blocked: boolean;
+  /** Who's talking, held steady: a newcomer takes over after 0.7 s of talking, a cough doesn't, nobody talking keeps the last. Never you unless you're alone. */
+  activeSpeaker: string | null;
   error: string;
 }
 
@@ -51,6 +53,8 @@ export interface Voice {
   muted: boolean;
   video: boolean;
   blocked: boolean;
+  /** Who's talking, held steady, as in a call. */
+  activeSpeaker: string | null;
   error: string;
 }
 
@@ -79,6 +83,9 @@ export function CallControls(props: { className?: string }): JSX.Element;
 
 /** The room's voice channel: who's in it with speaking rings, Join voice (muted), Unmute, video, Leave voice. */
 export function VoiceBar(props: { className?: string }): JSX.Element;
+
+/** Speaker view: whoever's talking big, everyone else in the call or voice in a strip. Click someone to pin them (pin: false turns that off); self: "hide" leaves you out of the strip. */
+export function Spotlight(props: { self?: "show" | "hide"; pin?: boolean; className?: string }): JSX.Element;
 
 export interface Message {
   id: number;
@@ -137,6 +144,12 @@ export function usePresence(): {
     setMuted(muted: boolean): Promise<void> | void;
     setVideo(on: boolean): Promise<void> | void;
   };
+  /** The current speaker in your call or voice (held steady), or null. */
+  activeSpeaker: string | null;
+  /** Who you pinned big (this page alone), or null. */
+  pinned: string | null;
+  /** Pin someone big in place of the speaker; null follows the speaker again. */
+  pin(sub: string | null): void;
   setLook(look: Look): void;
   camera: { on: boolean; start(o?: { mode?: "avatar" | "outline" }): Promise<void> | void; stop(): void };
 };

@@ -286,16 +286,23 @@ LiveKit carries it. What the client (`@arugula/presence`) does:
   their camera off.
 - It comes from the presence camera, not a second one: the page publishes
   a clone of the camera's track (one device, opened once), cropped and
-  scaled by the browser to 640×360 at 24 fps, while the rig or outline
-  keeps reading the original. A camera that was off turns on for it, and
-  off again with it.
-- Simulcast: a 320×180 layer beside the 640×360 one, at most 500 kbps for
-  the top. LiveKit's adaptive stream sends each viewer's `<video>` only the
-  layer its size needs, and nothing while it's hidden or out of view;
-  dynacast stops encoding a layer nobody's watching.
+  scaled by the browser to 16:9 at 24 fps, while the rig or outline keeps
+  reading the original. The camera is asked for 1280×720 while video is
+  on (and back to its own size after); the clone goes up at the biggest
+  of 1280×720, 640×360 and 320×180 that the camera gives, never scaled up.
+  A camera that was off turns on for it, and off again with it.
+- Simulcast: 320×180 (150 kbps, 15 fps) and 640×360 (500 kbps) layers
+  under a 1280×720 top (1.5 Mbps). LiveKit's adaptive stream sends each
+  viewer's `<video>` only the layer its size needs, and nothing while it's
+  hidden or out of view; dynacast stops encoding a layer nobody's
+  watching, so the 720p layer goes out only while some page shows that
+  person big (speaker view).
 - A tile in the call shows the person's video in place of their character
   or outline while it's on (their own tile too, mirrored). Everyone in the
   room but not in the call still sees their character or outline.
+- Speaker view (who's talking, shown big; pinning someone) is the client's
+  alone: it reads who it hears off its own LiveKit connection. Nothing
+  about it is on the wire, here or to the relay.
 
 ### Metering
 

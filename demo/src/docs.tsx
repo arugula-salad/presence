@@ -3,13 +3,14 @@
 
 import { Code, Tabs } from "./code";
 import { Nav, SOURCE } from "./landing";
-import { browser, install, jsApi, prototype, providers, reactHook, roomRule, server, theming } from "./snippets";
+import { browser, install, jsApi, prototype, providers, reactHook, roomRule, server, spotlight, theming } from "./snippets";
 
 const SECTIONS = [
   ["quickstart", "Quickstart"],
   ["tokens", "Room tokens"],
   ["sign-in", "Your sign-in, no server"],
   ["elements", "Elements"],
+  ["spotlight", "Speaker view"],
   ["js", "JS API"],
   ["react", "React"],
   ["server", "Server SDKs"],
@@ -101,13 +102,28 @@ export function Docs() {
               <Attr name="<arugula-avatar>">one person's live face: user="…" size="head|bust", e.g. beside their name in your UI</Attr>
               <Attr name="<arugula-call>">the call bar: a ring to answer, who you're calling, mute, video and leave; empty without a call. People's tiles get a Call button where the relay has calls (calls="off" on {"<arugula-people>"} hides it)</Attr>
               <Attr name="<arugula-voice>">the room's voice channel: who's in it with a ring while they speak, Join voice (people join muted), Unmute, video and Leave voice; hidden where the relay has no voice</Attr>
+              <Attr name="<arugula-spotlight>">speaker view, in a call or voice: whoever's talking big, everyone else in it in a strip; click someone to pin them. self="hide" leaves you out of the strip, pin="off" turns pinning off; empty outside a call or voice</Attr>
             </tbody>
           </table>
           <p>
             Events bubble from the room element: <code>arugula:members</code>, <code>arugula:wave</code>, <code>arugula:answer</code>, <code>arugula:react</code>, <code>arugula:message</code>,{" "}
-            <code>arugula:ring</code>, <code>arugula:call</code>, <code>arugula:voice</code>, <code>arugula:live</code>. Theme with custom properties on any ancestor:
+            <code>arugula:ring</code>, <code>arugula:call</code>, <code>arugula:voice</code>, <code>arugula:speaker</code>, <code>arugula:live</code>. Theme with custom properties on any ancestor:
           </p>
           <Code code={theming} label="Theming" />
+
+          <h2 id="spotlight">Speaker view</h2>
+          <p>
+            In a call or voice, <code>{"<arugula-spotlight>"}</code> shows whoever's talking big: their video if it's on, otherwise their live
+            character or outline, drawn big, with their name and whether they're muted or speaking. Everyone else in it is in a strip that
+            scrolls sideways on a phone. Click someone to pin them big on your page (nobody else sees it); click them again to follow whoever's
+            talking.
+          </p>
+          <Code code={spotlight} label="Speaker view" />
+          <p class="note">
+            The speaker is held steady: someone new takes over after 0.7 s of talking, a cough doesn't take it, the last speaker keeps
+            it while nobody talks, and you're never big on your own screen unless you're alone. Each person's video goes up at 720p only while
+            someone shows them big; strip tiles get a small layer.
+          </p>
 
           <h2 id="js">JS API</h2>
           <p>The same bundle exports the API the elements are built on, for when you draw your own UI.</p>
@@ -116,7 +132,7 @@ export function Docs() {
           <h2 id="react">React</h2>
           <p>
             <code>@arugula/presence-react</code> wraps the API: <code>PresenceRoom</code>, <code>People</code>, <code>CameraControls</code>,{" "}
-            <code>Avatar</code>, <code>Chat</code>, <code>CallControls</code>, <code>VoiceBar</code>, and a hook:
+            <code>Avatar</code>, <code>Chat</code>, <code>CallControls</code>, <code>VoiceBar</code>, <code>Spotlight</code>, and a hook:
           </p>
           <Code code={browser.React} label="React" />
           <Code code={reactHook} label="The hook" />
@@ -165,7 +181,8 @@ export function Docs() {
             <li>Calls: a wave they say yes to is a voice call (LiveKit). The relay rings, at most 3 rings per 30 seconds each, and hands each person a 10-minute token for that call's room alone; audio and video never pass through it.</li>
             <li>
               Video in a call is real video: the camera's actual picture, to the people in that call, while its owner has it on. Presence never sends a
-              picture. It shares the presence camera, 640×360 at 24 fps with a 320×180 simulcast layer, and each tile gets only the size it shows.
+              picture. It shares the presence camera, up to 1280×720 at 24 fps (where the camera gives that much) with 640×360 and 320×180 simulcast
+              layers, and each tile gets only the size it shows: the 720p layer goes out only while someone shows that person big.
             </li>
           </ul>
 
