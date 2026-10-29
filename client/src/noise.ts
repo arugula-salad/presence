@@ -172,7 +172,8 @@ export class MicFilter {
   }
 
   private run(): Promise<void> {
-    this.queue = this.queue.then(() => this.apply());
+    // A change that throws doesn't stop the ones after it.
+    this.queue = this.queue.then(() => this.apply()).catch(() => {});
     return this.queue;
   }
 
