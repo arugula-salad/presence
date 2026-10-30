@@ -227,6 +227,8 @@ room.pin(sub)  ·  room.pin(null)     // big on your page alone; null follows th
 room.spotlight(el, { self: "hide" })  // speaker view, drawn into el
 room.mount(el, { size: "bust" })      // everyone, drawn into el
 room.avatar(el, sub, { size: "head" })  // one person
+room.avatar(el, sub, { size: "head", draw: "character" })  // always their character, for small faces
+document.querySelector("arugula-room").room = room  // the elements draw from this room: no second connection
 room.leave()`;
 
 export const theming = `arugula-room {

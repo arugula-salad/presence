@@ -1,6 +1,6 @@
 // @arugula/presence-react: arugula.stream for React (../../sdk/API.md).
-// <PresenceRoom> joins a room with connect() and shares it through
-// context; <People>, <CameraControls> and <Avatar> draw into elements of
+// <PresenceRoom> joins a room with connect() (or takes a Room you
+// connected) and shares it through context; <People>, <CameraControls> and <Avatar> draw into elements of
 // their own with the same code the custom elements use; <CallControls>
 // is the call bar, <VoiceBar /> the room's voice channel and <Spotlight />
 // speaker view; usePresence() gives the room's members, calls, voice, the
@@ -25,7 +25,11 @@ interface Ctx {
 const Presence = createContext<Ctx>({ room: null, members: [], live: "off", error: null });
 
 export interface PresenceRoomProps {
-  room: string;
+  /** The room's id, to connect while mounted; or a Room your code
+   * connected (connect()), to draw from without connecting again: it's
+   * never left here (whoever connected it leaves it), and the connecting
+   * props are ignored. */
+  room: string | Room;
   /** A room token your server signed, or a function for a fresh one. */
   token?: ConnectOptions["token"];
   /** Or, with no server: the app's publishable key (connect()'s `key`;
@@ -44,15 +48,27 @@ export interface PresenceRoomProps {
   children?: ReactNode;
 }
 
-/** Join `room` while mounted; everything inside draws from it. */
-export function PresenceRoom({ room: id, token, publishableKey: key, auth, guest, name, relay, mode, look, children }: PresenceRoomProps) {
-  const [state, setState] = useState<Ctx>({ room: null, members: [], live: "connecting", error: null });
+/** Join `room` while mounted (or draw from the Room given); everything
+ * inside draws from it. */
+export function PresenceRoom({ room: which, token, publishableKey: key, auth, guest, name, relay, mode, look, children }: PresenceRoomProps) {
+  const given = typeof which === "string" ? null : which;
+  const id = typeof which === "string" ? which : "";
+  const [state, setState] = useState<Ctx>(() => (given ? { room: given, members: given.members, live: given.client.live, error: null } : { room: null, members: [], live: "connecting", error: null }));
+  // A Room you connected: drawn from, never left here.
+  useEffect(() => {
+    if (!given) return;
+    const sync = () => setState({ room: given, members: given.members, live: given.client.live, error: null });
+    const offs = [given.on("members", sync), given.on("live", sync)];
+    sync();
+    return () => offs.forEach((off) => off());
+  }, [given]);
   // The token (or auth) function may be a fresh closure each render; the
   // room keeps the first and reads the newest through this.
   const cred = key ? auth : token;
   const credRef = useRef(cred);
   credRef.current = cred;
   useEffect(() => {
+    if (given) return;
     let room: Room | null = null;
     let gone = false;
     const c = typeof cred === "function" ? () => (credRef.current as () => Promise<string>)() : cred;
@@ -72,7 +88,7 @@ export function PresenceRoom({ room: id, token, publishableKey: key, auth, guest
       room?.leave();
     };
     // A different room, relay, key or credential is a different connection.
-  }, [id, relay, key, guest, typeof cred === "string" ? cred : cred ? "fn" : ""]);
+  }, [given, id, relay, key, guest, typeof cred === "string" ? cred : cred ? "fn" : ""]);
   return <Presence.Provider value={state}>{children}</Presence.Provider>;
 }
 
@@ -158,10 +174,10 @@ export function People({ size, self, calls, className }: PeopleOptions & { class
   return <div ref={ref} className={className} />;
 }
 
-/** One person's live face (their outline or character). Size the
- * element with CSS; it fills it. */
-export function Avatar({ user, size, className, style }: AvatarOptions & { user: string; className?: string; style?: CSSProperties }) {
-  const ref = useDrawn((room, el) => room.avatar(el, user, { size }), [user, size]);
+/** One person's live face (their outline or character; `draw="character"`:
+ * always their character). Size the element with CSS; it fills it. */
+export function Avatar({ user, size, draw, className, style }: AvatarOptions & { user: string; className?: string; style?: CSSProperties }) {
+  const ref = useDrawn((room, el) => room.avatar(el, user, { size, draw }), [user, size, draw]);
   return <div ref={ref} className={className} style={{ width: 36, height: 36, ...style }} />;
 }
 

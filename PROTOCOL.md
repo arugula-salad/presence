@@ -151,11 +151,45 @@ is whether this connection is in the room's voice channel (the relay sets
 it; absent until the first time it joins), and `muted`, there only while
 it's in voice, whether it's muted (the page says, with `voice_mute`).
 
+### One person, several pages
+
+One `sub` may be in a room from several pages at once (an app's main
+page, its chat, a phone), each its own socket with its own token. They're
+**one member**: one presence key, with a meta per connection, counted once
+against the room's 64 members (and at most 8 connections a member). A
+client makes one member of the metas (`@arugula/presence`'s `memberOf`):
+on camera if any page is (in that page's look), `away` only when every
+page is, `watching` if any is, in a call if a page is, in voice if a page
+is. The relay keeps each page's own say; nothing is merged on the wire.
+
+- **Frames come from one page at a time**, the one sending. While its
+  newest frame is under 2 s old, frames from the member's other pages are
+  dropped, so nobody sees two cameras' frames interleaved; once it stops
+  (a hidden tab), the next page to send takes over. A page that turns its
+  camera off (`state {mode: "none"}`) or leaves hands over at once. The
+  frames go to the member's other pages too (they're other connections),
+  so a page with its camera off can show you as your phone sends you.
+  (Each node holds this for the frames sent through it: two pages on two
+  nodes of a cluster could both get frames through, softly, as the caps.)
+- **`off`** goes to the room only when no page of the member's still has a
+  camera on (presence's `mode`), and as soon as the page that was sending
+  leaves without another to take over (not 10 s later, when the frame
+  would go stale).
+- **Waves, answers and rings** go to every page (`wave`, `answer`,
+  `call`); any one page answers a ring and takes the call (it gets
+  `call_join`), and the others get `call_cancel`. Only the answering
+  page's meta says `call`. Text (`said`) reaches the sender's other pages.
+- **Voice** is one seat a person ("Voice"): joining from a second page
+  takes the first out (`voice_left {reason: "elsewhere"}`).
+- **Leaving** one page (closing it, its socket dropping) takes its meta
+  out; the member stays while another page is there, in their call if
+  another page holds it.
+
 ### Client → relay
 
 | event | payload | |
 |---|---|---|
-| `frame` | binary, ≤ 32 KiB | the member's newest frame (below). A member's frames are held to one per 70 ms on average, with a burst of 3 ("Limits"); over that, they're dropped. |
+| `frame` | binary, ≤ 32 KiB | the member's newest frame (below). A member's frames are held to one per 70 ms on average, with a burst of 3 ("Limits"); over that, they're dropped. So are frames from one of the member's connections while another is sending theirs ("One person, several pages"). |
 | `state` | `{mode?, look?, away?, watching?}` | updates the member's presence meta |
 | `wave` | `{to: <sub>}` | wave at someone: a hello (where the relay has calls, a page asks to talk with `call` instead) |
 | `answer` | `{to: <sub>, yes: bool}` | answer a wave |
@@ -170,7 +204,7 @@ it's in voice, whether it's muted (the page says, with `voice_mute`).
 | event | payload | |
 |---|---|---|
 | `frame` | binary: `len:u8 sub:utf8[len] frame` | someone's frame, to everyone else in the room; on join, every member's newest frame younger than 10 s |
-| `off` | `{sub}` | someone's camera went off, or their frame went stale (10 s) |
+| `off` | `{sub}` | someone's camera went off (on the last of their pages with one on), their frame went stale (10 s), or the page sending it left with no other page of theirs on camera |
 | `wave` | `{from: <sub>}` | to the waved member only |
 | `answer` | `{from: <sub>, yes}` | to the waver only |
 | `said` | `{id, sub, name, text, at}` | a message, to everyone in the room but the connection that said it (which has it in its reply); `id` only goes up in a room, `at` is Unix ms |
