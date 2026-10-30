@@ -126,17 +126,20 @@ interface Meta {
   muted?: boolean;
 }
 
-/** A member from their connections' metas: on camera if any page is, away
- * only if every page is, watching if any is, in voice if a page is (one
- * page at most: the relay keeps a person to one seat), muted as that page
- * says. */
+/** A member from their connections' metas (one person on several pages is
+ * one member: PROTOCOL.md, "One person, several pages"): on camera if any
+ * page is, in the look of a page whose camera is on (else any page's),
+ * away only if every page is, watching if any is, in a call if a page is,
+ * in voice if a page is (one page at most: the relay keeps a person to one
+ * seat), muted as that page says. */
 export function memberOf(sub: string, metas: Meta[]): Member {
   const first = metas[0] ?? {};
-  const mode = metas.find((m) => m.mode && m.mode !== "none")?.mode ?? "none";
+  const on = metas.find((m) => m.mode && m.mode !== "none");
+  const mode = on?.mode ?? "none";
   return {
     sub,
     name: first.name ?? sub,
-    look: metas.find((m) => m.look)?.look ?? null,
+    look: on?.look ?? metas.find((m) => m.look)?.look ?? null,
     mode,
     away: metas.length > 0 && metas.every((m) => m.away),
     watching: metas.some((m) => m.watching),

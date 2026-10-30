@@ -8,8 +8,23 @@ defmodule PresenceRelay.Rooms do
 
   `off` goes to the room when a member's camera goes off (`camera_off/4`),
   when their newest frame goes stale, and when their last connection
-  leaves. Internal topics carry the app, so two apps' rooms of one name
-  never meet: `r:<app>:<room>` (frames and `off`), `m:<app>:<room>:<sub>`
+  leaves.
+
+  ## One person, several pages (Arugula #345)
+
+  A member is a `sub`: the same person on several pages (each its own
+  socket and token) is one member, with a connection each. Their frames
+  come from one page at a time, the one sending: a frame from another of
+  their pages is dropped while the sender's newest is younger than
+  `:sender_hold_ms` (2 s), so nobody sees two cameras interleaved, and
+  once the sender stops (a hidden tab) the next page to send takes over.
+  A page whose camera goes off, or that leaves, hands over at once
+  (`page_off/5`), and the room hears `off` only if none of the member's
+  other pages has a camera on (presence says). The sender is held per
+  node (each keeps the frames sent through it): two pages on two nodes
+  could both get frames through, as softly as the caps.
+
+  Internal topics carry the app, so two apps' rooms of one name never meet: `r:<app>:<room>` (frames and `off`), `m:<app>:<room>:<sub>`
   (waves and answers for one member), `p:<app>:<room>` (presence).
 
   ## In a cluster (#318's P2)
@@ -86,8 +101,9 @@ defmodule PresenceRelay.Rooms do
 
   @doc """
   Keeps `frame` as `sub`'s newest and passes it to the rest of the room,
-  prefixed with who sent it; `:drop` for one too big, or over the
-  member's rate (a burst of 3, then one per 70 ms: "The frame rate").
+  prefixed with who sent it; `:drop` for one too big, over the member's
+  rate (a burst of 3, then one per 70 ms: "The frame rate"), or from one
+  of their pages while another is sending ("One person, several pages").
   """
   def frame(app, room, sub, frame, from \\ self())
 
@@ -105,31 +121,48 @@ defmodule PresenceRelay.Rooms do
 
     # The member's theoretical arrival time: when their next frame would
     # be due if every one so far had come exactly a gap apart. A frame
-    # may come early by up to the burst's worth of gaps.
-    tat =
+    # may come early by up to the burst's worth of gaps. And whether
+    # another of the member's pages is sending: it holds their frames
+    # while its newest is fresh (one sender at a time).
+    {tat, held} =
       case :ets.lookup(@table, key) do
-        [{^key, _, _, tat}] -> max(tat, now)
-        _ -> now
+        [{^key, at, _, tat, sender}] -> {max(tat, now), held?(sender, from, now - at)}
+        _ -> {now, false}
       end
 
-    if tat - now > (burst() - 1) * gap do
-      # Over the rate, or over the rate this node can carry just now.
-      framed(if(stretch > 100, do: :shed, else: :too_soon), frame)
-      :drop
-    else
-      :ets.insert(@table, {key, now, frame, tat + gap})
-      framed(:relayed, frame)
+    cond do
+      held ->
+        framed(:other_page, frame)
+        :drop
 
-      PubSub.broadcast_from(
-        PresenceRelay.PubSub,
-        from,
-        room_topic(app, room),
-        {:relay_frame, prefixed(sub, frame)},
-        PresenceRelay.Fanout
-      )
+      tat - now > (burst() - 1) * gap ->
+        # Over the rate, or over the rate this node can carry just now.
+        framed(if(stretch > 100, do: :shed, else: :too_soon), frame)
+        :drop
 
-      :ok
+      true ->
+        accept(key, app, room, sub, frame, now, tat + gap, from)
     end
+  end
+
+  defp held?(sender, from, _age) when sender == from, do: false
+
+  defp held?(sender, _from, age),
+    do: age < sender_hold_ms() and node(sender) == node() and Process.alive?(sender)
+
+  defp accept(key, app, room, sub, frame, now, tat, from) do
+    :ets.insert(@table, {key, now, frame, tat, from})
+    framed(:relayed, frame)
+
+    PubSub.broadcast_from(
+      PresenceRelay.PubSub,
+      from,
+      room_topic(app, room),
+      {:relay_frame, prefixed(sub, frame)},
+      PresenceRelay.Fanout
+    )
+
+    :ok
   end
 
   @doc """
@@ -160,7 +193,8 @@ defmodule PresenceRelay.Rooms do
   def local_fresh(app, room) do
     cutoff = System.monotonic_time(:millisecond) - stale_ms()
 
-    for {{_, _, sub}, at, frame, _} <- :ets.match_object(@table, {{app, room, :_}, :_, :_, :_}),
+    for {{_, _, sub}, at, frame, _, _} <-
+          :ets.match_object(@table, {{app, room, :_}, :_, :_, :_, :_}),
         at >= cutoff,
         do: prefixed(sub, frame)
   end
@@ -171,6 +205,29 @@ defmodule PresenceRelay.Rooms do
     :ets.delete(@table, key)
     :erpc.multicast(Node.list(), __MODULE__, :forget, [key])
     PubSub.broadcast_from(PresenceRelay.PubSub, from, room_topic(app, room), {:relay_off, sub})
+  end
+
+  @doc """
+  One of `sub`'s pages (`pid`) turned its camera off, or is leaving: if
+  another of their pages has a camera on, it only stops holding their
+  frames (the next page to send takes over at once, and nobody hears
+  `off`); otherwise their camera's off (`camera_off/4`).
+  """
+  def page_off(app, room, sub, pid, from \\ self()) do
+    if camera_elsewhere?(app, room, sub, pid) do
+      key = {app, room, sub}
+      :ets.select_delete(@table, [{{key, :_, :_, :_, pid}, [], [true]}])
+      :ok
+    else
+      camera_off(app, room, sub, from)
+    end
+  end
+
+  @doc "Whether one of `sub`'s connections other than `pid` has its camera on (presence says)."
+  def camera_elsewhere?(app, room, sub, pid) do
+    PresenceRelay.Presence
+    |> Phoenix.Tracker.get_by_key(presence_topic(app, room), sub)
+    |> Enum.any?(fn {p, meta} -> p != pid and Map.get(meta, :mode, "none") != "none" end)
   end
 
   @doc false
@@ -244,6 +301,8 @@ defmodule PresenceRelay.Rooms do
   @doc "Whether `sub` has a connection in the room, anywhere in the cluster."
   def here?(app, room, sub), do: :pg.get_members(@scope, {app, room, sub}) != []
 
+  defp sender?(key, pid), do: match?([{_, _, _, _, ^pid}], :ets.lookup(@table, key))
+
   defp prefixed(sub, frame), do: <<byte_size(sub)::8, sub::binary, frame::binary>>
 
   # Every frame in, for /metrics: relayed, or dropped and why.
@@ -259,6 +318,7 @@ defmodule PresenceRelay.Rooms do
   defp burst, do: Application.get_env(:presence_relay, :frame_burst, 3)
   defp stale_ms, do: Application.get_env(:presence_relay, :stale_ms, 10_000)
   defp sweep_ms, do: Application.get_env(:presence_relay, :sweep_ms, 2_000)
+  defp sender_hold_ms, do: Application.get_env(:presence_relay, :sender_hold_ms, 2_000)
   defp max_members, do: Application.get_env(:presence_relay, :max_members, 64)
   defp max_conns, do: Application.get_env(:presence_relay, :max_conns, 8)
 
@@ -314,9 +374,18 @@ defmodule PresenceRelay.Rooms do
 
       {{app, r, sub, pid}, refs} ->
         # :pg drops a dead process by itself, but maybe not yet: leave
-        # it out here. Their last connection anywhere: camera off.
-        if :pg.get_members(@scope, {app, r, sub}) -- [pid] == [] do
-          camera_off(app, r, sub, self())
+        # it out here. Their last connection anywhere: camera off. The
+        # page that was sending their frames: the next takes over, or
+        # their camera's off now (not when the frame goes stale).
+        cond do
+          :pg.get_members(@scope, {app, r, sub}) -- [pid] == [] ->
+            camera_off(app, r, sub, self())
+
+          sender?({app, r, sub}, pid) ->
+            page_off(app, r, sub, pid, self())
+
+          true ->
+            :ok
         end
 
         {:noreply, %{s | refs: refs}}
@@ -325,7 +394,7 @@ defmodule PresenceRelay.Rooms do
 
   def handle_info(:sweep, s) do
     cutoff = System.monotonic_time(:millisecond) - stale_ms()
-    stale = :ets.select(@table, [{{:"$1", :"$2", :_, :_}, [{:<, :"$2", cutoff}], [:"$1"]}])
+    stale = :ets.select(@table, [{{:"$1", :"$2", :_, :_, :_}, [{:<, :"$2", cutoff}], [:"$1"]}])
     for {app, r, sub} <- stale, do: camera_off(app, r, sub, self())
     Process.send_after(self(), :sweep, sweep_ms())
     {:noreply, s}

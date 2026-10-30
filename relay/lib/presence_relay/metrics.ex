@@ -23,9 +23,11 @@ defmodule PresenceRelay.Metrics do
     monthly limit), `room_full`, `connections` (a member's),
     `app_connections` and `wrong_room` at join.
   - `presence_frames_total{result}`: frames in, `relayed`, `too_big`,
-    `too_soon` (over the member's rate) or `shed` (over the rate this
-    node could carry just then: `PresenceRelay.Load`) (rate: frames a
-    second); `presence_frame_bytes_total`.
+    `too_soon` (over the member's rate), `shed` (over the rate this
+    node could carry just then: `PresenceRelay.Load`) or `other_page`
+    (from one of the member's pages while another sends their frames:
+    `PresenceRelay.Rooms`) (rate: frames a second);
+    `presence_frame_bytes_total`.
   - `presence_messages_total{kind, result}`: say, react, wave, answer.
   - `presence_calls_started_total`; `presence_call_seconds_total`, each
     person's time in calls (over 60: call minutes).

@@ -27,27 +27,41 @@ export interface PeopleOptions {
 
 export interface AvatarOptions {
   size?: "head" | "bust";
+  /** `live` (default): whatever they send, their outline, their character
+   * or their call video. `character`: always their character, even while
+   * they send an outline (for small faces, beside a name): live while they
+   * send a rig, idling in their look otherwise; their initial when there's
+   * no look of theirs to draw (an outline only, and no look in presence). */
+  draw?: "live" | "character";
 }
 
-type Kind = "outline" | "avatar" | "initial" | "video";
+export type Kind = "outline" | "avatar" | "initial" | "video";
 
-/** What one person's view draws from now. */
-function what(room: Room, m: Member): { kind: Kind; frame: Frame | null; source: () => Source | null } {
+/** What one person's view draws from now (`character`: never their
+ * outline or video). Your own tile draws this page's camera; with it off,
+ * what another of your pages sends (the relay passes your frames to your
+ * other pages), else you idling as you'd be. */
+export function what(room: Room, m: Member, character = false): { kind: Kind; frame: Frame | null; source: () => Source | null } {
   const c = room.client;
   const me = m.sub === room.me;
   const seen = c.of(m.sub);
-  const frame = (me ? c.mine?.frame : null) ?? seen?.frame ?? null;
+  const own = me && c.cameraOn;
+  // You, from another of your pages: drawn as anyone else is.
+  const elsewhere = me && !own && !!seen;
+  const frame = character ? null : (own ? c.mine?.frame : seen?.frame) ?? null;
   // A fresh wave (theirs at you, yours at someone) waves on their avatar.
   const hand = (rig: Rig | null) => (c.waving(m.sub, me) ? waving(rig, performance.now() / 1000) : rig);
+  // Read on every animation frame: who's sending you may change meanwhile.
   const source = (): Source | null => {
-    if (me) return { rig: hand(c.mine?.rig ?? null), look: c.look, away: false };
     const s = c.of(m.sub);
+    if (me && (c.cameraOn || !s)) return { rig: hand(c.mine?.rig ?? null), look: c.look, away: false };
     const now = c.members.find((x) => x.sub === m.sub) ?? m;
-    const look = s?.look ?? c.lookOf(m.sub) ?? now.look;
-    return look ? { rig: hand(s?.rig ?? null), look, away: now.away } : null;
+    const look = s?.look ?? c.lookOf(m.sub) ?? now.look ?? (me ? c.look : null);
+    return look ? { rig: hand(s?.rig ?? null), look, away: !me && now.away } : null;
   };
   // In your call with their camera on, their video stands in for the rest.
-  const kind: Kind = c.videoOf(m.sub) ? "video" : frame ? "outline" : (me ? c.mode === "avatar" : !!source()) ? "avatar" : "initial";
+  const kind: Kind =
+    !character && c.videoOf(m.sub) ? "video" : frame ? "outline" : (me && !elsewhere ? character || c.mode === "avatar" : !!source()) ? "avatar" : "initial";
   return { kind, frame, source };
 }
 
@@ -63,13 +77,15 @@ export class Face {
   private el: Element | null = null;
   private view: HTMLElement;
   private size: "bust" | "head";
-  constructor(view: HTMLElement, size: "bust" | "head") {
+  private character: boolean;
+  constructor(view: HTMLElement, size: "bust" | "head", draw: "live" | "character" = "live") {
     this.view = view;
     this.size = size;
+    this.character = draw === "character";
   }
 
   update(room: Room, m: Member) {
-    const w = what(room, m);
+    const w = what(room, m, this.character);
     const me = m.sub === room.me;
     if (w.kind !== this.kind) {
       this.clear();
@@ -239,8 +255,9 @@ export function mountAvatar(room: Room, el: Element | ShadowRoot, sub: string, o
   const view = document.createElement("div");
   view.className = `arugula-avatar ${o.size ?? "head"}`;
   view.setAttribute("part", "avatar");
+  view.dataset.sub = sub;
   el.append(view);
-  const face = new Face(view, o.size === "bust" ? "bust" : "head");
+  const face = new Face(view, o.size === "bust" ? "bust" : "head", o.draw === "character" ? "character" : "live");
   const render = () => {
     const m = room.client.members.find((x) => x.sub === sub) ?? { sub, name: sub, look: null, mode: "none" as const, away: false, watching: false, call: null, voice: false, muted: false };
     face.update(room, m);

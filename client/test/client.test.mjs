@@ -121,6 +121,38 @@ test("the relay's frames say who sent them; a member is on camera if any page is
   assert.deepEqual(m, { sub: "jake", name: "Jake", look: { character: 2, colour: 0 }, mode: "avatar", away: false, watching: true, call: null, voice: false, muted: false });
 });
 
+test("one person on several pages is one member: away only when every page is, the look of the page on camera", () => {
+  const look = (character) => ({ character, colour: 1 });
+  // Control, chat and a phone: the phone's camera is on.
+  const pages = [
+    { name: "Jake", mode: "none", look: look(1), away: true, watching: true, call: null },
+    { name: "Jake", mode: "none", look: look(1), away: true, watching: false, call: null },
+    { name: "Jake", mode: "outline", look: look(4), away: false, watching: false, call: null },
+  ];
+  const m = memberOf("jake", pages);
+  assert.equal(m.away, false, "one page here: here");
+  assert.equal(m.mode, "outline");
+  assert.deepEqual(m.look, look(4), "the look of the page that's sending");
+  assert.equal(m.watching, true);
+  assert.equal(memberOf("jake", pages.map((p) => ({ ...p, away: true }))).away, true, "every page away: away");
+  // The page that answered a ring is in the call; the member is.
+  assert.equal(memberOf("jake", [...pages.slice(0, 2), { ...pages[2], call: "c9" }]).call, "c9");
+  assert.equal(memberOf("jake", []).away, false);
+});
+
+test("a ring on every page: answered on another, it stops here", () => {
+  const t = fake();
+  const c = new PresenceClient({ transport: t.transport, storage: "tpages." });
+  const stop = c.watch();
+  t.on.call("bea", "c1");
+  assert.deepEqual(c.rings.map((r) => r.id), ["c1"]);
+  // The relay tells this page another of yours answered (call_cancel).
+  t.on.callCancel("c1");
+  assert.deepEqual(c.rings, []);
+  assert.equal(c.inCall, null, "this page isn't in the call");
+  stop();
+});
+
 test("the socket's params: a room token, or a publishable key with the room and a guest's name", () => {
   const url = "wss://arugula.stream/socket";
   assert.deepEqual(socketParams({ url, room: "lobby", token: () => Promise.resolve("t") }, "t1"), { token: "t1" });

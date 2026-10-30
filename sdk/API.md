@@ -28,7 +28,23 @@ this; the site's docs show exactly this. PROTOCOL.md is underneath.
 - `relay`: default `wss://arugula.stream/socket`.
 - `mode` (`avatar`|`outline`, default `avatar`), `character`, `colour`: starting choices (the person can change them; kept in their browser).
 
-`<arugula-people>`: attributes `size` (`bust`, default; `head` for a compact strip), `self` (`first`|`hide`), `calls` (`off` hides the Call button on tiles; it shows only where the relay has calls). `<arugula-camera>`: attribute `controls` (`full`, default; `button` for just the toggle). `<arugula-spotlight>`: `self` (`hide` leaves you out of the strip), `pin` (`off`: clicking doesn't pin). `<arugula-avatar>`: `user`, `size` (`head`|`bust`). Theming: CSS custom properties on any ancestor: `--arugula-accent`, `--arugula-bg`, `--arugula-fg`, `--arugula-dim`, `--arugula-radius`.
+**A room you already connected.** Set the element's `room` property to a
+Room from `connect()` (below), before or after the element is in the
+page, and it and everything inside it (camera, people, chat, call, voice,
+spotlight, avatar) draw from that room instead of connecting: one
+connection per page, shared by your own code and the elements. The
+element then ignores its connecting attributes (`room`, `token-url`,
+`key`, `auth`, `demo`…) and still re-dispatches the room's events.
+Taking the element out of the page never leaves the room (whoever called
+`connect()` does, with `room.leave()`); back in, it draws again. Setting
+`el.room` to another Room swaps everything inside to it; `null` goes
+back to the attributes. `el.room` reads the room it draws from (its own
+connection's too), or null.
+
+    const room = await connect({ room: "design-team", token: getToken });
+    document.querySelector("arugula-room").room = room;   // <arugula-room><arugula-people></arugula-people></arugula-room>
+
+`<arugula-people>`: attributes `size` (`bust`, default; `head` for a compact strip), `self` (`first`|`hide`), `calls` (`off` hides the Call button on tiles; it shows only where the relay has calls). `<arugula-camera>`: attribute `controls` (`full`, default; `button` for just the toggle). `<arugula-spotlight>`: `self` (`hide` leaves you out of the strip), `pin` (`off`: clicking doesn't pin). `<arugula-avatar>`: `user`, `size` (`head`|`bust`), `draw` (`live`, default: whatever they send; `character`: always their character, as `room.avatar`'s `draw` below). Theming: CSS custom properties on any ancestor: `--arugula-accent`, `--arugula-bg`, `--arugula-fg`, `--arugula-dim`, `--arugula-radius`.
 
 Events (bubbling, on the room element): `arugula:members` (`detail.members`), `arugula:wave` (`detail.from`), `arugula:answer` (`detail.from, detail.yes`), `arugula:react` (`detail.from, detail.emoji`), `arugula:message` (`detail.message`), `arugula:ring` (`detail.from, detail.id`), `arugula:call` (`detail.call`, null when it's over), `arugula:voice` (`detail.members` in voice, `detail.joined`: you in it, or null), `arugula:speaker` (`detail.active`: the current speaker in your call or voice, `detail.pinned`: who you pinned, or null), `arugula:live` (`detail.state`). `<arugula-camera>` also has a row of reactions.
 
@@ -78,14 +94,37 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
     room.spotlight(element, { self: "show", pin: true }); // draw speaker view into an element
     room.mount(element, { size: "bust" });          // draw everyone into an element
     room.avatar(element, sub, { size: "head" });    // draw one person
+    room.avatar(element, sub, { size: "head", draw: "character" }); // always their character (small faces)
     room.leave();
+
+**`draw: "character"`.** By default an avatar draws whatever the person
+sends: their outline, their character, or their video in your call.
+`draw: "character"` (`<arugula-avatar draw="character">`, `<Avatar
+draw="character" />`) always draws their character, for faces too small
+for an outline (24–32 px beside a name in a chat): live while they send a
+rig (avatar mode), idling in their look while they send an outline or
+their camera's off. The look is the one their rigs carry, else presence's
+(`look` in the token, or the one their page sent on turning the camera on
+or changing it). Someone with no look anywhere (outline only, and none in
+their token) gets their initial, as a tile does. Your own face is always
+your character, in this browser's look.
+
+**One person on several pages** (PROTOCOL.md, "One person, several
+pages"): the same `sub` connected from several pages at once (each its
+own socket and token) is one member. `room.members` lists them once: on
+camera if any page is, `away` only when every page is, in a call if a
+page is. Their frames come from whichever page is sending; a ring rings
+every page and the one that answers takes the call (the others stop
+ringing); one page leaving doesn't take them out of the room. On your own
+pages, your own tile shows this page's camera, or, with it off, what your
+other page sends.
 
 ## React: `@arugula/presence-react`
 
-    <PresenceRoom room="design-team" token={getToken}>   {/* or publishableKey="pk_live_…" auth={getToken} */}
+    <PresenceRoom room="design-team" token={getToken}>   {/* or publishableKey="pk_live_…" auth={getToken}; or room={r}, a Room from connect() */}
       <CameraControls />
       <People />
-      <Avatar user={id} size="head" />
+      <Avatar user={id} size="head" />                     {/* draw="character": always their character */}
       <CallControls />
       <VoiceBar />
       <Spotlight />                                        {/* self="hide", pin={false} */}
@@ -93,6 +132,10 @@ Events (bubbling, on the room element): `arugula:members` (`detail.members`), `a
     const { members, messages, say, wave, camera, calls, rings, inCall, call, answerCall, leaveCall, setMuted, setVideo, voice, noise, setNoiseFilter, activeSpeaker, pinned, pin } = usePresence();
     // voice: { available, members, joined, speaking(sub), join(), leave(), setMuted(m), setVideo(on) }
     // noise: { mode, active, krisp, fallback }; setNoiseFilter("krisp" | "standard" | "off")
+
+`<PresenceRoom room={r}>` with a Room from `connect()` draws from it
+without connecting again, and never leaves it (unmounting doesn't; its
+owner does); the connecting props are ignored.
 
 **Video in a call is real video.** Presence sends a rig or an outline,
 never a picture. A call's video (`setVideo(true)`, or the call bar's Start

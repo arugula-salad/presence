@@ -20,8 +20,8 @@ elements. The same module, bundled, is served at
 <arugula-avatar user="u_123" size="head"></arugula-avatar>
 ```
 
-- `<arugula-room>`: `room` (required); `token-url` (the element POSTs `{room}` with the page's cookies and expects `{token}`, a room token your server signed: `../sdk`); or `demo` + `name` to prototype with arugula.stream's public demo tokens; `relay` (default `wss://arugula.stream/socket`); `mode` (`avatar`|`outline`), `character`, `colour` as starting choices.
-- `<arugula-people>`: `size` (`bust`|`head`), `self` (`first`|`hide`). `<arugula-camera>`: `controls` (`full`|`button`). `<arugula-avatar>`: `user`, `size` (`head`|`bust`); size the element with CSS.
+- `<arugula-room>`: or set its `room` property to a Room from `connect()` (below) to draw from that one instead of connecting; taking the element out of the page doesn't leave it. Attributes: `room` (required without a Room); `token-url` (the element POSTs `{room}` with the page's cookies and expects `{token}`, a room token your server signed: `../sdk`); or `demo` + `name` to prototype with arugula.stream's public demo tokens; `relay` (default `wss://arugula.stream/socket`); `mode` (`avatar`|`outline`), `character`, `colour` as starting choices.
+- `<arugula-people>`: `size` (`bust`|`head`), `self` (`first`|`hide`). `<arugula-camera>`: `controls` (`full`|`button`). `<arugula-avatar>`: `user`, `size` (`head`|`bust`), `draw` (`character`: always their character); size the element with CSS.
 - Theme with `--arugula-accent`, `--arugula-bg`, `--arugula-fg`, `--arugula-dim`, `--arugula-radius` on any ancestor.
 - Events on the room element (bubbling): `arugula:members` (`detail.members`), `arugula:wave` (`detail.from`), `arugula:answer` (`detail.from`, `detail.yes`), `arugula:live` (`detail.state`).
 

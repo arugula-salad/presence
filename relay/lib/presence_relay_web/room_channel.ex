@@ -265,7 +265,9 @@ defmodule PresenceRelayWeb.RoomChannel do
 
     if change != %{} do
       Presence.update(self(), presence_topic(socket), a.sub, &Map.merge(&1, change))
-      if change[:mode] == "none", do: Rooms.camera_off(a.app, a.room, a.sub)
+      # Off on this page: off for the room, unless another of this
+      # person's pages has a camera on (Rooms, "One person, several pages").
+      if change[:mode] == "none", do: Rooms.page_off(a.app, a.room, a.sub, self())
     end
 
     {:noreply, socket}

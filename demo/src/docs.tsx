@@ -92,6 +92,7 @@ export function Docs() {
               <Attr name="demo + name">a public demo room instead (prototypes only)</Attr>
               <Attr name="relay">default wss://arugula.stream/socket</Attr>
               <Attr name="mode, character, colour">starting choices; each person can change theirs</Attr>
+              <Attr name="el.room = r">a Room your code connected with connect(): the element and everything inside draw from it instead of connecting (one connection per page); taking the element out of the page doesn't leave it</Attr>
             </tbody>
           </table>
           <table class="attrs">
@@ -99,7 +100,7 @@ export function Docs() {
               <Attr name="<arugula-camera>">camera on/off, avatar or outline, character and colour; controls="button" for just the toggle</Attr>
               <Attr name="<arugula-people>">a tile per person; size="head" for a compact strip, self="hide" to leave yourself out</Attr>
               <Attr name="<arugula-chat>">the room's text: messages (kept, with history) and an input; Enter sends, Shift+Enter is a new line</Attr>
-              <Attr name="<arugula-avatar>">one person's live face: user="…" size="head|bust", e.g. beside their name in your UI</Attr>
+              <Attr name="<arugula-avatar>">one person's live face: user="…" size="head|bust", e.g. beside their name in your UI; draw="character" always draws their character, even while they send an outline (their initial if they have no look)</Attr>
               <Attr name="<arugula-call>">the call bar: a ring to answer, who you're calling, mute, video, the noise filter and leave; empty without a call. People's tiles get a Call button where the relay has calls (calls="off" on {"<arugula-people>"} hides it)</Attr>
               <Attr name="<arugula-voice>">the room's voice channel: who's in it with a ring while they speak, Join voice (people join muted), Unmute, video, the noise filter and Leave voice; hidden where the relay has no voice</Attr>
               <Attr name="<arugula-spotlight>">speaker view, in a call or voice: whoever's talking big, everyone else in it in a strip; click someone to pin them. self="hide" leaves you out of the strip, pin="off" turns pinning off; empty outside a call or voice</Attr>

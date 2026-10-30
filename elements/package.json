@@ -19,6 +19,7 @@
     "@arugula/presence-core": "link:../core"
   },
   "devDependencies": {
+    "happy-dom": "20.14.6",
     "typescript": "^7.0.2",
     "vite": "8.3.4"
   }
